@@ -50,3 +50,4 @@ Current Entries
 [2026-05-02] [DOCS] [TEAM] [main] - Reworked README for public repository presentation
 [2026-05-02] [DOCS] [TEAM] [main] - Improved README setup steps and project tree formatting
 [2026-05-02] [DOCS] [TEAM] [main] - Added uv installation instructions to README
+[2026-05-02] [ADD] [TEAM] [main] - Added frontend placeholder files so scaffold directories are tracked
