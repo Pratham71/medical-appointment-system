@@ -12,11 +12,13 @@ MVP Tasks
 [ ] Create normalized core tables
 [ ] Insert dummy data
 
-[ ] Setup FastAPI project
+[x] Setup FastAPI project
 [ ] Setup uv environment
 [ ] Setup DB connection pooling
 
+[x] Register MVP API routes
 [ ] Implement basic login
+[x] Add logout endpoint
 
 [ ] Appointment APIs
 - [ ] Get doctors
@@ -47,6 +49,7 @@ MVP Tasks
 [ ] Test queries with EXPLAIN ANALYZE
 
 [ ] Testing
+- [x] Add API surface tests
 [ ] Screenshots for report
 [ ] Final documentation
 
@@ -54,3 +57,8 @@ Documentation Tasks
 
 [x] Add project README
 [x] Update contributor instructions
+
+Delivery Tasks
+
+[ ] Push feat/backend/api branch
+[ ] Open backend API pull request

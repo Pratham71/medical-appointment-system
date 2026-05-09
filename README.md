@@ -143,6 +143,7 @@ The final database engine will be either MySQL or PostgreSQL.
 ### Auth
 
 - `POST /auth/login`
+- `POST /auth/logout`
 - `GET /auth/me`
 
 ### Students
@@ -236,27 +237,14 @@ uv sync
 Create a `.env` file in the project root:
 
 ```env
-DATABASE_URL=your_database_connection_url
 ENV=dev
 ```
 
 ### 3. Database Setup
 
-Create a database named `medapp` in either MySQL or PostgreSQL.
+Database setup is deferred until the final engine is selected.
 
-After the schema file is completed, execute this file in the selected database:
-
-```text
-app/backend/app/db/schema.sql
-```
-
-If seed data is available, execute:
-
-```text
-app/backend/app/db/seed.sql
-```
-
-Use the command-line tool or database client for whichever database engine is selected.
+The project will use either MySQL or PostgreSQL. Do not run schema or seed files yet.
 
 ### 4. Run the Backend
 
@@ -304,7 +292,6 @@ http://localhost:3000
 
 ### 6. Development Flow
 
-- Start the database server.
 - Run the backend from the project root.
 - Run the frontend from `app/frontend`.
 - Open the frontend at `http://localhost:3000`.
@@ -323,4 +310,4 @@ Additional project notes are available in the `docs/` directory:
 
 ## Current Status
 
-The project structure and documentation are currently set up. Backend APIs, database schema, and frontend pages are under development.
+The project structure and documentation are currently set up. Backend APIs are in progress, while database schema and frontend pages are still under development.

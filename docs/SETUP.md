@@ -39,7 +39,6 @@ uv sync
 
 Create a `.env` file in the project root:
 ```env
-DATABASE_URL=your_database_connection_url
 ENV=dev
 ```
 
@@ -60,22 +59,9 @@ http://127.0.0.1:8000/docs
 
 Database Setup
 
-1. Create database
-```sql
-CREATE DATABASE medapp;
-```
+Database setup is deferred until the final engine is selected.
 
-2. Run schema after `schema.sql` is completed
-```text
-app/backend/app/db/schema.sql
-```
-
-3. Run seed data if available
-```text
-app/backend/app/db/seed.sql
-```
-
-Use the command-line tool or database client for the selected database engine.
+The project will use either MySQL or PostgreSQL. Do not run schema or seed files yet.
 
 Frontend Setup
 
@@ -93,7 +79,5 @@ http://localhost:3000
 
 Notes
 - Use raw SQL only.
-- Ensure the database is running before the backend.
 - Keep `.env` values correct.
 - Do not run frontend package commands until the frontend project has a `package.json`.
-

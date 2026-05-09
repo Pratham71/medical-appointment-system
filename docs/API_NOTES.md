@@ -8,8 +8,15 @@ Rules
 - Return proper status codes
 - Keep SQL out of routes
 
+Current MVP Notes
+- Student endpoints use a `student_id` query parameter until authenticated student context is wired.
+- Doctor dashboard and appointment list endpoints use a `staff_id` query parameter until authenticated doctor context is wired.
+- This API pass does not create database tables, seed data, or migrations.
+- DB-backed routes return 503 until the database engine and schema are finalized.
+
 Auth
 POST /auth/login
+POST /auth/logout
 GET /auth/me
 
 Students

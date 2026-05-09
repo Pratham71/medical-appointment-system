@@ -75,3 +75,9 @@ temp/
 
 # pytest
 .pytest_cache/
+
+# ruff-cache
+.ruff_cache/
+
+# FastAPI
+.uvicorn.*

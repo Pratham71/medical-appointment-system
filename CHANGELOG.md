@@ -53,3 +53,7 @@ Current Entries
 [2026-05-02] [ADD] [TEAM] [main] - Added frontend placeholder files so scaffold directories are tracked
 [2026-05-02] [DOCS] [TEAM] [main] - Updated setup guide for current frontend scaffold state
 [2026-05-02] [UPDATE] [TEAM] [main] - Removed frontend placeholder files
+[2026-05-09] [API] [TEAM] [feat/backend/api] - Added MVP FastAPI route, schema, service, and repository skeletons
+[2026-05-09] [TEST] [TEAM] [feat/backend/api] - Added API surface tests for health and MVP route registration
+[2026-05-09] [API] [TEAM] [feat/backend/api] - Added stateless auth logout endpoint
+[2026-05-09] [DOCS] [TEAM] [feat/backend/api] - Deferred database setup instructions until database selection
