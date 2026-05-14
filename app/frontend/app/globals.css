@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #F0F4F6;
+  --color-surface: #FFFFFF;
+  --color-primary: #0D9488;
+  --color-primary-hover: #0F766E;
+  --color-text: #0F172A;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Status pill base */
+.pill {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* Teal focus ring for inputs */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-teal-600 ring-offset-1;
+}
+
+/* Table striping */
+tbody tr:nth-child(even) {
+  background-color: var(--color-bg);
+}

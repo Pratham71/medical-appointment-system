@@ -70,3 +70,9 @@ Current Entries
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added auth, authorization, idempotency, and rate-limit test coverage
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Ran live MySQL JWT, role access, idempotency, and protected route smoke checks
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Updated API, setup, database, README, AGENTS, and TODO notes for security hardening
+[2026-05-14] [ADD] [TEAM] [feat/backend/api] - Added root npm dev command to start backend and frontend together
+[2026-05-14] [UI] [TEAM] [feat/backend/api] - Added login password visibility toggle and routed frontend API calls through the Next.js local proxy
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added frontend login/proxy regression checks and fixed the patient history TypeScript error
+[2026-05-14] [FIX] [TEAM] [feat/backend/api] - Fixed Windows root dev launcher spawn handling for npm and uv
+[2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added frontend to-fix items for upcoming appointments and report, prescription, and certificate downloads
+[2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added template tasks for reports, prescriptions, and medical certificates

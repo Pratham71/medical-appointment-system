@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     mysql_database: str = "medical_appointment_system"
     mysql_pool_name: str = "medical_appointment_pool"
     mysql_pool_size: int = 5
+    cors_origins: list[str] = ["http://localhost:3000"]
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = 120
     login_max_failed_attempts: int = 5

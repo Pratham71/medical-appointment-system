@@ -50,7 +50,23 @@ JWT_SECRET_KEY=change-this-dev-secret
 RATE_LIMIT_ENABLED=true
 ```
 
-4. Run backend server
+4. Run the full stack
+
+From the project root:
+```bash
+npm run dev
+```
+
+This starts both services:
+```text
+Backend:  http://127.0.0.1:8000
+Frontend: http://localhost:3000
+```
+
+The frontend sends local API requests through its Next.js `/api` proxy, so keep
+the backend running on `http://127.0.0.1:8000` while using the app.
+
+To run only the backend:
 ```bash
 uv run uvicorn app.backend.app.main:app --reload
 ```
@@ -89,12 +105,16 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 
 Frontend Setup
 
-The frontend directory is currently a scaffold. After the Next.js app is initialized, run it from:
+Install frontend dependencies from the frontend directory:
 ```bash
 cd app/frontend
+npm install
 ```
 
-Then start the frontend using the command defined in its `package.json`.
+After dependencies are installed, use the root command:
+```bash
+npm run dev
+```
 
 Frontend will run on:
 ```text
@@ -104,7 +124,8 @@ http://localhost:3000
 Notes
 - Use raw SQL only.
 - Keep `.env` values correct.
-- Do not run frontend package commands until the frontend project has a `package.json`.
+- Run `npm run dev` from the project root to start backend and frontend together.
+- Frontend API calls use the local `/api` proxy to avoid browser CORS issues.
 
 Security Configuration Notes
 - `JWT_SECRET_KEY` must be changed for production.

@@ -76,11 +76,22 @@ Certificate APIs
 
 Frontend Tasks
 
-[ ] Setup Next.js frontend
-[ ] Build login page
+[x] Setup Next.js frontend
+[x] Add one-command full-stack dev startup
+[x] Build login page
 [ ] Build student pages
 [ ] Build doctor pages
-[ ] Connect frontend to backend API
+[x] Connect frontend to backend API
+
+Frontend To Fix
+
+[ ] [TOFIX] Upcoming appointments tab shows no appointments
+[ ] [TOFIX] Add view/download support for student medical reports
+[ ] [TOFIX] Add view/download support for student prescriptions
+[ ] [TOFIX] Add view/download support for student certificates
+[ ] [TOFIX] Create printable/downloadable templates for medical reports
+[ ] [TOFIX] Create printable/downloadable templates for prescriptions
+[ ] [TOFIX] Create printable/downloadable templates for medical certificates
 
 Testing and Documentation Tasks
 

@@ -285,6 +285,24 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 
 ### 4. Run the Backend
 
+To start both the backend and frontend together, run this from the project root:
+
+```bash
+npm run dev
+```
+
+This starts:
+
+```text
+Backend:  http://127.0.0.1:8000
+Frontend: http://localhost:3000
+```
+
+Frontend API calls go through the Next.js `/api` proxy during local development,
+so the browser does not call the FastAPI server directly.
+
+To run only the backend:
+
 ```bash
 uv run uvicorn app.backend.app.main:app --reload
 ```
@@ -321,7 +339,17 @@ Go to the frontend directory:
 cd app/frontend
 ```
 
-The frontend directory is still a scaffold. Do not run frontend package commands until a `package.json` exists.
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Then return to the project root and run:
+
+```bash
+npm run dev
+```
 
 Frontend URL:
 
@@ -331,8 +359,7 @@ http://localhost:3000
 
 ### 6. Development Flow
 
-- Run the backend from the project root.
-- Run the frontend from `app/frontend`.
+- Run `npm run dev` from the project root.
 - Open the frontend at `http://localhost:3000`.
 - Use the API docs at `http://127.0.0.1:8000/docs` while testing backend routes.
 
