@@ -21,6 +21,8 @@ export default function LoginPage() {
       setSession(res.access_token, res.user);
       if (res.user.role_name === "doctor") {
         router.replace("/doctors");
+      } else if (res.user.role_name === "admin") {
+        router.replace("/admin");
       } else {
         router.replace("/students");
       }

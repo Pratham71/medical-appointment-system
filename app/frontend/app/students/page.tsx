@@ -19,7 +19,9 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user) { router.replace("/login"); return; }
-    if (user.role_name !== "student") { router.replace("/doctors"); return; }
+    if (user.role_name === "doctor") { router.replace("/doctors"); return; }
+    if (user.role_name === "admin") { router.replace("/admin"); return; }
+    if (user.role_name !== "student") { router.replace("/login"); return; }
 
     getStudentDashboard()
       .then(setData)

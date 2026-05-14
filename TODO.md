@@ -14,6 +14,7 @@ Completed Tasks
 [x] Add API schema, service, and repository skeletons
 [x] Add health endpoint
 [x] Add stateless logout endpoint
+[x] Fix admin frontend redirect loop crash
 [x] Add API surface tests
 [x] Add MySQL database layer tests
 [x] Run live MySQL route smoke test locally
@@ -92,6 +93,7 @@ Frontend To Fix
 [ ] [TOFIX] Create printable/downloadable templates for medical reports
 [ ] [TOFIX] Create printable/downloadable templates for prescriptions
 [ ] [TOFIX] Create printable/downloadable templates for medical certificates
+[ ] [TOFIX] Build full admin dashboard and admin workflows
 
 Testing and Documentation Tasks
 

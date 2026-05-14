@@ -76,3 +76,5 @@ Current Entries
 [2026-05-14] [FIX] [TEAM] [feat/backend/api] - Fixed Windows root dev launcher spawn handling for npm and uv
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added frontend to-fix items for upcoming appointments and report, prescription, and certificate downloads
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added template tasks for reports, prescriptions, and medical certificates
+[2026-05-14] [FIX] [TEAM] [feat/backend/api] - Fixed admin login redirect loop by routing admin users to a safe admin dashboard landing page
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added regression coverage for admin frontend routing

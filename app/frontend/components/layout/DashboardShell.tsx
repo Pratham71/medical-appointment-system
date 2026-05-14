@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 interface Props {
-  role: "student" | "doctor";
+  role: "student" | "doctor" | "admin";
   title: string;
   children: React.ReactNode;
 }
