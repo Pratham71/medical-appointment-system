@@ -22,3 +22,8 @@ def get_appointment_detail(appointment_id: int) -> dict[str, Any] | None:
 def list_patient_history(student_id: int) -> list[dict[str, Any]]:
     with session.connection_scope() as connection:
         return doctor_queries.list_patient_history(connection, student_id)
+
+
+def has_doctor_seen_student(staff_id: int, student_id: int) -> bool:
+    with session.connection_scope() as connection:
+        return doctor_queries.has_doctor_seen_student(connection, staff_id, student_id)

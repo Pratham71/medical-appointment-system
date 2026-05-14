@@ -32,3 +32,22 @@ def get_user_by_id(connection: Any, user_id: int) -> dict[str, Any] | None:
             AND users.is_active = TRUE
     """
     return fetch_one(connection, sql, (user_id,))
+
+
+def get_student_id_by_user_id(connection: Any, user_id: int) -> dict[str, Any] | None:
+    sql = """
+        SELECT students.student_id
+        FROM students
+        WHERE students.user_id = %s
+    """
+    return fetch_one(connection, sql, (user_id,))
+
+
+def get_staff_id_by_user_id(connection: Any, user_id: int) -> dict[str, Any] | None:
+    sql = """
+        SELECT staff.staff_id
+        FROM staff
+        WHERE staff.user_id = %s
+            AND staff.is_doctor = TRUE
+    """
+    return fetch_one(connection, sql, (user_id,))

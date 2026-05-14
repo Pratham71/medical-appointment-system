@@ -47,6 +47,7 @@ MYSQL_USER=root
 MYSQL_PASSWORD=your_mysql_password
 MYSQL_DATABASE=medical_appointment_system
 JWT_SECRET_KEY=change-this-dev-secret
+RATE_LIMIT_ENABLED=true
 ```
 
 4. Run backend server
@@ -104,3 +105,10 @@ Notes
 - Use raw SQL only.
 - Keep `.env` values correct.
 - Do not run frontend package commands until the frontend project has a `package.json`.
+
+Security Configuration Notes
+- `JWT_SECRET_KEY` must be changed for production.
+- Production must use a strong random JWT secret.
+- Protected routes require `Authorization: Bearer <access_token>`.
+- Replay-sensitive write endpoints require an `Idempotency-Key` header.
+- Login and sensitive routes are rate limited.

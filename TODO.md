@@ -17,6 +17,7 @@ Completed Tasks
 [x] Add API surface tests
 [x] Add MySQL database layer tests
 [x] Run live MySQL route smoke test locally
+[x] Run live JWT/RBAC/idempotency smoke test locally
 [x] Add project README
 [x] Update contributor instructions
 [x] Update setup docs for current backend/frontend state
@@ -38,12 +39,12 @@ Database Tasks
 Auth and Security Tasks
 
 [x] Implement DB-backed login
-[ ] Protect API routes with JWT authentication
-[ ] Add role-based access for student, doctor, and admin/staff routes
-[ ] Replace temporary `student_id` and `staff_id` query parameters with authenticated user context
-[ ] Implement security features like idempotency, rate limiting, and replay-safe write requests
-[ ] Require production-safe JWT secret configuration
-[ ] Add brute-force protection for login
+[x] Protect API routes with JWT authentication
+[x] Add role-based access for student, doctor, and admin/staff routes
+[x] Replace temporary `student_id` and `staff_id` query parameters with authenticated user context
+[x] Implement security features like idempotency, rate limiting, and replay-safe write requests
+[x] Require production-safe JWT secret configuration
+[x] Add brute-force protection for login
 
 Appointment APIs
 
@@ -84,8 +85,8 @@ Frontend Tasks
 Testing and Documentation Tasks
 
 [ ] Add live MySQL API integration tests
-[ ] Add auth and authorization tests
-[ ] Add security/rate-limit tests
+[x] Add auth and authorization tests
+[x] Add security/rate-limit tests
 [ ] Screenshots for report
 [ ] Final documentation
 

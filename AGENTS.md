@@ -102,6 +102,9 @@ Coding Guidelines
 - Keep routes thin and readable.
 - Put business logic in services.
 - Keep database access coordination in repositories.
+- Protected route identity must come from authenticated JWT context, not from caller-supplied `student_id` or `staff_id` query parameters.
+- Keep authorization checks in route dependencies/services; keep SQL in query modules only.
+- Use idempotency keys for replay-sensitive write requests where implemented.
 
 Database Rules
 

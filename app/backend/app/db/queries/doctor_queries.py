@@ -118,3 +118,20 @@ def list_patient_history(connection: Any, student_id: int) -> list[dict[str, Any
             v_appointment_details.start_time DESC
     """
     return fetch_all(connection, sql, (student_id,))
+
+
+def has_doctor_seen_student(
+    connection: Any,
+    staff_id: int,
+    student_id: int,
+) -> bool:
+    sql = """
+        SELECT appointments.appointment_id
+        FROM appointments
+        INNER JOIN appointment_slots
+            ON appointment_slots.slot_id = appointments.slot_id
+        WHERE appointment_slots.staff_id = %s
+            AND appointments.student_id = %s
+        LIMIT 1
+    """
+    return fetch_one(connection, sql, (staff_id, student_id)) is not None

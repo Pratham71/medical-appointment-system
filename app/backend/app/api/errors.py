@@ -13,8 +13,16 @@ class UnauthorizedError(ServiceError):
     status_code = 401
 
 
+class ForbiddenError(ServiceError):
+    status_code = 403
+
+
 class ConflictError(ServiceError):
     status_code = 409
+
+
+class RateLimitError(ServiceError):
+    status_code = 429
 
 
 class DatabaseNotConfiguredError(ServiceError):

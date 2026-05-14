@@ -13,7 +13,6 @@ class AppointmentSlot(BaseModel):
 
 
 class AppointmentBookRequest(BaseModel):
-    student_id: int = Field(..., gt=0)
     slot_id: int = Field(..., gt=0)
     reason: str | None = Field(default=None, max_length=500)
 

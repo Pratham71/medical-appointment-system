@@ -15,7 +15,10 @@ The project is built as a DBMS-focused application with a simple frontend and a 
 - Medical consultation notes
 - Prescription records
 - Medical certificate records
-- Basic login flow
+- JWT-based login flow
+- Role-based access for student, doctor, and admin/staff users
+- Rate limiting and login brute-force protection
+- Idempotent/replay-safe write requests
 - REST API backend
 - Simple web interface
 
@@ -139,6 +142,8 @@ Key database concepts covered:
 
 The selected database engine is MySQL.
 
+Student and doctor routes use the authenticated JWT user context. Student-facing endpoints no longer accept `student_id` query parameters, and doctor dashboard/list endpoints no longer accept `staff_id` query parameters.
+
 ## Planned API Routes
 
 ### Auth
@@ -259,6 +264,7 @@ MYSQL_USER=root
 MYSQL_PASSWORD=your_mysql_password
 MYSQL_DATABASE=medical_appointment_system
 JWT_SECRET_KEY=change-this-dev-secret
+RATE_LIMIT_ENABLED=true
 ```
 
 Apply the schema and seed data.
@@ -293,6 +299,18 @@ API docs:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+Protected routes use:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+Replay-sensitive write routes also use:
+
+```text
+Idempotency-Key: <unique-request-key>
 ```
 
 ### 5. Frontend Setup
@@ -331,4 +349,4 @@ Additional project notes are available in the `docs/` directory:
 
 ## Current Status
 
-The backend has FastAPI route skeletons, MySQL schema/seed files, MySQL connection pooling, and raw SQL query modules. Frontend pages and production security hardening are still under development.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, MySQL reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, and login brute-force protection. Frontend pages are still under development.

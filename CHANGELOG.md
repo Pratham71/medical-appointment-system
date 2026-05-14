@@ -64,3 +64,9 @@ Current Entries
 [2026-05-14] [FIX] [TEAM] [feat/backend/api] - Normalized MySQL TIME values for API responses and kept cancelled unique slots from being relisted as available
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Ran live MySQL schema, seed, API route smoke test, and EXPLAIN checks
 [2026-05-14] [DB] [TEAM] [feat/backend/api] - Added MySQL views for available slots, appointment details, doctor appointments, student reports, and student certificates
+[2026-05-14] [API] [TEAM] [feat/backend/api] - Protected API routes with JWT authentication and role-based access
+[2026-05-14] [API] [TEAM] [feat/backend/api] - Replaced temporary student_id and staff_id query parameters with authenticated user context
+[2026-05-14] [UPDATE] [TEAM] [feat/backend/api] - Added idempotency, rate limiting, replay-safe write handling, and login brute-force protection
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added auth, authorization, idempotency, and rate-limit test coverage
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Ran live MySQL JWT, role access, idempotency, and protected route smoke checks
+[2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Updated API, setup, database, README, AGENTS, and TODO notes for security hardening

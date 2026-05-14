@@ -16,9 +16,12 @@ def list_available_slots(from_date: date | None = None) -> list[AppointmentSlot]
     return [AppointmentSlot(**row) for row in rows]
 
 
-def book_appointment(payload: AppointmentBookRequest) -> AppointmentBookResponse:
+def book_appointment(
+    payload: AppointmentBookRequest,
+    student_id: int,
+) -> AppointmentBookResponse:
     result = appointment_repo.book_appointment(
-        student_id=payload.student_id,
+        student_id=student_id,
         slot_id=payload.slot_id,
         reason=payload.reason,
     )

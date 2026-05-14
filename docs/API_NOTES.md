@@ -9,11 +9,27 @@ Rules
 - Keep SQL out of routes
 
 Current MVP Notes
-- Student endpoints use a `student_id` query parameter until authenticated student context is wired.
-- Doctor dashboard and appointment list endpoints use a `staff_id` query parameter until authenticated doctor context is wired.
 - MySQL is selected as the database provider.
-- Backend repositories now call MySQL query functions.
-- Routes still need authenticated user context and role-based access before production use.
+- Backend repositories call MySQL query functions.
+- Protected API routes require JWT Bearer authentication.
+- Role-based access is enforced for student, doctor, and admin/staff routes.
+- Student endpoints use the authenticated student context instead of `student_id` query parameters.
+- Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
+- Write endpoints use idempotency/replay protection where required.
+- Login includes brute-force protection.
+- Rate limiting is enabled for sensitive and high-traffic routes.
+
+Auth Requirements
+- Use `Authorization: Bearer <access_token>` for protected routes.
+- Public routes: `POST /auth/login` and `GET /health`.
+- Protected routes: student, doctor, appointment, report, certificate, logout, and `/auth/me`.
+- Return `401` for missing/invalid tokens.
+- Return `403` for valid users without the required role.
+
+Security Headers/Request Rules
+- Replay-sensitive write endpoints require an `Idempotency-Key` header.
+- Rate-limited requests return `429`.
+- Repeated failed login attempts are locked according to backend policy.
 
 Auth
 POST /auth/login

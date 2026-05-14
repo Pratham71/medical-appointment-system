@@ -152,3 +152,23 @@ def get_status_result(
         WHERE appointments.appointment_id = %s
     """
     return fetch_one(connection, sql, (appointment_id,))
+
+
+def get_appointment_access_context(
+    connection: Any,
+    appointment_id: int,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            appointments.appointment_id,
+            appointments.student_id,
+            appointment_slots.staff_id AS doctor_id,
+            appointment_statuses.status_name AS status
+        FROM appointments
+        INNER JOIN appointment_slots
+            ON appointment_slots.slot_id = appointments.slot_id
+        INNER JOIN appointment_statuses
+            ON appointment_statuses.status_id = appointments.status_id
+        WHERE appointments.appointment_id = %s
+    """
+    return fetch_one(connection, sql, (appointment_id,))

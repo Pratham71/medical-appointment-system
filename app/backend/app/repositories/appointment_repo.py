@@ -82,3 +82,11 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
         )
 
         return appointment_queries.get_status_result(connection, appointment_id)
+
+
+def get_access_context(appointment_id: int) -> dict[str, Any] | None:
+    with session.connection_scope() as connection:
+        return appointment_queries.get_appointment_access_context(
+            connection,
+            appointment_id,
+        )

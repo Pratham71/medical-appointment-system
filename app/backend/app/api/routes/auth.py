@@ -1,8 +1,6 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.backend.app.api.dependencies import get_current_user
 from app.backend.app.api.errors import service_error_to_http
 from app.backend.app.schemas.auth import (
     AuthenticatedUser,
@@ -13,7 +11,6 @@ from app.backend.app.schemas.auth import (
 from app.backend.app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-bearer_scheme = HTTPBearer(auto_error=False)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -25,7 +22,9 @@ def login(payload: LoginRequest) -> TokenResponse:
 
 
 @router.post("/logout", response_model=LogoutResponse)
-def logout() -> LogoutResponse:
+def logout(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> LogoutResponse:
     try:
         return auth_service.logout()
     except Exception as exc:
@@ -34,13 +33,6 @@ def logout() -> LogoutResponse:
 
 @router.get("/me", response_model=AuthenticatedUser)
 def me(
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None,
-        Depends(bearer_scheme),
-    ],
+    current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> AuthenticatedUser:
-    token = credentials.credentials if credentials else None
-    try:
-        return auth_service.get_current_user(token)
-    except Exception as exc:
-        raise service_error_to_http(exc) from exc
+    return current_user

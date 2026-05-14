@@ -2,6 +2,8 @@ from fastapi.testclient import TestClient
 
 from app.backend.app.api.errors import service_error_to_http
 from app.backend.app.main import app
+from app.backend.app.schemas.auth import AuthenticatedUser
+from app.backend.app.services import auth_service
 
 
 def test_health_endpoint_returns_ok():
@@ -13,10 +15,20 @@ def test_health_endpoint_returns_ok():
     assert response.json() == {"status": "ok"}
 
 
-def test_logout_endpoint_returns_success_message():
+def test_logout_endpoint_returns_success_message(monkeypatch):
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: AuthenticatedUser(
+            user_id=1,
+            name="Test User",
+            email="test@example.edu",
+            role_name="student",
+        ),
+    )
     client = TestClient(app)
 
-    response = client.post("/auth/logout")
+    response = client.post("/auth/logout", headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 200
     assert response.json() == {"message": "Logged out"}

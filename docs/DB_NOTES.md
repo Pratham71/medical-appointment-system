@@ -10,6 +10,10 @@ Current Focus
 - Constraints
 - Queries
 - Views for common dashboard and report reads
+- Authenticated user context for student and staff access
+- Login brute-force protection
+- Idempotency/replay-safe write request support
+- Rate limiting support
 
 ERD
 - Do NOT create ER diagram yet
@@ -109,6 +113,8 @@ DBMS Concepts to Demonstrate
 - Views
 - Transactions
 - MySQL EXPLAIN query analysis
+- Auth-backed access control
+- Idempotent transaction handling
 
 Notes
 - Avoid SELECT *
