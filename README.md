@@ -16,7 +16,7 @@ The project is built as a DBMS-focused application with a simple frontend and a 
 - Prescription records
 - Medical certificate records
 - JWT-based login flow
-- Role-based access for student, doctor, and admin/staff users
+- Role-based access for student, doctor, and admin-supported routes
 - Rate limiting and login brute-force protection
 - Idempotent/replay-safe write requests
 - REST API backend
@@ -377,3 +377,5 @@ Additional project notes are available in the `docs/` directory:
 ## Current Status
 
 The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, MySQL reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, and login brute-force protection. Frontend pages are still under development.
+
+Current known gaps include the full admin dashboard, staff login/workflow, report and prescription context views, and printable/downloadable templates for reports, prescriptions, and certificates. Staff login is tracked in GitHub issue #12.

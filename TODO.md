@@ -46,6 +46,7 @@ Auth and Security Tasks
 [x] Implement security features like idempotency, rate limiting, and replay-safe write requests
 [x] Require production-safe JWT secret configuration
 [x] Add brute-force protection for login
+[ ] [TOFIX] Add staff login, seed account, routing, and staff role workflow (GitHub issue #12)
 
 Appointment APIs
 
@@ -94,6 +95,7 @@ Frontend To Fix
 [ ] [TOFIX] Create printable/downloadable templates for prescriptions
 [ ] [TOFIX] Create printable/downloadable templates for medical certificates
 [ ] [TOFIX] Build full admin dashboard and admin workflows
+[ ] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 
 Testing and Documentation Tasks
 

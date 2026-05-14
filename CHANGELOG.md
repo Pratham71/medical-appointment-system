@@ -78,3 +78,4 @@ Current Entries
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added template tasks for reports, prescriptions, and medical certificates
 [2026-05-14] [FIX] [TEAM] [feat/backend/api] - Fixed admin login redirect loop by routing admin users to a safe admin dashboard landing page
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added regression coverage for admin frontend routing
+[2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added staff login and staff workflow gap to TODO, README, and project context with GitHub issue tracking

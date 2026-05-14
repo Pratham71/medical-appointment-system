@@ -12,7 +12,8 @@ Current MVP Notes
 - MySQL is selected as the database provider.
 - Backend repositories call MySQL query functions.
 - Protected API routes require JWT Bearer authentication.
-- Role-based access is enforced for student, doctor, and admin/staff routes.
+- Role-based access is enforced for student, doctor, and admin-supported routes.
+- Staff login and staff-specific workflow are not implemented yet and are tracked in GitHub issue #12.
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
 - Write endpoints use idempotency/replay protection where required.

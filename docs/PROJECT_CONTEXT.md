@@ -16,6 +16,7 @@ MVP Scope
 - Basic dashboard stats
 
 Future Scope
+- Staff login and staff role workflow
 - Staff dashboard
 - Walk-in management
 - Live queue system
@@ -27,6 +28,10 @@ Future Scope
 Database Decision
 - MySQL is selected for the MVP database.
 - Schema and seed files are stored under `app/backend/app/db/`.
+
+Current Open Role Gap
+- Staff login is not implemented yet.
+- Staff login and staff workflow planning are tracked in GitHub issue #12.
 
 ER Diagram
 - Not required at this stage
