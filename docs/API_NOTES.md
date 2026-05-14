@@ -11,8 +11,9 @@ Rules
 Current MVP Notes
 - Student endpoints use a `student_id` query parameter until authenticated student context is wired.
 - Doctor dashboard and appointment list endpoints use a `staff_id` query parameter until authenticated doctor context is wired.
-- This API pass does not create database tables, seed data, or migrations.
-- DB-backed routes return 503 until the database engine and schema are finalized.
+- MySQL is selected as the database provider.
+- Backend repositories now call MySQL query functions.
+- Routes still need authenticated user context and role-based access before production use.
 
 Auth
 POST /auth/login

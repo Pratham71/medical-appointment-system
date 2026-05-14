@@ -15,6 +15,7 @@ Completed Tasks
 [x] Add health endpoint
 [x] Add stateless logout endpoint
 [x] Add API surface tests
+[x] Add MySQL database layer tests
 [x] Add project README
 [x] Update contributor instructions
 [x] Update setup docs for current backend/frontend state
@@ -23,17 +24,18 @@ Completed Tasks
 
 Database Tasks
 
-[ ] Decide database provider: PostgreSQL or MySQL
-[ ] Setup selected database provider
-[ ] Setup DB connection pooling after provider is chosen
-[ ] Create normalized core tables after provider is chosen
-[ ] Insert dummy data after schema is finalized
-[ ] Add indexes
-[ ] Test queries with EXPLAIN ANALYZE
+[x] Decide database provider: MySQL
+[x] Setup MySQL provider configuration
+[x] Setup MySQL connection pooling
+[x] Create normalized MySQL core tables
+[x] Insert MySQL dummy seed data
+[x] Add MySQL indexes
+[x] Add MySQL raw SQL query modules
+[ ] Run MySQL EXPLAIN query analysis on a live database
 
 Auth and Security Tasks
 
-[ ] Implement DB-backed login
+[x] Implement DB-backed login
 [ ] Protect API routes with JWT authentication
 [ ] Add role-based access for student, doctor, and admin/staff routes
 [ ] Replace temporary `student_id` and `staff_id` query parameters with authenticated user context
@@ -44,30 +46,30 @@ Auth and Security Tasks
 Appointment APIs
 
 [ ] Implement get doctors
-[ ] Implement get slots
-[ ] Implement book appointment
-[ ] Implement cancel appointment
-[ ] Implement mark appointment complete
+[x] Implement get slots
+[x] Implement book appointment
+[x] Implement cancel appointment
+[x] Implement mark appointment complete
 
 Student APIs
 
-[ ] Implement dashboard
-[ ] Implement my appointments
-[ ] Implement reports
-[ ] Implement certificates
+[x] Implement dashboard
+[x] Implement my appointments
+[x] Implement reports
+[x] Implement certificates
 
 Doctor APIs
 
-[ ] Implement view appointments
-[ ] Implement appointment details
-[ ] Implement add notes
-[ ] Implement add prescriptions
-[ ] Implement patient history
+[x] Implement view appointments
+[x] Implement appointment details
+[x] Implement add notes
+[x] Implement add prescriptions
+[x] Implement patient history
 
 Certificate APIs
 
-[ ] Implement create certificate
-[ ] Implement list student certificates
+[x] Implement create certificate
+[x] Implement list student certificates
 
 Frontend Tasks
 
@@ -79,7 +81,7 @@ Frontend Tasks
 
 Testing and Documentation Tasks
 
-[ ] Add DB-backed API tests after provider is chosen
+[ ] Add live MySQL API integration tests
 [ ] Add auth and authorization tests
 [ ] Add security/rate-limit tests
 [ ] Screenshots for report

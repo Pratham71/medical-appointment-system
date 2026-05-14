@@ -21,7 +21,7 @@ Sections for Submission
 - Constraints
 
 Note:
-- ER Diagram will be added later after schema is finalized
+- ER Diagram will be added later after the MySQL schema is reviewed
 
 5. Implementation
 - Tech stack
@@ -37,7 +37,7 @@ Note:
 7. Query Optimization
 - Index usage
 - Example queries
-- EXPLAIN ANALYZE
+- MySQL EXPLAIN query analysis
 
 8. Transactions
 - Booking logic explanation

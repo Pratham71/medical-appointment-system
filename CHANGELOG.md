@@ -58,3 +58,6 @@ Current Entries
 [2026-05-09] [API] [TEAM] [feat/backend/api] - Added stateless auth logout endpoint
 [2026-05-09] [DOCS] [TEAM] [feat/backend/api] - Deferred database setup instructions until database selection
 [2026-05-10] [DOCS] [TEAM] [feat/backend/api] - Updated TODO with completed API skeleton work, database provider decision task, and security hardening tasks
+[2026-05-14] [DB] [TEAM] [feat/backend/api] - Selected MySQL and added schema, seed data, connection pooling, raw SQL queries, and repository integration
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added MySQL database layer tests and bcrypt verification coverage
+[2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Updated setup, database, API, ERD notes, README, AGENTS, and TODO for MySQL

@@ -25,16 +25,16 @@ Future Scope
 - ORM migration
 
 Database Decision
-- PostgreSQL or MySQL (to be finalized)
-- Schema design should stay compatible with both
+- MySQL is selected for the MVP database.
+- Schema and seed files are stored under `app/backend/app/db/`.
 
 ER Diagram
 - Not required at this stage
-- Will be created after schema finalization
+- Will be created after the MySQL schema is reviewed
 
 Tech Stack
 Backend: FastAPI
-Database: PostgreSQL/MySQL
+Database: MySQL
 Frontend: Next.js
 Package Manager: uv
 

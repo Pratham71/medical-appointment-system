@@ -110,7 +110,7 @@ Database Rules
 - Add indexes where needed.
 - Prevent double booking using UNIQUE(slot_id).
 - Use transactions for appointment booking.
-- Keep the schema compatible with PostgreSQL and MySQL until the final database is chosen.
+- MySQL is the selected database provider for the MVP.
 
 ERD Rule
 

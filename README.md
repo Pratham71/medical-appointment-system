@@ -23,7 +23,7 @@ The project is built as a DBMS-focused application with a simple frontend and a 
 
 - Backend: FastAPI
 - Frontend: Next.js
-- Database: MySQL/PostgreSQL
+- Database: MySQL
 - Package Manager: uv
 - Query Style: Raw SQL
 
@@ -136,7 +136,7 @@ Key database concepts covered:
 - Indexing
 - Transactions
 
-The final database engine will be either MySQL or PostgreSQL.
+The selected database engine is MySQL.
 
 ## Planned API Routes
 
@@ -187,7 +187,7 @@ Follow these steps to set up the project locally.
 - Python 3.12+
 - uv
 - Node.js 18+
-- MySQL or PostgreSQL
+- MySQL 8+
 
 ### Install uv
 
@@ -237,14 +237,44 @@ uv sync
 Create a `.env` file in the project root:
 
 ```env
-ENV=dev
+ENVIRONMENT=development
 ```
 
 ### 3. Database Setup
 
-Database setup is deferred until the final engine is selected.
+Create the MySQL database:
 
-The project will use either MySQL or PostgreSQL. Do not run schema or seed files yet.
+```sql
+CREATE DATABASE medical_appointment_system;
+```
+
+Update `.env` with your local MySQL settings:
+
+```env
+DATABASE_PROVIDER=mysql
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=medical_appointment_system
+JWT_SECRET_KEY=change-this-dev-secret
+```
+
+Apply the schema and seed data.
+
+Windows PowerShell:
+
+```powershell
+Get-Content app\backend\app\db\schema.sql | mysql -u root -p medical_appointment_system
+Get-Content app\backend\app\db\seed.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
+mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
+```
 
 ### 4. Run the Backend
 
@@ -272,17 +302,7 @@ Go to the frontend directory:
 cd app/frontend
 ```
 
-Install frontend dependencies:
-
-```bash
-npm install
-```
-
-Run the frontend:
-
-```bash
-npm run dev
-```
+The frontend directory is still a scaffold. Do not run frontend package commands until a `package.json` exists.
 
 Frontend URL:
 
@@ -310,4 +330,4 @@ Additional project notes are available in the `docs/` directory:
 
 ## Current Status
 
-The project structure and documentation are currently set up. Backend APIs are in progress, while database schema and frontend pages are still under development.
+The backend has FastAPI route skeletons, MySQL schema/seed files, MySQL connection pooling, and raw SQL query modules. Frontend pages and production security hardening are still under development.

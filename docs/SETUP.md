@@ -4,7 +4,7 @@ Prerequisites
 - Python 3.12+
 - uv installed
 - Node.js 18+
-- MySQL or PostgreSQL
+- MySQL 8+
 
 Install uv
 
@@ -39,7 +39,14 @@ uv sync
 
 Create a `.env` file in the project root:
 ```env
-ENV=dev
+ENVIRONMENT=development
+DATABASE_PROVIDER=mysql
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=medical_appointment_system
+JWT_SECRET_KEY=change-this-dev-secret
 ```
 
 4. Run backend server
@@ -59,9 +66,25 @@ http://127.0.0.1:8000/docs
 
 Database Setup
 
-Database setup is deferred until the final engine is selected.
+Create the MySQL database:
 
-The project will use either MySQL or PostgreSQL. Do not run schema or seed files yet.
+```sql
+CREATE DATABASE medical_appointment_system;
+```
+
+Apply the schema and seed data.
+
+Windows PowerShell:
+```powershell
+Get-Content app\backend\app\db\schema.sql | mysql -u root -p medical_appointment_system
+Get-Content app\backend\app\db\seed.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
+mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
+```
 
 Frontend Setup
 
