@@ -7,26 +7,20 @@ from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 def list_available_slots(connection: Any, from_date: date) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            appointment_slots.slot_id,
-            staff.staff_id AS doctor_id,
-            users.name AS doctor_name,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time
-        FROM appointment_slots
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users ON users.user_id = staff.user_id
-        INNER JOIN slot_statuses
-            ON slot_statuses.slot_status_id = appointment_slots.slot_status_id
-        WHERE appointment_slots.slot_date >= %s
-            AND slot_statuses.status_name = %s
-            AND staff.is_doctor = TRUE
+            v_available_appointment_slots.slot_id,
+            v_available_appointment_slots.doctor_id,
+            v_available_appointment_slots.doctor_name,
+            v_available_appointment_slots.slot_date,
+            v_available_appointment_slots.start_time,
+            v_available_appointment_slots.end_time
+        FROM v_available_appointment_slots
+        WHERE v_available_appointment_slots.slot_date >= %s
         ORDER BY
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            users.name
+            v_available_appointment_slots.slot_date,
+            v_available_appointment_slots.start_time,
+            v_available_appointment_slots.doctor_name
     """
-    return fetch_all(connection, sql, (from_date, "available"))
+    return fetch_all(connection, sql, (from_date,))
 
 
 def get_available_slot_for_update(

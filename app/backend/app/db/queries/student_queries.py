@@ -51,24 +51,18 @@ def get_dashboard_counts(connection: Any, student_id: int) -> dict[str, Any] | N
 def get_next_appointment(connection: Any, student_id: int) -> dict[str, Any] | None:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            appointment_statuses.status_name AS status
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN appointment_statuses
-            ON appointment_statuses.status_id = appointments.status_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        WHERE appointments.student_id = %s
-            AND appointment_statuses.status_name = %s
-            AND appointment_slots.slot_date >= CURRENT_DATE
-        ORDER BY appointment_slots.slot_date, appointment_slots.start_time
+            v_appointment_details.appointment_id,
+            v_appointment_details.slot_date,
+            v_appointment_details.start_time,
+            v_appointment_details.end_time,
+            v_appointment_details.doctor_id,
+            v_appointment_details.doctor_name,
+            v_appointment_details.status
+        FROM v_appointment_details
+        WHERE v_appointment_details.student_id = %s
+            AND v_appointment_details.status = %s
+            AND v_appointment_details.slot_date >= CURRENT_DATE
+        ORDER BY v_appointment_details.slot_date, v_appointment_details.start_time
         LIMIT 1
     """
     return fetch_one(connection, sql, (student_id, "booked"))
@@ -77,22 +71,18 @@ def get_next_appointment(connection: Any, student_id: int) -> dict[str, Any] | N
 def list_appointments(connection: Any, student_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            appointment_statuses.status_name AS status
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN appointment_statuses
-            ON appointment_statuses.status_id = appointments.status_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        WHERE appointments.student_id = %s
-        ORDER BY appointment_slots.slot_date DESC, appointment_slots.start_time DESC
+            v_appointment_details.appointment_id,
+            v_appointment_details.slot_date,
+            v_appointment_details.start_time,
+            v_appointment_details.end_time,
+            v_appointment_details.doctor_id,
+            v_appointment_details.doctor_name,
+            v_appointment_details.status
+        FROM v_appointment_details
+        WHERE v_appointment_details.student_id = %s
+        ORDER BY
+            v_appointment_details.slot_date DESC,
+            v_appointment_details.start_time DESC
     """
     return fetch_all(connection, sql, (student_id,))
 
@@ -100,34 +90,16 @@ def list_appointments(connection: Any, student_id: int) -> list[dict[str, Any]]:
 def list_reports(connection: Any, student_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date AS appointment_date,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            medical_notes.diagnosis,
-            medical_notes.remarks,
-            COUNT(prescription_items.item_id) AS prescription_count
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        LEFT JOIN medical_notes
-            ON medical_notes.appointment_id = appointments.appointment_id
-        LEFT JOIN prescriptions
-            ON prescriptions.appointment_id = appointments.appointment_id
-        LEFT JOIN prescription_items
-            ON prescription_items.prescription_id = prescriptions.prescription_id
-        WHERE appointments.student_id = %s
-            AND medical_notes.note_id IS NOT NULL
-        GROUP BY
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            staff.staff_id,
-            doctor_users.name,
-            medical_notes.diagnosis,
-            medical_notes.remarks
-        ORDER BY appointment_slots.slot_date DESC
+            v_student_report_summaries.appointment_id,
+            v_student_report_summaries.appointment_date,
+            v_student_report_summaries.doctor_id,
+            v_student_report_summaries.doctor_name,
+            v_student_report_summaries.diagnosis,
+            v_student_report_summaries.remarks,
+            v_student_report_summaries.prescription_count
+        FROM v_student_report_summaries
+        WHERE v_student_report_summaries.student_id = %s
+        ORDER BY v_student_report_summaries.appointment_date DESC
     """
     return fetch_all(connection, sql, (student_id,))
 
@@ -135,25 +107,16 @@ def list_reports(connection: Any, student_id: int) -> list[dict[str, Any]]:
 def list_certificates(connection: Any, student_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            medical_certificates.certificate_id,
-            appointments.appointment_id,
-            certificate_types.certificate_type_id,
-            certificate_types.certificate_type,
-            medical_certificates.issue_date,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            appointment_slots.slot_date AS appointment_date
-        FROM medical_certificates
-        INNER JOIN appointments
-            ON appointments.appointment_id = medical_certificates.appointment_id
-        INNER JOIN certificate_types
-            ON certificate_types.certificate_type_id =
-                medical_certificates.certificate_type_id
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        WHERE appointments.student_id = %s
-        ORDER BY medical_certificates.issue_date DESC
+            v_student_certificate_summaries.certificate_id,
+            v_student_certificate_summaries.appointment_id,
+            v_student_certificate_summaries.certificate_type_id,
+            v_student_certificate_summaries.certificate_type,
+            v_student_certificate_summaries.issue_date,
+            v_student_certificate_summaries.doctor_id,
+            v_student_certificate_summaries.doctor_name,
+            v_student_certificate_summaries.appointment_date
+        FROM v_student_certificate_summaries
+        WHERE v_student_certificate_summaries.student_id = %s
+        ORDER BY v_student_certificate_summaries.issue_date DESC
     """
     return fetch_all(connection, sql, (student_id,))

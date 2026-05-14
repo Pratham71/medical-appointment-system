@@ -1,5 +1,11 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP VIEW IF EXISTS v_student_certificate_summaries;
+DROP VIEW IF EXISTS v_student_report_summaries;
+DROP VIEW IF EXISTS v_doctor_appointment_summaries;
+DROP VIEW IF EXISTS v_appointment_details;
+DROP VIEW IF EXISTS v_available_appointment_slots;
+
 DROP TABLE IF EXISTS prescription_items;
 DROP TABLE IF EXISTS prescriptions;
 DROP TABLE IF EXISTS medical_certificates;
@@ -174,3 +180,129 @@ CREATE INDEX idx_medical_notes_appointment ON medical_notes(appointment_id);
 CREATE INDEX idx_prescriptions_appointment ON prescriptions(appointment_id);
 CREATE INDEX idx_prescription_items_prescription ON prescription_items(prescription_id);
 CREATE INDEX idx_medical_certificates_type ON medical_certificates(certificate_type_id);
+
+CREATE VIEW v_available_appointment_slots AS
+SELECT
+    appointment_slots.slot_id,
+    staff.staff_id AS doctor_id,
+    users.name AS doctor_name,
+    staff.specialization,
+    appointment_slots.slot_date,
+    appointment_slots.start_time,
+    appointment_slots.end_time,
+    slot_statuses.status_name AS slot_status
+FROM appointment_slots
+INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+INNER JOIN users ON users.user_id = staff.user_id
+INNER JOIN slot_statuses
+    ON slot_statuses.slot_status_id = appointment_slots.slot_status_id
+WHERE slot_statuses.status_name = 'available'
+    AND staff.is_doctor = TRUE;
+
+CREATE VIEW v_appointment_details AS
+SELECT
+    appointments.appointment_id,
+    appointments.student_id,
+    student_users.name AS student_name,
+    student_users.email AS student_email,
+    staff.staff_id AS doctor_id,
+    doctor_users.name AS doctor_name,
+    appointment_slots.slot_date,
+    appointment_slots.start_time,
+    appointment_slots.end_time,
+    appointment_statuses.status_name AS status,
+    appointments.reason,
+    medical_notes.diagnosis,
+    medical_notes.remarks,
+    medical_certificates.certificate_id,
+    certificate_types.certificate_type
+FROM appointments
+INNER JOIN students ON students.student_id = appointments.student_id
+INNER JOIN users AS student_users ON student_users.user_id = students.user_id
+INNER JOIN appointment_slots
+    ON appointment_slots.slot_id = appointments.slot_id
+INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
+INNER JOIN appointment_statuses
+    ON appointment_statuses.status_id = appointments.status_id
+LEFT JOIN medical_notes
+    ON medical_notes.appointment_id = appointments.appointment_id
+LEFT JOIN medical_certificates
+    ON medical_certificates.appointment_id = appointments.appointment_id
+LEFT JOIN certificate_types
+    ON certificate_types.certificate_type_id =
+        medical_certificates.certificate_type_id;
+
+CREATE VIEW v_doctor_appointment_summaries AS
+SELECT
+    appointments.appointment_id,
+    staff.staff_id AS doctor_id,
+    appointment_slots.slot_date,
+    appointment_slots.start_time,
+    appointment_slots.end_time,
+    students.student_id,
+    student_users.name AS student_name,
+    appointment_statuses.status_name AS status
+FROM appointments
+INNER JOIN appointment_slots
+    ON appointment_slots.slot_id = appointments.slot_id
+INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+INNER JOIN appointment_statuses
+    ON appointment_statuses.status_id = appointments.status_id
+INNER JOIN students ON students.student_id = appointments.student_id
+INNER JOIN users AS student_users ON student_users.user_id = students.user_id;
+
+CREATE VIEW v_student_report_summaries AS
+SELECT
+    appointments.appointment_id,
+    appointments.student_id,
+    appointment_slots.slot_date AS appointment_date,
+    staff.staff_id AS doctor_id,
+    doctor_users.name AS doctor_name,
+    medical_notes.diagnosis,
+    medical_notes.remarks,
+    COUNT(prescription_items.item_id) AS prescription_count
+FROM appointments
+INNER JOIN appointment_slots
+    ON appointment_slots.slot_id = appointments.slot_id
+INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
+INNER JOIN medical_notes
+    ON medical_notes.appointment_id = appointments.appointment_id
+LEFT JOIN prescriptions
+    ON prescriptions.appointment_id = appointments.appointment_id
+LEFT JOIN prescription_items
+    ON prescription_items.prescription_id = prescriptions.prescription_id
+GROUP BY
+    appointments.appointment_id,
+    appointments.student_id,
+    appointment_slots.slot_date,
+    staff.staff_id,
+    doctor_users.name,
+    medical_notes.diagnosis,
+    medical_notes.remarks;
+
+CREATE VIEW v_student_certificate_summaries AS
+SELECT
+    medical_certificates.certificate_id,
+    appointments.appointment_id,
+    appointments.student_id,
+    student_users.name AS student_name,
+    certificate_types.certificate_type_id,
+    certificate_types.certificate_type,
+    medical_certificates.issue_date,
+    staff.staff_id AS doctor_id,
+    doctor_users.name AS doctor_name,
+    appointment_slots.slot_date AS appointment_date
+FROM medical_certificates
+INNER JOIN appointments
+    ON appointments.appointment_id = medical_certificates.appointment_id
+INNER JOIN students ON students.student_id = appointments.student_id
+INNER JOIN users AS student_users ON student_users.user_id = students.user_id
+INNER JOIN certificate_types
+    ON certificate_types.certificate_type_id =
+        medical_certificates.certificate_type_id
+INNER JOIN appointment_slots
+    ON appointment_slots.slot_id = appointments.slot_id
+INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id;

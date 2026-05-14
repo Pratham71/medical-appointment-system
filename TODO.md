@@ -32,6 +32,7 @@ Database Tasks
 [x] Insert MySQL dummy seed data
 [x] Add MySQL indexes
 [x] Add MySQL raw SQL query modules
+[x] Add MySQL views for dashboard and report queries
 [x] Run MySQL EXPLAIN query analysis on a live database
 
 Auth and Security Tasks

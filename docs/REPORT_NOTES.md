@@ -19,6 +19,7 @@ Sections for Submission
 - Tables and relationships
 - Normalization (3NF)
 - Constraints
+- Views for dashboard and report queries
 
 Note:
 - ER Diagram will be added later after the MySQL schema is reviewed
@@ -27,6 +28,7 @@ Note:
 - Tech stack
 - Backend architecture
 - Raw SQL usage
+- MySQL views usage
 
 6. Features
 - Appointment booking
@@ -37,6 +39,7 @@ Note:
 7. Query Optimization
 - Index usage
 - Example queries
+- View-backed read queries
 - MySQL EXPLAIN query analysis
 
 8. Transactions

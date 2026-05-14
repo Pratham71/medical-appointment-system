@@ -133,6 +133,7 @@ Key database concepts covered:
 - Unique constraints
 - Normalization
 - Joins
+- Views
 - Indexing
 - Transactions
 

@@ -39,23 +39,16 @@ def get_certificate_by_appointment_type(
 ) -> dict[str, Any] | None:
     sql = """
         SELECT
-            medical_certificates.certificate_id,
-            appointments.appointment_id,
-            students.student_id,
-            student_users.name AS student_name,
-            certificate_types.certificate_type_id,
-            certificate_types.certificate_type,
-            medical_certificates.issue_date
-        FROM medical_certificates
-        INNER JOIN appointments
-            ON appointments.appointment_id = medical_certificates.appointment_id
-        INNER JOIN students ON students.student_id = appointments.student_id
-        INNER JOIN users AS student_users ON student_users.user_id = students.user_id
-        INNER JOIN certificate_types
-            ON certificate_types.certificate_type_id =
-                medical_certificates.certificate_type_id
-        WHERE medical_certificates.appointment_id = %s
-            AND medical_certificates.certificate_type_id = %s
+            v_student_certificate_summaries.certificate_id,
+            v_student_certificate_summaries.appointment_id,
+            v_student_certificate_summaries.student_id,
+            v_student_certificate_summaries.student_name,
+            v_student_certificate_summaries.certificate_type_id,
+            v_student_certificate_summaries.certificate_type,
+            v_student_certificate_summaries.issue_date
+        FROM v_student_certificate_summaries
+        WHERE v_student_certificate_summaries.appointment_id = %s
+            AND v_student_certificate_summaries.certificate_type_id = %s
     """
     return fetch_one(connection, sql, (appointment_id, certificate_type_id))
 
@@ -63,22 +56,15 @@ def get_certificate_by_appointment_type(
 def list_by_student(connection: Any, student_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            medical_certificates.certificate_id,
-            appointments.appointment_id,
-            students.student_id,
-            student_users.name AS student_name,
-            certificate_types.certificate_type_id,
-            certificate_types.certificate_type,
-            medical_certificates.issue_date
-        FROM medical_certificates
-        INNER JOIN appointments
-            ON appointments.appointment_id = medical_certificates.appointment_id
-        INNER JOIN students ON students.student_id = appointments.student_id
-        INNER JOIN users AS student_users ON student_users.user_id = students.user_id
-        INNER JOIN certificate_types
-            ON certificate_types.certificate_type_id =
-                medical_certificates.certificate_type_id
-        WHERE students.student_id = %s
-        ORDER BY medical_certificates.issue_date DESC
+            v_student_certificate_summaries.certificate_id,
+            v_student_certificate_summaries.appointment_id,
+            v_student_certificate_summaries.student_id,
+            v_student_certificate_summaries.student_name,
+            v_student_certificate_summaries.certificate_type_id,
+            v_student_certificate_summaries.certificate_type,
+            v_student_certificate_summaries.issue_date
+        FROM v_student_certificate_summaries
+        WHERE v_student_certificate_summaries.student_id = %s
+        ORDER BY v_student_certificate_summaries.issue_date DESC
     """
     return fetch_all(connection, sql, (student_id,))

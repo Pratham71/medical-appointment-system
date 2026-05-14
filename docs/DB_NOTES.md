@@ -9,6 +9,7 @@ Current Focus
 - Relationships
 - Constraints
 - Queries
+- Views for common dashboard and report reads
 
 ERD
 - Do NOT create ER diagram yet
@@ -79,6 +80,18 @@ Indexes
 - prescription_items(prescription_id)
 - medical_certificates(certificate_type_id)
 
+Views
+- v_available_appointment_slots
+- v_appointment_details
+- v_doctor_appointment_summaries
+- v_student_report_summaries
+- v_student_certificate_summaries
+
+Triggers
+- Not required for the MVP right now.
+- Double booking is handled with UNIQUE(slot_id) and appointment booking transactions.
+- Add triggers later only if the project needs audit logging or automatic history tables.
+
 Transactions
 - Use transaction when booking appointment:
   1. Check slot availability
@@ -93,6 +106,7 @@ DBMS Concepts to Demonstrate
 - Unique constraints
 - Indexing
 - Joins
+- Views
 - Transactions
 - MySQL EXPLAIN query analysis
 

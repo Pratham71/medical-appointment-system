@@ -55,22 +55,18 @@ def get_dashboard_counts(connection: Any, staff_id: int) -> dict[str, Any] | Non
 def list_appointments(connection: Any, staff_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time,
-            students.student_id,
-            student_users.name AS student_name,
-            appointment_statuses.status_name AS status
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN appointment_statuses
-            ON appointment_statuses.status_id = appointments.status_id
-        INNER JOIN students ON students.student_id = appointments.student_id
-        INNER JOIN users AS student_users ON student_users.user_id = students.user_id
-        WHERE appointment_slots.staff_id = %s
-        ORDER BY appointment_slots.slot_date, appointment_slots.start_time
+            v_doctor_appointment_summaries.appointment_id,
+            v_doctor_appointment_summaries.slot_date,
+            v_doctor_appointment_summaries.start_time,
+            v_doctor_appointment_summaries.end_time,
+            v_doctor_appointment_summaries.student_id,
+            v_doctor_appointment_summaries.student_name,
+            v_doctor_appointment_summaries.status
+        FROM v_doctor_appointment_summaries
+        WHERE v_doctor_appointment_summaries.doctor_id = %s
+        ORDER BY
+            v_doctor_appointment_summaries.slot_date,
+            v_doctor_appointment_summaries.start_time
     """
     return fetch_all(connection, sql, (staff_id,))
 
@@ -81,37 +77,22 @@ def get_appointment_detail(
 ) -> dict[str, Any] | None:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time,
-            appointment_statuses.status_name AS status,
-            students.student_id,
-            student_users.name AS student_name,
-            student_users.email AS student_email,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            medical_notes.diagnosis,
-            medical_notes.remarks,
-            medical_certificates.certificate_id,
-            certificate_types.certificate_type
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN appointment_statuses
-            ON appointment_statuses.status_id = appointments.status_id
-        INNER JOIN students ON students.student_id = appointments.student_id
-        INNER JOIN users AS student_users ON student_users.user_id = students.user_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        LEFT JOIN medical_notes
-            ON medical_notes.appointment_id = appointments.appointment_id
-        LEFT JOIN medical_certificates
-            ON medical_certificates.appointment_id = appointments.appointment_id
-        LEFT JOIN certificate_types
-            ON certificate_types.certificate_type_id =
-                medical_certificates.certificate_type_id
-        WHERE appointments.appointment_id = %s
+            v_appointment_details.appointment_id,
+            v_appointment_details.slot_date,
+            v_appointment_details.start_time,
+            v_appointment_details.end_time,
+            v_appointment_details.status,
+            v_appointment_details.student_id,
+            v_appointment_details.student_name,
+            v_appointment_details.student_email,
+            v_appointment_details.doctor_id,
+            v_appointment_details.doctor_name,
+            v_appointment_details.diagnosis,
+            v_appointment_details.remarks,
+            v_appointment_details.certificate_id,
+            v_appointment_details.certificate_type
+        FROM v_appointment_details
+        WHERE v_appointment_details.appointment_id = %s
     """
     return fetch_one(connection, sql, (appointment_id,))
 
@@ -119,32 +100,21 @@ def get_appointment_detail(
 def list_patient_history(connection: Any, student_id: int) -> list[dict[str, Any]]:
     sql = """
         SELECT
-            appointments.appointment_id,
-            appointment_slots.slot_date,
-            appointment_slots.start_time,
-            appointment_slots.end_time,
-            staff.staff_id AS doctor_id,
-            doctor_users.name AS doctor_name,
-            appointment_statuses.status_name AS status,
-            medical_notes.diagnosis,
-            medical_notes.remarks,
-            medical_certificates.certificate_id,
-            certificate_types.certificate_type
-        FROM appointments
-        INNER JOIN appointment_slots
-            ON appointment_slots.slot_id = appointments.slot_id
-        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-        INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
-        INNER JOIN appointment_statuses
-            ON appointment_statuses.status_id = appointments.status_id
-        LEFT JOIN medical_notes
-            ON medical_notes.appointment_id = appointments.appointment_id
-        LEFT JOIN medical_certificates
-            ON medical_certificates.appointment_id = appointments.appointment_id
-        LEFT JOIN certificate_types
-            ON certificate_types.certificate_type_id =
-                medical_certificates.certificate_type_id
-        WHERE appointments.student_id = %s
-        ORDER BY appointment_slots.slot_date DESC, appointment_slots.start_time DESC
+            v_appointment_details.appointment_id,
+            v_appointment_details.slot_date,
+            v_appointment_details.start_time,
+            v_appointment_details.end_time,
+            v_appointment_details.doctor_id,
+            v_appointment_details.doctor_name,
+            v_appointment_details.status,
+            v_appointment_details.diagnosis,
+            v_appointment_details.remarks,
+            v_appointment_details.certificate_id,
+            v_appointment_details.certificate_type
+        FROM v_appointment_details
+        WHERE v_appointment_details.student_id = %s
+        ORDER BY
+            v_appointment_details.slot_date DESC,
+            v_appointment_details.start_time DESC
     """
     return fetch_all(connection, sql, (student_id,))

@@ -1,6 +1,6 @@
+from contextlib import contextmanager
 from datetime import time, timedelta
 from pathlib import Path
-from contextlib import contextmanager
 
 import pytest
 
@@ -170,6 +170,24 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
     assert "idx_appointments_student" in schema
     assert "idx_appointment_slots_staff_date" in schema
     assert "idx_appointment_slots_date_status" in schema
+
+
+def test_schema_defines_reporting_views():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    expected_views = [
+        "v_available_appointment_slots",
+        "v_appointment_details",
+        "v_doctor_appointment_summaries",
+        "v_student_report_summaries",
+        "v_student_certificate_summaries",
+    ]
+
+    for view_name in expected_views:
+        assert f"create view {view_name}" in schema
+
+    assert "drop view if exists v_appointment_details" in schema
+    assert "select *" not in schema
 
 
 def test_seed_inserts_mvp_lookup_and_sample_data():
