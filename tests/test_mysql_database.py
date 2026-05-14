@@ -1,9 +1,13 @@
+from datetime import time, timedelta
 from pathlib import Path
+from contextlib import contextmanager
 
 import pytest
 
 from app.backend.app.core.config import Settings
 from app.backend.app.db import session
+from app.backend.app.db.queries._helpers import fetch_all
+from app.backend.app.repositories import appointment_repo
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +42,46 @@ class FakePool:
         return self.connection
 
 
+class FakeCursor:
+    def __init__(self) -> None:
+        self.executed = None
+        self.closed = False
+
+    def execute(self, sql, params) -> None:
+        self.executed = (sql, params)
+
+    def fetchall(self):
+        return [
+            {
+                "start_time": timedelta(hours=9, minutes=30),
+                "end_time": timedelta(hours=10),
+            }
+        ]
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class FakeDictionaryConnection:
+    def __init__(self) -> None:
+        self.cursor_instance = FakeCursor()
+
+    def cursor(self, dictionary=False):
+        assert dictionary is True
+        return self.cursor_instance
+
+
+class FakeSettings:
+    database_provider = "mysql"
+    mysql_pool_name = "medical_appointment_pool"
+    mysql_pool_size = 5
+    mysql_host = "127.0.0.1"
+    mysql_port = 3306
+    mysql_user = "root"
+    mysql_password = ""
+    mysql_database = "medical_appointment_system"
+
+
 @pytest.fixture(autouse=True)
 def reset_db_pool():
     session.reset_connection_pool()
@@ -58,6 +102,7 @@ def test_settings_default_to_mysql_provider():
 
 def test_connection_pool_uses_mysql_settings(monkeypatch):
     monkeypatch.setattr(session, "MySQLConnectionPool", FakePool)
+    monkeypatch.setattr(session, "get_settings", lambda: FakeSettings())
 
     pool = session.get_connection_pool()
 
@@ -156,3 +201,54 @@ def test_query_files_keep_sql_parameterized_and_explicit():
         assert "select *" not in lowered
         if "select " in lowered or "insert " in lowered or "update " in lowered:
             assert "%s" in source
+
+
+def test_query_helpers_convert_mysql_time_deltas_to_time_values():
+    connection = FakeDictionaryConnection()
+
+    rows = fetch_all(connection, "SELECT start_time, end_time FROM appointment_slots")
+
+    assert rows == [
+        {
+            "start_time": time(9, 30),
+            "end_time": time(10, 0),
+        }
+    ]
+
+
+def test_cancel_status_does_not_mark_unique_slot_available(monkeypatch):
+    slot_updates = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_for_update(connection, appointment_id):
+            return {"appointment_id": appointment_id, "slot_id": 10}
+
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "cancelled"
+            return 2
+
+        @staticmethod
+        def update_appointment_status(connection, appointment_id, status_id):
+            connection["appointment_status"] = (appointment_id, status_id)
+
+        @staticmethod
+        def update_slot_status(connection, slot_id, slot_status_id):
+            slot_updates.append((slot_id, slot_status_id))
+
+        @staticmethod
+        def get_status_result(connection, appointment_id):
+            return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = appointment_repo.update_status(5, "cancelled")
+
+    assert result == {"appointment_id": 5, "status": "cancelled"}
+    assert slot_updates == []

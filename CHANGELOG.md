@@ -61,3 +61,5 @@ Current Entries
 [2026-05-14] [DB] [TEAM] [feat/backend/api] - Selected MySQL and added schema, seed data, connection pooling, raw SQL queries, and repository integration
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added MySQL database layer tests and bcrypt verification coverage
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Updated setup, database, API, ERD notes, README, AGENTS, and TODO for MySQL
+[2026-05-14] [FIX] [TEAM] [feat/backend/api] - Normalized MySQL TIME values for API responses and kept cancelled unique slots from being relisted as available
+[2026-05-14] [TEST] [TEAM] [feat/backend/api] - Ran live MySQL schema, seed, API route smoke test, and EXPLAIN checks

@@ -81,16 +81,4 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
             status_id=status_id,
         )
 
-        if status_name == "cancelled":
-            available_slot_status_id = appointment_queries.get_slot_status_id(
-                connection,
-                "available",
-            )
-            if available_slot_status_id is not None:
-                appointment_queries.update_slot_status(
-                    connection,
-                    slot_id=appointment["slot_id"],
-                    slot_status_id=available_slot_status_id,
-                )
-
         return appointment_queries.get_status_result(connection, appointment_id)

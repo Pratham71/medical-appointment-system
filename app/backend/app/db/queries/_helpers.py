@@ -1,3 +1,4 @@
+from datetime import time, timedelta
 from typing import Any
 
 
@@ -12,7 +13,8 @@ def fetch_one(
     cursor = connection.cursor(dictionary=True)
     try:
         cursor.execute(sql, params)
-        return cursor.fetchone()
+        row = cursor.fetchone()
+        return _normalize_row(row) if row else None
     finally:
         cursor.close()
 
@@ -25,9 +27,23 @@ def fetch_all(
     cursor = connection.cursor(dictionary=True)
     try:
         cursor.execute(sql, params)
-        return cursor.fetchall()
+        return [_normalize_row(row) for row in cursor.fetchall()]
     finally:
         cursor.close()
+
+
+def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {key: _normalize_value(value) for key, value in row.items()}
+
+
+def _normalize_value(value: Any) -> Any:
+    if isinstance(value, timedelta):
+        total_seconds = int(value.total_seconds())
+        if 0 <= total_seconds < 24 * 60 * 60:
+            hours, remainder = divmod(total_seconds, 60 * 60)
+            minutes, seconds = divmod(remainder, 60)
+            return time(hours, minutes, seconds, value.microseconds)
+    return value
 
 
 def execute(

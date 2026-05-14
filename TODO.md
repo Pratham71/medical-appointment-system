@@ -16,6 +16,7 @@ Completed Tasks
 [x] Add stateless logout endpoint
 [x] Add API surface tests
 [x] Add MySQL database layer tests
+[x] Run live MySQL route smoke test locally
 [x] Add project README
 [x] Update contributor instructions
 [x] Update setup docs for current backend/frontend state
@@ -31,7 +32,7 @@ Database Tasks
 [x] Insert MySQL dummy seed data
 [x] Add MySQL indexes
 [x] Add MySQL raw SQL query modules
-[ ] Run MySQL EXPLAIN query analysis on a live database
+[x] Run MySQL EXPLAIN query analysis on a live database
 
 Auth and Security Tasks
 
