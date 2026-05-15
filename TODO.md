@@ -126,6 +126,7 @@ Frontend To Fix
 [x] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
 [x] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
 [x] [TOFIX] Add View button on booked appointments + student appointment detail page /students/appointments/[id] (GitHub issue #25)
+[ ] [TOFIX] Booking reason not showing on doctor appointment detail and patient history pages — backend schema and query updated but field not rendering on doctor side; investigate
 [ ] [TOFIX] User profile + onboarding flow — hosteler status, room number, hostel block, local + international contact numbers, emergency contact; multi-step onboarding on first login, profile page in sidebar; backend needs student_profiles table (GitHub issue #27)
 [ ] [TOFIX] Emergency button — quick-dial infirmary/hostel/security via tel: links (frontend), automated alert POST /emergency/alert with email/SMS notifications to staff (backend needs notification provider) (GitHub issue #26)
 [ ] [TOFIX] Build full admin dashboard and admin workflows — blocked on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
