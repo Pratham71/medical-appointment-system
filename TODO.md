@@ -51,6 +51,7 @@ Auth and Security Tasks
 [x] Add staff login, seed account, routing, and safe staff landing page
 [ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
 [ ] [TOFIX] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
+[ ] [TOFIX] Allow editing completed appointment notes/prescriptions — doctor override for own appointments, admin override for any; needs backend PATCH support + audit trail + admin dashboard (#11) (GitHub issue #24)
 
 Google OAuth Tasks — Future Scope (GitHub issue #21)
 
