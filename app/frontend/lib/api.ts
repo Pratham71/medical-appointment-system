@@ -68,9 +68,10 @@ async function request<T>(
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 && typeof window !== "undefined") {
       clearSession();
-      if (typeof window !== "undefined") window.location.href = "/login";
+      window.location.href = "/login";
+      return new Promise<never>(() => {}) as unknown as T;
     }
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(body.detail ?? `HTTP ${res.status}`);
