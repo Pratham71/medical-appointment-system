@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getStudentAppointments, cancelAppointment, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
 import type { StudentAppointmentSummary } from "@/lib/types";
+import { AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Modal from "@/components/ui/Modal";
@@ -63,17 +64,19 @@ export default function MyAppointmentsPage() {
 
   return (
     <DashboardShell role="student" title="My Appointments">
-      {cancelId && (
-        <Modal
-          title="Cancel Appointment"
-          message="Are you sure you want to cancel this appointment? This action cannot be undone."
-          confirmLabel={cancelling ? "Cancelling…" : "Cancel Appointment"}
-          cancelLabel="Keep Appointment"
-          danger
-          onConfirm={handleCancel}
-          onCancel={() => setCancelId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {cancelId && (
+          <Modal
+            title="Cancel Appointment"
+            message="Are you sure you want to cancel this appointment? This action cannot be undone."
+            confirmLabel={cancelling ? "Cancelling…" : "Cancel Appointment"}
+            cancelLabel="Keep Appointment"
+            danger
+            onConfirm={handleCancel}
+            onCancel={() => setCancelId(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Tabs */}
       <div className="flex border-b border-brand-border mb-5">

@@ -1,12 +1,18 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F0F4F6] px-4">
-      <div className="text-center max-w-md">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="text-center max-w-md"
+      >
         <p className="font-['Newsreader'] text-8xl font-semibold text-teal-600 leading-none mb-6">
           404
         </p>
@@ -30,7 +36,7 @@ export default function NotFound() {
             Go Back
           </button>
         </div>
-      </div>
+      </motion.div>
       <p className="mt-16 font-['Outfit'] text-xs text-slate-400">
         College Infirmary · Medical Appointment System
       </p>

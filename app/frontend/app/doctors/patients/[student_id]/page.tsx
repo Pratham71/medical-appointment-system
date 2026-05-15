@@ -2,6 +2,7 @@
 import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { getPatientHistory, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
 import type { PatientHistoryItem } from "@/lib/types";
@@ -131,7 +132,15 @@ function PatientHistoryPageInner() {
                 </svg>
               </button>
 
+              <AnimatePresence initial={false}>
               {expanded === item.appointment_id && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
                 <div className="px-4 pb-4 border-t border-brand-border text-sm space-y-2 pt-3">
                   <div className="flex gap-2">
                     <span className="text-brand-muted w-24 flex-shrink-0">Time</span>
@@ -166,7 +175,9 @@ function PatientHistoryPageInner() {
                     </button>
                   </div>
                 </div>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
           </div>
         ))}

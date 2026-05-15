@@ -56,6 +56,7 @@ export default function DoctorDashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatsCard
+              index={0}
               label="Completed Today"
               value={dashboard.todays_appointments}
               icon={
@@ -65,6 +66,7 @@ export default function DoctorDashboardPage() {
               }
             />
             <StatsCard
+              index={1}
               label="Upcoming"
               value={dashboard.upcoming_appointments}
               icon={
@@ -74,6 +76,7 @@ export default function DoctorDashboardPage() {
               }
             />
             <StatsCard
+              index={2}
               label="Total Patients"
               value={dashboard.total_patients}
               icon={

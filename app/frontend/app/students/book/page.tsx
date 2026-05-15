@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { getSlots, bookAppointment, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
 import type { AppointmentSlot } from "@/lib/types";
@@ -124,7 +125,15 @@ export default function BookAppointmentPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-card border border-brand-border shadow-card p-6">
+      <div className="bg-white rounded-card border border-brand-border shadow-card p-6 overflow-hidden">
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
         {/* Step 1 — Select doctor */}
         {step === 1 && (
           <div>
@@ -264,6 +273,8 @@ export default function BookAppointmentPage() {
             </button>
           </div>
         )}
+        </motion.div>
+        </AnimatePresence>
       </div>
     </DashboardShell>
   );

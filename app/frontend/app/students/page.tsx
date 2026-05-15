@@ -47,6 +47,7 @@ export default function StudentDashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatsCard
+              index={0}
               label="Upcoming Appointments"
               value={data.upcoming_appointments}
               icon={
@@ -56,6 +57,7 @@ export default function StudentDashboardPage() {
               }
             />
             <StatsCard
+              index={1}
               label="Completed Visits"
               value={data.completed_appointments}
               icon={
@@ -65,6 +67,7 @@ export default function StudentDashboardPage() {
               }
             />
             <StatsCard
+              index={2}
               label="Certificates Available"
               value={data.certificates_available}
               icon={

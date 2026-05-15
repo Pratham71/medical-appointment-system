@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "framer-motion";
 
 interface Props {
   title: string;
@@ -20,9 +21,21 @@ export default function Modal({
   onCancel,
 }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div className="absolute inset-0 bg-black/30" onClick={onCancel} />
-      <div className="relative bg-white rounded-card shadow-xl p-6 w-full max-w-sm mx-4 border border-brand-border">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="relative bg-white rounded-card shadow-xl p-6 w-full max-w-sm mx-4 border border-brand-border"
+      >
         <h3 className="text-base font-semibold text-brand-text">{title}</h3>
         <p className="mt-2 text-sm text-brand-muted">{message}</p>
         <div className="mt-5 flex gap-3 justify-end">
@@ -43,7 +56,7 @@ export default function Modal({
             {confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
