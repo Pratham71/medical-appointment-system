@@ -10,7 +10,7 @@ interface NavItem {
 }
 
 interface Props {
-  role: "student" | "doctor" | "admin";
+  role: "student" | "doctor" | "admin" | "staff";
 }
 
 const studentNav: NavItem[] = [
@@ -94,10 +94,29 @@ const adminNav: NavItem[] = [
   },
 ];
 
+const staffNav: NavItem[] = [
+  {
+    href: "/staff",
+    label: "Dashboard",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+      </svg>
+    ),
+  },
+];
+
 export default function Sidebar({ role }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const nav = role === "student" ? studentNav : role === "doctor" ? doctorNav : adminNav;
+  const nav =
+    role === "student"
+      ? studentNav
+      : role === "doctor"
+        ? doctorNav
+        : role === "admin"
+          ? adminNav
+          : staffNav;
 
   const handleLogout = async () => {
     await logout();
@@ -105,7 +124,7 @@ export default function Sidebar({ role }: Props) {
   };
 
   function isActive(href: string) {
-    if (href === "/students" || href === "/doctors" || href === "/admin") {
+    if (href === "/students" || href === "/doctors" || href === "/admin" || href === "/staff") {
       return pathname === href;
     }
     return pathname.startsWith(href);

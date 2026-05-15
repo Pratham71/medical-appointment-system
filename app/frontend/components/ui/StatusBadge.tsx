@@ -3,6 +3,7 @@ interface Props {
 }
 
 const MAP: Record<string, string> = {
+  booked: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
   confirmed: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
   pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
   cancelled: "bg-red-50 text-red-600 ring-1 ring-red-200",

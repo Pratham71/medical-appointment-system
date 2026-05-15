@@ -9,7 +9,9 @@ import type {
   DoctorDashboard,
   MedicalNoteResponse,
   PatientHistoryItem,
+  PatientSearchResult,
   PrescriptionResponse,
+  ReportDetail,
   StudentAppointmentSummary,
   StudentCertificateSummary,
   StudentDashboard,
@@ -37,7 +39,13 @@ export function clearSession() {
 export function getStoredUser(): AuthenticatedUser | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem("mas_user");
-  return raw ? (JSON.parse(raw) as AuthenticatedUser) : null;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthenticatedUser;
+  } catch {
+    clearSession();
+    return null;
+  }
 }
 
 function idempotencyKey(): string {
@@ -151,6 +159,16 @@ export async function getDoctorAppointmentDetail(id: number): Promise<DoctorAppo
 
 export async function getPatientHistory(studentId: number): Promise<PatientHistoryItem[]> {
   return request<PatientHistoryItem[]>(`/doctors/patient-history/${studentId}`);
+}
+
+export async function searchPatients(query: string): Promise<PatientSearchResult[]> {
+  return request<PatientSearchResult[]>(
+    `/doctors/patients/search?q=${encodeURIComponent(query)}`
+  );
+}
+
+export async function getReportDetail(appointmentId: number): Promise<ReportDetail> {
+  return request<ReportDetail>(`/reports/${appointmentId}`);
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────

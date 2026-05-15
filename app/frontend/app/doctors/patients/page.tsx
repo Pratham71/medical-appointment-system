@@ -1,47 +1,97 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { searchPatients } from "@/lib/api";
+import type { PatientSearchResult } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 
 export default function PatientSearchPage() {
   const router = useRouter();
-  const [studentId, setStudentId] = useState("");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<PatientSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const canSearch = query.trim().length >= 2;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const id = parseInt(studentId, 10);
-    if (id > 0) router.push(`/doctors/patients/${id}`);
+    if (!canSearch) return;
+    setLoading(true);
+    setError("");
+    try {
+      setResults(await searchPatients(query.trim()));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Patient search failed");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardShell role="doctor" title="Patient History">
-      <div className="bg-white rounded-card border border-brand-border shadow-card p-6 max-w-sm">
-        <h2 className="text-base font-semibold text-brand-text mb-4">Look up a Patient</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-brand-text mb-1.5">
-              Student ID
+      <div className="max-w-2xl rounded-card border border-brand-border bg-white p-6 shadow-card">
+        <h2 className="mb-4 text-base font-semibold text-brand-text">
+          Look up a Patient
+        </h2>
+        <form onSubmit={handleSubmit} className="flex gap-3">
+          <div className="min-w-0 flex-1">
+            <label className="mb-1.5 block text-sm font-medium text-brand-text">
+              Name or roll number
             </label>
             <input
-              type="number"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              placeholder="e.g. 1"
-              min="1"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. Aarav or CSE-2026-001"
+              minLength={2}
               required
-              className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm font-mono text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none transition"
+              className="w-full rounded-btn border border-brand-border px-3 py-2.5 text-sm text-brand-text transition placeholder:text-brand-muted focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-1"
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2.5 rounded-btn text-sm transition-colors"
+            disabled={!canSearch || loading}
+            className="mt-6 rounded-btn bg-teal-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
           >
-            View History
+            {loading ? "Searching..." : "Search"}
           </button>
         </form>
-        <p className="mt-4 text-xs text-brand-muted">
-          Tip: you can also open patient history directly from an appointment&apos;s detail page.
-        </p>
+
+        {error && (
+          <div className="mt-4 rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <div className="mt-5 space-y-2">
+          {results.map((patient) => (
+            <button
+              key={patient.student_id}
+              type="button"
+              onClick={() => router.push(`/doctors/patients/${patient.student_id}`)}
+              className="w-full rounded-card border border-brand-border px-4 py-3 text-left transition hover:border-teal-200 hover:bg-teal-50"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-medium text-brand-text">
+                  {patient.student_name}
+                </span>
+                <span className="font-mono text-xs text-brand-muted">
+                  {patient.roll_number}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-brand-muted">
+                {patient.department} - Year {patient.year_level}
+              </p>
+            </button>
+          ))}
+          {!loading && canSearch && results.length === 0 && (
+            <p className="text-sm text-brand-muted">
+              Search by patient name or college roll number.
+            </p>
+          )}
+        </div>
       </div>
     </DashboardShell>
   );

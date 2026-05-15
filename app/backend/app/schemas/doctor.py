@@ -51,3 +51,11 @@ class PatientHistoryItem(BaseModel):
     remarks: str | None = None
     certificate_id: int | None = None
     certificate_type: str | None = None
+
+
+class PatientSearchResult(BaseModel):
+    student_id: int
+    student_name: str
+    roll_number: str
+    department: str
+    year_level: int

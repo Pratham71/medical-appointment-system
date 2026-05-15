@@ -105,13 +105,12 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 
 Frontend Setup
 
-Install frontend dependencies from the frontend directory:
+If frontend dependencies are missing on a clean checkout, install from the frontend lockfile:
 ```bash
-cd app/frontend
-npm install
+npm --prefix app/frontend ci
 ```
 
-After dependencies are installed, use the root command:
+Then use the root command:
 ```bash
 npm run dev
 ```
@@ -126,6 +125,7 @@ Notes
 - Keep `.env` values correct.
 - Run `npm run dev` from the project root to start backend and frontend together.
 - Frontend API calls use the local `/api` proxy to avoid browser CORS issues.
+- Seed login accounts use `password123`: `student@college.edu`, `doctor@college.edu`, `admin@college.edu`, and `staff@college.edu`.
 
 Security Configuration Notes
 - `JWT_SECRET_KEY` must be changed for production.

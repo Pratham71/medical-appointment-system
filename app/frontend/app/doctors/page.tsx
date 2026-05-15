@@ -11,6 +11,13 @@ function fmtTime(t: string) {
   return t.slice(0, 5);
 }
 
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function DoctorDashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<DoctorDashboard | null>(null);
@@ -23,6 +30,7 @@ export default function DoctorDashboardPage() {
     if (!user) { router.replace("/login"); return; }
     if (user.role_name === "student") { router.replace("/students"); return; }
     if (user.role_name === "admin") { router.replace("/admin"); return; }
+    if (user.role_name === "staff") { router.replace("/staff"); return; }
     if (user.role_name !== "doctor") { router.replace("/login"); return; }
 
     Promise.all([getDoctorDashboard(), getDoctorAppointments()])
@@ -32,7 +40,7 @@ export default function DoctorDashboardPage() {
   }, [router]);
 
   // Show today's appointments only
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDateKey();
   const todaysAppts = appointments.filter((a) => a.slot_date === today);
 
   return (

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Query
 
 from app.backend.app.api.dependencies import (
     ensure_appointment_access,
@@ -13,8 +13,9 @@ from app.backend.app.schemas.doctor import (
     DoctorAppointmentSummary,
     DoctorDashboard,
     PatientHistoryItem,
+    PatientSearchResult,
 )
-from app.backend.app.services import doctor_service
+from app.backend.app.services import auth_service, doctor_service
 
 router = APIRouter(prefix="/doctors", tags=["Doctors"])
 
@@ -33,6 +34,20 @@ def appointments(
 ) -> list[DoctorAppointmentSummary]:
     try:
         return doctor_service.list_appointments(staff_id)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.get("/patients/search", response_model=list[PatientSearchResult])
+def search_patients(
+    q: str = Query(..., min_length=2, max_length=120),
+    current_user: AuthenticatedUser = Depends(require_roles("doctor", "admin")),
+) -> list[PatientSearchResult]:
+    try:
+        staff_id = None
+        if current_user.role_name.lower() == "doctor":
+            staff_id = auth_service.get_staff_id_for_user(current_user.user_id)
+        return doctor_service.search_patients(q, staff_id)
     except Exception as exc:
         raise service_error_to_http(exc) from exc
 

@@ -79,3 +79,10 @@ Current Entries
 [2026-05-14] [FIX] [TEAM] [feat/backend/api] - Fixed admin login redirect loop by routing admin users to a safe admin dashboard landing page
 [2026-05-14] [TEST] [TEAM] [feat/backend/api] - Added regression coverage for admin frontend routing
 [2026-05-14] [DOCS] [TEAM] [feat/backend/api] - Added staff login and staff workflow gap to TODO, README, and project context with GitHub issue tracking
+[2026-05-15] [API] [TEAM] [feat/backend/api] - Added doctor patient search by name or roll number with doctor-scoped results
+[2026-05-15] [UPDATE] [TEAM] [feat/backend/api] - Added staff seed login, frontend staff routing, and safe staff landing page
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed student upcoming appointment filtering for backend booked status
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Added student report, prescription, and certificate view/download actions without printable templates
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Preserved existing prescription context on doctor appointment details and fixed local-date schedule filtering
+[2026-05-15] [TEST] [TEAM] [feat/backend/api] - Added frontend workflow and patient-search regression tests
+[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Updated README, setup, API notes, project context, report notes, and TODO for staff login and UI integration fixes

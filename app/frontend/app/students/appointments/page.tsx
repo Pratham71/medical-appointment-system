@@ -33,7 +33,7 @@ export default function MyAppointmentsPage() {
 
   const filtered = appointments.filter((a) => {
     const s = a.status.toLowerCase();
-    if (tab === "upcoming") return s === "confirmed" || s === "pending";
+    if (tab === "upcoming") return s === "booked";
     if (tab === "past") return s === "completed";
     return s === "cancelled";
   });
@@ -136,7 +136,7 @@ export default function MyAppointmentsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {(a.status.toLowerCase() === "confirmed" || a.status.toLowerCase() === "pending") && (
+                      {a.status.toLowerCase() === "booked" && (
                         <button
                           onClick={() => setCancelId(a.appointment_id)}
                           className="text-xs text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 px-2.5 py-1 rounded-btn transition-colors"

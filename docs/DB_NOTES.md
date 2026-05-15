@@ -11,6 +11,7 @@ Current Focus
 - Queries
 - Views for common dashboard and report reads
 - Authenticated user context for student and staff access
+- Staff login seed account and non-doctor staff row
 - Login brute-force protection
 - Idempotency/replay-safe write request support
 - Rate limiting support

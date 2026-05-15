@@ -15,6 +15,8 @@ Completed Tasks
 [x] Add health endpoint
 [x] Add stateless logout endpoint
 [x] Fix admin frontend redirect loop crash
+[x] Add staff login seed account, routing, and safe staff landing page
+[x] Add doctor patient search by name or roll number
 [x] Add API surface tests
 [x] Add MySQL database layer tests
 [x] Run live MySQL route smoke test locally
@@ -46,7 +48,8 @@ Auth and Security Tasks
 [x] Implement security features like idempotency, rate limiting, and replay-safe write requests
 [x] Require production-safe JWT secret configuration
 [x] Add brute-force protection for login
-[ ] [TOFIX] Add staff login, seed account, routing, and staff role workflow (GitHub issue #12)
+[x] Add staff login, seed account, routing, and safe staff landing page
+[ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
 
 Appointment APIs
 
@@ -70,6 +73,7 @@ Doctor APIs
 [x] Implement add notes
 [x] Implement add prescriptions
 [x] Implement patient history
+[x] Implement patient search by name or roll number
 
 Certificate APIs
 
@@ -81,27 +85,31 @@ Frontend Tasks
 [x] Setup Next.js frontend
 [x] Add one-command full-stack dev startup
 [x] Build login page
-[ ] Build student pages
-[ ] Build doctor pages
+[x] Build MVP student pages
+[x] Build MVP doctor pages
 [x] Connect frontend to backend API
 
 Frontend To Fix
 
-[ ] [TOFIX] Upcoming appointments tab shows no appointments
-[ ] [TOFIX] Add view/download support for student medical reports
-[ ] [TOFIX] Add view/download support for student prescriptions
-[ ] [TOFIX] Add view/download support for student certificates
-[ ] [TOFIX] Create printable/downloadable templates for medical reports
-[ ] [TOFIX] Create printable/downloadable templates for prescriptions
-[ ] [TOFIX] Create printable/downloadable templates for medical certificates
+[x] [TOFIX] Upcoming appointments tab shows no appointments
+[x] [TOFIX] Add view/download support for student medical reports
+[x] [TOFIX] Add view/download support for student prescriptions
+[x] [TOFIX] Add view/download support for student certificates
+[x] [TOFIX] Preserve doctor report and prescription context on appointment detail
+[x] [TOFIX] Fix doctor's today's schedule local-date filtering
+[x] [TOFIX] Replace patient history student ID input with name or roll-number lookup
+[ ] [TOFIX] Create printable/downloadable templates for medical reports after templates are supplied
+[ ] [TOFIX] Create printable/downloadable templates for prescriptions after templates are supplied
+[ ] [TOFIX] Create printable/downloadable templates for medical certificates after templates are supplied
 [ ] [TOFIX] Build full admin dashboard and admin workflows
-[ ] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
+[x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 
 Testing and Documentation Tasks
 
 [ ] Add live MySQL API integration tests
 [x] Add auth and authorization tests
 [x] Add security/rate-limit tests
+[x] Add frontend workflow regression tests
 [ ] Screenshots for report
 [ ] Final documentation
 

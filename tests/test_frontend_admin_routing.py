@@ -31,3 +31,19 @@ def test_admin_dashboard_page_exists_without_backend_dashboard_call() -> None:
     assert '<DashboardShell role="admin" title="Admin Dashboard">' in content
     assert "getStudentDashboard" not in content
     assert "getDoctorDashboard" not in content
+
+
+def test_staff_role_routes_to_staff_landing_page() -> None:
+    root_page = read(FRONTEND / "page.tsx")
+    login_page = read(FRONTEND / "login" / "page.tsx")
+    sidebar = read(ROOT / "app" / "frontend" / "components" / "layout" / "Sidebar.tsx")
+    shell = read(
+        ROOT / "app" / "frontend" / "components" / "layout" / "DashboardShell.tsx"
+    )
+    staff_page = FRONTEND / "staff" / "page.tsx"
+
+    assert staff_page.exists()
+    assert 'router.replace("/staff")' in root_page
+    assert 'router.replace("/staff")' in login_page
+    assert 'role: "student" | "doctor" | "admin" | "staff"' in shell
+    assert 'role: "student" | "doctor" | "admin" | "staff"' in sidebar

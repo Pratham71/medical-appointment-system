@@ -1,7 +1,7 @@
 Project Context
 
 Project Name
-Medical Appointment System – College Infirmary
+Medical Appointment System - College Infirmary
 
 Objective
 Build a DBMS-focused system for managing appointments, medical records, prescriptions, and certificates.
@@ -14,10 +14,11 @@ MVP Scope
 - Prescriptions
 - Certificates
 - Basic dashboard stats
+- Staff login safe landing
 
 Future Scope
-- Staff login and staff role workflow
-- Staff dashboard
+- Full staff workflow
+- Full admin dashboard and workflows
 - Walk-in management
 - Live queue system
 - Notifications
@@ -30,8 +31,8 @@ Database Decision
 - Schema and seed files are stored under `app/backend/app/db/`.
 
 Current Open Role Gap
-- Staff login is not implemented yet.
-- Staff login and staff workflow planning are tracked in GitHub issue #12.
+- Staff login and seed account are implemented.
+- Full staff workflow planning is still tracked in GitHub issue #12.
 
 ER Diagram
 - Not required at this stage
@@ -44,7 +45,7 @@ Frontend: Next.js
 Package Manager: uv
 
 Architecture
-routes → services → repositories → queries → db
+routes -> services -> repositories -> queries -> db
 
 Design Philosophy
 - Keep simple

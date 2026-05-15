@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   getDoctorAppointmentDetail,
+  getReportDetail,
   saveNotes,
   savePrescription,
   issueCertificate,
@@ -49,11 +50,24 @@ export default function AppointmentDetailPage() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user) { router.replace("/login"); return; }
-    getDoctorAppointmentDetail(id)
-      .then((d) => {
+    Promise.all([getDoctorAppointmentDetail(id), getReportDetail(id)])
+      .then(([d, report]) => {
         setDetail(d);
-        if (d.diagnosis) setDiagnosis(d.diagnosis);
-        if (d.remarks) setRemarks(d.remarks ?? "");
+        const note = report.note;
+        if (note?.diagnosis ?? d.diagnosis) {
+          setDiagnosis(note?.diagnosis ?? d.diagnosis ?? "");
+        }
+        if (note?.remarks ?? d.remarks) {
+          setRemarks(note?.remarks ?? d.remarks ?? "");
+        }
+        if (report.prescription?.items.length) {
+          setPrescRows(
+            report.prescription.items.map((item) => ({
+              medicine_name: item.medicine_name,
+              dosage: item.dosage,
+            }))
+          );
+        }
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));

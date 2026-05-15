@@ -14,6 +14,8 @@ export default function RootPage() {
       router.replace("/doctors");
     } else if (user.role_name === "admin") {
       router.replace("/admin");
+    } else if (user.role_name === "staff") {
+      router.replace("/staff");
     } else {
       router.replace("/students");
     }

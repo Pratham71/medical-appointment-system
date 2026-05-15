@@ -120,6 +120,60 @@ def list_patient_history(connection: Any, student_id: int) -> list[dict[str, Any
     return fetch_all(connection, sql, (student_id,))
 
 
+def search_patients_for_doctor(
+    connection: Any,
+    search_text: str,
+    staff_id: int,
+) -> list[dict[str, Any]]:
+    pattern = f"%{search_text}%"
+    sql = """
+        SELECT DISTINCT
+            students.student_id,
+            users.name AS student_name,
+            students.roll_number,
+            students.department,
+            students.year_level
+        FROM students
+        INNER JOIN users
+            ON users.user_id = students.user_id
+        INNER JOIN appointments
+            ON appointments.student_id = students.student_id
+        INNER JOIN appointment_slots
+            ON appointment_slots.slot_id = appointments.slot_id
+        WHERE appointment_slots.staff_id = %s
+            AND (
+                users.name LIKE %s
+                OR students.roll_number LIKE %s
+            )
+        ORDER BY users.name, students.roll_number
+        LIMIT 10
+    """
+    return fetch_all(connection, sql, (staff_id, pattern, pattern))
+
+
+def search_patients(
+    connection: Any,
+    search_text: str,
+) -> list[dict[str, Any]]:
+    pattern = f"%{search_text}%"
+    sql = """
+        SELECT
+            students.student_id,
+            users.name AS student_name,
+            students.roll_number,
+            students.department,
+            students.year_level
+        FROM students
+        INNER JOIN users
+            ON users.user_id = students.user_id
+        WHERE users.name LIKE %s
+            OR students.roll_number LIKE %s
+        ORDER BY users.name, students.roll_number
+        LIMIT 10
+    """
+    return fetch_all(connection, sql, (pattern, pattern))
+
+
 def has_doctor_seen_student(
     connection: Any,
     staff_id: int,

@@ -134,6 +134,14 @@ export interface PatientHistoryItem {
   certificate_type: string | null;
 }
 
+export interface PatientSearchResult {
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  department: string;
+  year_level: number;
+}
+
 export interface MedicalNoteResponse {
   note_id: number;
   appointment_id: number;
@@ -151,6 +159,24 @@ export interface PrescriptionResponse {
   prescription_id: number;
   appointment_id: number;
   items: PrescriptionItemResponse[];
+}
+
+export interface ReportAppointmentSummary {
+  appointment_id: number;
+  student_id: number;
+  student_name: string;
+  doctor_id: number;
+  doctor_name: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+}
+
+export interface ReportDetail {
+  appointment: ReportAppointmentSummary;
+  note: MedicalNoteResponse | null;
+  prescription: PrescriptionResponse | null;
 }
 
 export interface CertificateResponse {

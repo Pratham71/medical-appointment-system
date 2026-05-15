@@ -23,6 +23,8 @@ export default function LoginPage() {
         router.replace("/doctors");
       } else if (res.user.role_name === "admin") {
         router.replace("/admin");
+      } else if (res.user.role_name === "staff") {
+        router.replace("/staff");
       } else {
         router.replace("/students");
       }

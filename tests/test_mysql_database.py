@@ -200,6 +200,9 @@ def test_seed_inserts_mvp_lookup_and_sample_data():
     assert "insert into users" in seed
     assert "insert into students" in seed
     assert "insert into staff" in seed
+    assert "'staff'" in seed
+    assert "staff@college.edu" in seed
+    assert "false" in seed
     assert "insert into appointment_slots" in seed
 
 

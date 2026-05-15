@@ -8,7 +8,12 @@ from app.backend.app.main import app
 from app.backend.app.schemas.appointment import AppointmentBookResponse
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.schemas.student import StudentDashboard
-from app.backend.app.services import appointment_service, auth_service, student_service
+from app.backend.app.services import (
+    appointment_service,
+    auth_service,
+    doctor_service,
+    student_service,
+)
 
 
 def _user(role_name: str, user_id: int = 10) -> AuthenticatedUser:
@@ -79,6 +84,66 @@ def test_student_role_cannot_access_doctor_dashboard(monkeypatch):
     response = client.get("/doctors/dashboard", headers=_auth_header())
 
     assert response.status_code == 403
+
+
+def test_doctor_patient_search_uses_authenticated_doctor_scope(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("doctor", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_staff_id_for_user", lambda user_id: 5)
+
+    def fake_search_patients(query: str, staff_id: int | None):
+        captured.append((query, staff_id))
+        return [
+            {
+                "student_id": 7,
+                "student_name": "Aarav Sharma",
+                "roll_number": "CSE-2026-001",
+                "department": "Computer Science",
+                "year_level": 2,
+            }
+        ]
+
+    monkeypatch.setattr(doctor_service, "search_patients", fake_search_patients)
+
+    client = TestClient(app)
+    response = client.get(
+        "/doctors/patients/search?q=Aarav",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["roll_number"] == "CSE-2026-001"
+    assert captured == [("Aarav", 5)]
+
+
+def test_admin_patient_search_is_not_scoped_to_doctor(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_search_patients(query: str, staff_id: int | None):
+        captured.append((query, staff_id))
+        return []
+
+    monkeypatch.setattr(doctor_service, "search_patients", fake_search_patients)
+
+    client = TestClient(app)
+    response = client.get(
+        "/doctors/patients/search?q=CSE",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert captured == [("CSE", None)]
 
 
 def test_student_booking_uses_authenticated_student_and_idempotency(monkeypatch):

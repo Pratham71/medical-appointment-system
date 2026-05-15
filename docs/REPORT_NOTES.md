@@ -35,6 +35,8 @@ Note:
 - Medical notes
 - Prescriptions
 - Certificates
+- Patient lookup by name or roll number
+- Staff login safe landing
 
 7. Query Optimization
 - Index usage
@@ -48,6 +50,7 @@ Note:
 9. Screenshots
 - UI pages
 - DB tables
+- Report, prescription, and certificate printable templates are pending supplied designs
 
 10. Conclusion
 - Summary
