@@ -39,6 +39,7 @@ export interface StudentAppointmentSummary {
   doctor_id: number;
   doctor_name: string;
   status: string;
+  reason: string | null;
 }
 
 export interface StudentReportSummary {

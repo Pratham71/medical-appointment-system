@@ -42,6 +42,10 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/student-appointment-view] - Fixed booking showing 108 slots — filter to selected date only instead of all slots from that date onwards
+[2026-05-15] [API] [TEAM] [feat/student-appointment-view] - Added reason field to student list_appointments query and StudentAppointmentSummary type
+[2026-05-15] [UI] [TEAM] [feat/student-appointment-view] - Show booking reason on student appointment detail page when present
+[2026-05-15] [UI] [TEAM] [feat/student-appointment-view] - Doctor appointments page: Today tab with count badge showing only today's appointments, All tab for full list
 [2026-05-15] [UI] [TEAM] [feat/student-appointment-view] - Add View button on all student appointments, dedicated detail page /students/appointments/[id] with reference number, date/time/doctor, Cancel button for booked, View Report link for completed (closes #25)
 [2026-05-15] [UI] [TEAM] [feat/login-improvements] - Login page: entrance animations (panels slide in from sides, form/features stagger in), spinner on submit button, rate limit countdown with 30s timer, auto-focus on email field
 [2026-05-15] [DOCS] [TEAM] [feat/login-improvements] - Opened GitHub issue #23 for forgot password / password reset flow

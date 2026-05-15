@@ -167,6 +167,12 @@ function AppointmentDetailPageInner() {
             </p>
             <p className="text-xs text-brand-muted mt-0.5">College Infirmary</p>
           </div>
+          {appointment.reason && (
+            <div className="px-5 py-4">
+              <p className="text-xs text-brand-muted mb-1">Reason for visit</p>
+              <p className="text-sm text-brand-text">{appointment.reason}</p>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

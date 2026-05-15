@@ -77,7 +77,8 @@ def list_appointments(connection: Any, student_id: int) -> list[dict[str, Any]]:
             v_appointment_details.end_time,
             v_appointment_details.doctor_id,
             v_appointment_details.doctor_name,
-            v_appointment_details.status
+            v_appointment_details.status,
+            v_appointment_details.reason
         FROM v_appointment_details
         WHERE v_appointment_details.student_id = %s
         ORDER BY

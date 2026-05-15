@@ -41,8 +41,8 @@ export default function BookAppointmentPage() {
       .finally(() => setLoading(false));
   }, [fromDate]);
 
-  // Group slots by doctor
-  const byDoctor = slots.reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
+  // Group slots by doctor — only show slots for the selected date
+  const byDoctor = slots.filter((s) => s.slot_date === fromDate).reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
     const key = `${s.doctor_id}:${s.doctor_name}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(s);
@@ -140,7 +140,7 @@ export default function BookAppointmentPage() {
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-brand-text">Select a Doctor</h2>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-brand-muted">Slots from</label>
+                <label className="text-xs text-brand-muted">Date</label>
                 <input
                   type="date"
                   value={fromDate}
