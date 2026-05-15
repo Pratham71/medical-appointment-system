@@ -42,6 +42,11 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Replaced report and certificate modal/download pattern with dedicated A4 print-ready document template routes
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Added auto-print trigger via ?print=1 query param and Back + Print controls on document pages
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed Reports/Certificates tab state resetting on back navigation — active tab now encoded in URL as ?tab= (#19)
+[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Added root DESIGN.md brief for Stitch report, prescription, and certificate templates
+[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Updated TODO with appointment lifecycle, doctor availability, and richer certificate tracking issues
 [2026-05-02] [INIT] [TEAM] [main] - Project initialized
 [2026-05-02] [INIT] [TEAM] [main] - Base directory structure defined
 [2026-05-02] [DOCS] [TEAM] [main] - Added agent instructions, TODO, API notes, DB notes, and project context
