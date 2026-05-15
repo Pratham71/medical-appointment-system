@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getReportDetail, getStoredUser } from "@/lib/api";
 import type { ReportDetail } from "@/lib/types";
@@ -16,11 +16,12 @@ function fmtTime(t: string) {
   return t.slice(0, 5);
 }
 
-export default function ReportDocumentPage() {
+function ReportDocumentPageInner() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = Number(params.id);
+  const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const id = rawId ? Number(rawId) : NaN;
   const autoPrint = searchParams.get("print") === "1";
 
   const [report, setReport] = useState<ReportDetail | null>(null);
@@ -31,6 +32,12 @@ export default function ReportDocumentPage() {
     const user = getStoredUser();
     if (!user) {
       router.replace("/login");
+      setLoading(false);
+      return;
+    }
+    if (!id || isNaN(id)) {
+      setError("Invalid report ID");
+      setLoading(false);
       return;
     }
     getReportDetail(id)
@@ -225,5 +232,17 @@ export default function ReportDocumentPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ReportDocumentPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <p className="animate-pulse text-sm text-gray-500">Loading…</p>
+      </div>
+    }>
+      <ReportDocumentPageInner />
+    </Suspense>
   );
 }
