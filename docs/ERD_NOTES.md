@@ -1,13 +1,20 @@
 ER Diagram Notes
 
+Status
+
+- Do not generate the final ER diagram yet.
+- These notes track the current MySQL schema shape.
+
 Entities
 
 Users
 
 - user_id (PK)
+- role_id (FK)
 - name
 - email
-- role_id (FK)
+- password_hash
+- is_active
 
 Roles
 
@@ -18,17 +25,34 @@ Students
 
 - student_id (PK)
 - user_id (FK)
+- roll_number
+- department
+- year_level
 
 Staff
 
 - staff_id (PK)
 - user_id (FK)
+- employee_number
+- specialization
+- is_doctor
+
+Appointment_Statuses
+
+- status_id (PK)
+- status_name
+
+Slot_Statuses
+
+- slot_status_id (PK)
+- status_name
 
 Appointment_Slots
 
 - slot_id (PK)
 - staff_id (FK)
-- date
+- slot_status_id (FK)
+- slot_date
 - start_time
 - end_time
 
@@ -36,21 +60,21 @@ Appointments
 
 - appointment_id (PK)
 - student_id (FK)
-- staff_id (FK)
 - slot_id (FK, UNIQUE)
-- status
+- status_id (FK)
+- reason
 
 Medical_Notes
 
 - note_id (PK)
-- appointment_id (FK)
+- appointment_id (FK, UNIQUE)
 - diagnosis
 - remarks
 
 Prescriptions
 
 - prescription_id (PK)
-- appointment_id (FK)
+- appointment_id (FK, UNIQUE)
 
 Prescription_Items
 
@@ -59,34 +83,41 @@ Prescription_Items
 - medicine_name
 - dosage
 
+Certificate_Types
+
+- certificate_type_id (PK)
+- certificate_type
+
 Medical_Certificates
 
 - certificate_id (PK)
 - appointment_id (FK)
-- type
+- certificate_type_id (FK)
 - issue_date
 
 Relationships
 
-User → Student (1:1)
-User → Staff (1:1)
-Staff → Appointment Slots (1:M)
-Student → Appointments (1:M)
-Slot → Appointment (1:1)
-Appointment → Notes (1:1)
-Appointment → Prescriptions (1:M)
-Prescription → Items (1:M)
-Appointment → Certificate (1:1)
+- User -> Student (1:1)
+- User -> Staff (1:1)
+- Staff -> Appointment Slots (1:M)
+- Student -> Appointments (1:M)
+- Slot -> Appointment (1:1)
+- Appointment -> Medical Notes (1:1)
+- Appointment -> Prescription (1:1)
+- Prescription -> Items (1:M)
+- Appointment -> Medical Certificates (1:M)
 
 Normalization
 
-- Role stored separately
-- No repeated doctor/student info in appointments
-- Prescription split into items table
-- Slot separated from appointment
+- Role stored separately.
+- Status values stored in lookup tables.
+- No repeated doctor or student info in appointments.
+- Prescription split into prescription and prescription item tables.
+- Slot separated from appointment to prevent duplicate bookings.
 
 Constraints
 
-- UNIQUE(slot_id) in appointments
-- Foreign keys everywhere
-- Prevent duplicate bookings
+- UNIQUE(slot_id) in appointments.
+- Foreign keys across all related tables.
+- UNIQUE(appointment_id) in medical_notes and prescriptions.
+- UNIQUE(appointment_id, certificate_type_id) in medical_certificates.

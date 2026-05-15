@@ -1,7 +1,7 @@
 Project Context
 
 Project Name
-Medical Appointment System – College Infirmary
+Medical Appointment System - College Infirmary
 
 Objective
 Build a DBMS-focused system for managing appointments, medical records, prescriptions, and certificates.
@@ -14,9 +14,11 @@ MVP Scope
 - Prescriptions
 - Certificates
 - Basic dashboard stats
+- Staff login safe landing
 
 Future Scope
-- Staff dashboard
+- Full staff workflow
+- Full admin dashboard and workflows
 - Walk-in management
 - Live queue system
 - Notifications
@@ -25,21 +27,25 @@ Future Scope
 - ORM migration
 
 Database Decision
-- PostgreSQL or MySQL (to be finalized)
-- Schema design should stay compatible with both
+- MySQL is selected for the MVP database.
+- Schema and seed files are stored under `app/backend/app/db/`.
+
+Current Open Role Gap
+- Staff login and seed account are implemented.
+- Full staff workflow planning is still tracked in GitHub issue #12.
 
 ER Diagram
 - Not required at this stage
-- Will be created after schema finalization
+- Will be created after the MySQL schema is reviewed
 
 Tech Stack
 Backend: FastAPI
-Database: PostgreSQL/MySQL
+Database: MySQL
 Frontend: Next.js
 Package Manager: uv
 
 Architecture
-routes → services → repositories → queries → db
+routes -> services -> repositories -> queries -> db
 
 Design Philosophy
 - Keep simple

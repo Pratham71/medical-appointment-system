@@ -1,18 +1,24 @@
 Database Notes
 
 Database Choice
-- PostgreSQL or MySQL (not finalized yet)
-- Schema should remain compatible with both
+- MySQL is selected for the MVP database.
+- Schema and setup instructions now target MySQL 8+.
 
 Current Focus
 - Table design
 - Relationships
 - Constraints
 - Queries
+- Views for common dashboard and report reads
+- Authenticated user context for student and staff access
+- Staff login seed account and non-doctor staff row
+- Login brute-force protection
+- Idempotency/replay-safe write request support
+- Rate limiting support
 
 ERD
 - Do NOT create ER diagram yet
-- Will be created after schema is finalized
+- Will be created after the MySQL schema is reviewed
 
 Design Rules
 - Follow 3NF normalization
@@ -27,6 +33,7 @@ Core Tables (MVP)
 - students
 - staff
 - appointment_statuses
+- slot_statuses
 - appointment_slots
 - appointments
 - medical_notes
@@ -65,13 +72,30 @@ Constraints
 - Foreign keys across all related tables
 - Add CHECK constraints where needed
 
-Indexes (to be added later)
+Indexes
+- users(role_id)
+- students(user_id)
+- staff(user_id)
 - appointments(student_id)
-- appointments(staff_id)
 - appointments(status_id)
 - appointment_slots(staff_id, slot_date)
 - appointment_slots(slot_date, status_id)
-- medical_certificates(student_id)
+- medical_notes(appointment_id)
+- prescriptions(appointment_id)
+- prescription_items(prescription_id)
+- medical_certificates(certificate_type_id)
+
+Views
+- v_available_appointment_slots
+- v_appointment_details
+- v_doctor_appointment_summaries
+- v_student_report_summaries
+- v_student_certificate_summaries
+
+Triggers
+- Not required for the MVP right now.
+- Double booking is handled with UNIQUE(slot_id) and appointment booking transactions.
+- Add triggers later only if the project needs audit logging or automatic history tables.
 
 Transactions
 - Use transaction when booking appointment:
@@ -87,11 +111,14 @@ DBMS Concepts to Demonstrate
 - Unique constraints
 - Indexing
 - Joins
+- Views
 - Transactions
-- EXPLAIN ANALYZE
+- MySQL EXPLAIN query analysis
+- Auth-backed access control
+- Idempotent transaction handling
 
 Notes
 - Avoid SELECT *
 - Fetch only required columns
 - Keep queries efficient and readable
-- Final optimization will be done after schema is finalized
+- Final optimization will be done after testing against the live MySQL database

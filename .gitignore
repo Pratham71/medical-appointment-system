@@ -8,7 +8,6 @@ __pycache__/
 venv/
 .env/
 .python-version
-uv.lock
 
 # Environment variables (IMPORTANT)
 .env
@@ -48,6 +47,10 @@ coverage.xml
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # OS files
 .DS_Store
@@ -75,3 +78,27 @@ temp/
 
 # pytest
 .pytest_cache/
+
+# ruff-cache
+.ruff_cache/
+
+# FastAPI
+.uvicorn.*
+
+# claude
+.claude
+
+# stitch
+.stitch
+
+# uv
+uv.lock
+
+# Node / Next.js frontend
+node_modules/
+.next/
+out/
+.vercel/
+.turbo/
+coverage/
+*.tsbuildinfo

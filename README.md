@@ -1,116 +1,91 @@
 # Medical Appointment System
 
-A web-based medical appointment system for a college infirmary. It helps students book appointments, doctors manage consultations, and the infirmary maintain medical records, prescriptions, and certificates in an organized way.
+A web-based medical appointment system for a college infirmary. It helps students book appointments, doctors manage consultations, and infirmary staff maintain medical records, prescriptions, and certificates.
 
 ## Overview
 
-The project is built as a DBMS-focused application with a simple frontend and a structured backend. The main focus is clean database design, normalized tables, proper relationships, and a maintainable API layer.
+This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL query layer, JWT authentication, role-based access, and a Next.js frontend for the MVP workflows.
 
 ## Features
 
 - Student appointment booking
-- Appointment slot management
+- Appointment slot listing and booking
 - Student appointment history
 - Doctor appointment dashboard
 - Medical consultation notes
 - Prescription records
 - Medical certificate records
-- Basic login flow
+- Student report and certificate view/download actions
+- Staff login landing page
+- JWT-based login flow
+- Role-based access for student, doctor, staff, and admin users
+- Rate limiting and login brute-force protection
+- Idempotent write requests
 - REST API backend
-- Simple web interface
 
 ## Tech Stack
 
 - Backend: FastAPI
 - Frontend: Next.js
-- Database: MySQL/PostgreSQL
-- Package Manager: uv
-- Query Style: Raw SQL
+- Database: MySQL
+- Package manager: uv
+- Query style: Raw SQL
 
 ## Project Structure
 
 ```text
 medical-appointment-system/
-├── app/
-│   ├── backend/
-│   │   └── app/
-│   │       ├── api/
-│   │       │   ├── routes/
-│   │       │   │   ├── appointments.py
-│   │       │   │   ├── auth.py
-│   │       │   │   ├── certificates.py
-│   │       │   │   ├── doctors.py
-│   │       │   │   ├── reports.py
-│   │       │   │   └── students.py
-│   │       │   └── api_router.py
-│   │       ├── core/
-│   │       │   ├── config.py
-│   │       │   └── security.py
-│   │       ├── db/
-│   │       │   ├── queries/
-│   │       │   │   ├── appointment_queries.py
-│   │       │   │   ├── auth_queries.py
-│   │       │   │   ├── certificate_queries.py
-│   │       │   │   ├── doctor_queries.py
-│   │       │   │   ├── report_queries.py
-│   │       │   │   └── student_queries.py
-│   │       │   ├── schema.sql
-│   │       │   ├── seed.sql
-│   │       │   └── session.py
-│   │       ├── repositories/
-│   │       │   ├── appointment_repo.py
-│   │       │   ├── certificate_repo.py
-│   │       │   ├── doctor_repo.py
-│   │       │   ├── report_repo.py
-│   │       │   ├── student_repo.py
-│   │       │   └── user_repo.py
-│   │       ├── schemas/
-│   │       │   ├── appointment.py
-│   │       │   ├── auth.py
-│   │       │   ├── certificate.py
-│   │       │   ├── doctor.py
-│   │       │   ├── report.py
-│   │       │   └── student.py
-│   │       ├── services/
-│   │       │   ├── appointment_service.py
-│   │       │   ├── auth_service.py
-│   │       │   ├── certificate_service.py
-│   │       │   ├── doctor_service.py
-│   │       │   ├── report_service.py
-│   │       │   └── student_service.py
-│   │       └── main.py
-│   └── frontend/
-│       ├── app/
-│       │   ├── doctors/
-│       │   ├── login/
-│       │   └── students/
-│       ├── components/
-│       │   ├── cards/
-│       │   ├── forms/
-│       │   ├── layout/
-│       │   └── tables/
-│       └── lib/
-├── docs/
-│   ├── API_NOTES.md
-│   ├── DB_NOTES.md
-│   ├── ERD_NOTES.md
-│   ├── PROJECT_CONTEXT.md
-│   ├── REPORT_NOTES.md
-│   └── SETUP.md
-├── changelog/
-│   ├── archive/
-│   └── branches/
-├── AGENTS.md
-├── CHANGELOG.md
-├── README.md
-├── TODO.md
-├── pyproject.toml
-└── uv.lock
+|-- app/
+|   |-- backend/
+|   |   `-- app/
+|   |       |-- api/
+|   |       |   |-- routes/
+|   |       |   |   |-- appointments.py
+|   |       |   |   |-- auth.py
+|   |       |   |   |-- certificates.py
+|   |       |   |   |-- doctors.py
+|   |       |   |   |-- reports.py
+|   |       |   |   `-- students.py
+|   |       |   |-- api_router.py
+|   |       |   |-- dependencies.py
+|   |       |   `-- errors.py
+|   |       |-- core/
+|   |       |   |-- config.py
+|   |       |   |-- security.py
+|   |       |   `-- security_controls.py
+|   |       |-- db/
+|   |       |   |-- queries/
+|   |       |   |-- schema.sql
+|   |       |   |-- seed.sql
+|   |       |   `-- session.py
+|   |       |-- repositories/
+|   |       |-- schemas/
+|   |       |-- services/
+|   |       `-- main.py
+|   `-- frontend/
+|       |-- app/
+|       |   |-- admin/
+|       |   |-- doctors/
+|       |   |-- login/
+|       |   |-- staff/
+|       |   `-- students/
+|       |-- components/
+|       |-- lib/
+|       |-- next.config.mjs
+|       `-- package.json
+|-- docs/
+|-- scripts/
+|-- tests/
+|-- AGENTS.md
+|-- CHANGELOG.md
+|-- README.md
+|-- TODO.md
+|-- package.json
+|-- pyproject.toml
+`-- uv.lock
 ```
 
 ## Backend Architecture
-
-The backend follows a layered structure:
 
 ```text
 routes -> services -> repositories -> queries -> db
@@ -124,7 +99,7 @@ routes -> services -> repositories -> queries -> db
 
 ## Database Design
 
-The database is planned around normalized tables for users, students, staff, appointments, slots, notes, prescriptions, and certificates.
+The database is normalized around users, roles, students, staff, appointment slots, appointments, medical notes, prescriptions, prescription items, certificate types, and medical certificates.
 
 Key database concepts covered:
 
@@ -133,16 +108,18 @@ Key database concepts covered:
 - Unique constraints
 - Normalization
 - Joins
+- Views
 - Indexing
 - Transactions
 
-The final database engine will be either MySQL or PostgreSQL.
+The selected database engine is MySQL.
 
-## Planned API Routes
+## API Routes
 
 ### Auth
 
 - `POST /auth/login`
+- `POST /auth/logout`
 - `GET /auth/me`
 
 ### Students
@@ -157,6 +134,7 @@ The final database engine will be either MySQL or PostgreSQL.
 - `GET /doctors/dashboard`
 - `GET /doctors/appointments`
 - `GET /doctors/appointment/{id}`
+- `GET /doctors/patients/search?q={name_or_roll_number}`
 - `GET /doctors/patient-history/{student_id}`
 
 ### Appointments
@@ -179,18 +157,14 @@ The final database engine will be either MySQL or PostgreSQL.
 
 ## Setup and Run
 
-Follow these steps to set up the project locally.
-
 ### Prerequisites
 
 - Python 3.12+
 - uv
 - Node.js 18+
-- MySQL or PostgreSQL
+- MySQL 8+
 
 ### Install uv
-
-Install `uv` using the official installer.
 
 Windows PowerShell:
 
@@ -204,123 +178,108 @@ macOS/Linux:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Check that it installed correctly:
+Verify installation:
 
 ```bash
 uv --version
 ```
 
-Official uv installation docs: https://docs.astral.sh/uv/getting-started/installation/
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd medical-appointment-system
-```
-
-### 2. Backend Setup
-
-Create the Python virtual environment:
+### Backend Setup
 
 ```bash
 uv venv
-```
-
-Install backend dependencies:
-
-```bash
 uv sync
 ```
 
 Create a `.env` file in the project root:
 
 ```env
-DATABASE_URL=your_database_connection_url
-ENV=dev
+ENVIRONMENT=development
+DATABASE_PROVIDER=mysql
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=medical_appointment_system
+JWT_SECRET_KEY=change-this-dev-secret
+RATE_LIMIT_ENABLED=true
 ```
 
-### 3. Database Setup
+Create and seed the database:
 
-Create a database named `medapp` in either MySQL or PostgreSQL.
-
-After the schema file is completed, execute this file in the selected database:
-
-```text
-app/backend/app/db/schema.sql
+```sql
+CREATE DATABASE medical_appointment_system;
 ```
 
-If seed data is available, execute:
+Windows PowerShell:
 
-```text
-app/backend/app/db/seed.sql
+```powershell
+Get-Content app\backend\app\db\schema.sql | mysql -u root -p medical_appointment_system
+Get-Content app\backend\app\db\seed.sql | mysql -u root -p medical_appointment_system
 ```
 
-Use the command-line tool or database client for whichever database engine is selected.
-
-### 4. Run the Backend
+macOS/Linux:
 
 ```bash
-uv run uvicorn app.backend.app.main:app --reload
+mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
+mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 ```
 
-Backend URL:
+### Run
 
-```text
-http://127.0.0.1:8000
-```
-
-API docs:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 5. Frontend Setup
-
-Go to the frontend directory:
+Run backend only:
 
 ```bash
-cd app/frontend
+uv run uvicorn app.backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Install frontend dependencies:
-
-```bash
-npm install
-```
-
-Run the frontend:
+Run backend and frontend together:
 
 ```bash
 npm run dev
 ```
 
-Frontend URL:
+If frontend dependencies are missing on a clean checkout, install from the lockfile:
 
-```text
-http://localhost:3000
+```bash
+npm --prefix app/frontend ci
 ```
 
-### 6. Development Flow
+Local URLs:
 
-- Start the database server.
-- Run the backend from the project root.
-- Run the frontend from `app/frontend`.
-- Open the frontend at `http://localhost:3000`.
-- Use the API docs at `http://127.0.0.1:8000/docs` while testing backend routes.
+```text
+Backend:  http://127.0.0.1:8000
+Docs:     http://127.0.0.1:8000/docs
+Frontend: http://localhost:3000
+```
 
-## Documentation
+Protected routes use:
 
-Additional project notes are available in the `docs/` directory:
+```text
+Authorization: Bearer <access_token>
+```
 
-- `PROJECT_CONTEXT.md`
-- `DB_NOTES.md`
-- `API_NOTES.md`
-- `SETUP.md`
-- `REPORT_NOTES.md`
-- `ERD_NOTES.md`
+Replay-sensitive write routes also use:
+
+```text
+Idempotency-Key: <unique-request-key>
+```
+
+## Seed Login Accounts
+
+All seeded accounts use `password123`.
+
+```text
+student@college.edu
+doctor@college.edu
+admin@college.edu
+staff@college.edu
+```
 
 ## Current Status
 
-The project structure and documentation are currently set up. Backend APIs, database schema, and frontend pages are under development.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, login brute-force protection, and doctor patient search.
+
+The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, admin safe landing, and staff safe landing.
+
+Current known gaps include the full admin workflow, full staff workflow, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
