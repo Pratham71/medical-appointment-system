@@ -13,6 +13,15 @@ function fmtDate(d: string) {
   });
 }
 
+function leaveDays(start: string, end: string): number {
+  return (
+    Math.round(
+      (new Date(end).getTime() - new Date(start).getTime()) /
+        (1000 * 60 * 60 * 24)
+    ) + 1
+  );
+}
+
 function CertificateDocumentPageInner() {
   const params = useParams();
   const router = useRouter();
@@ -84,6 +93,20 @@ function CertificateDocumentPageInner() {
   }
 
   const issueDate = fmtDate(certificate.issue_date);
+  const isMedicalLeave = certificate.certificate_type
+    .toLowerCase()
+    .includes("leave");
+  const isFitness = certificate.certificate_type
+    .toLowerCase()
+    .includes("fitness");
+
+  const hasDates =
+    isMedicalLeave &&
+    !!certificate.leave_start_date &&
+    !!certificate.leave_end_date;
+  const days = hasDates
+    ? leaveDays(certificate.leave_start_date!, certificate.leave_end_date!)
+    : null;
 
   return (
     <>
@@ -138,14 +161,46 @@ function CertificateDocumentPageInner() {
             </div>
           </div>
 
-          {/* Formal statement */}
+          {/* Formal statement — type-aware */}
           <div className="mb-8">
-            <p className="text-sm leading-relaxed text-gray-800">
-              This certifies that the following student was examined at the
-              College Infirmary and this{" "}
-              <strong>{certificate.certificate_type}</strong> was issued on{" "}
-              <strong>{issueDate}</strong>.
-            </p>
+            {isMedicalLeave && (
+              <p className="text-sm leading-relaxed text-gray-800">
+                This certifies that{" "}
+                <strong>{user?.name ?? "the above-named student"}</strong> was
+                examined at the College Infirmary on{" "}
+                <strong>{fmtDate(certificate.appointment_date)}</strong> and is
+                hereby granted medical leave
+                {hasDates ? (
+                  <>
+                    {" "}from{" "}
+                    <strong>{fmtDate(certificate.leave_start_date!)}</strong> to{" "}
+                    <strong>{fmtDate(certificate.leave_end_date!)}</strong> (
+                    {days} {days === 1 ? "day" : "days"})
+                  </>
+                ) : (
+                  <> for the recommended duration as advised by the attending doctor</>
+                )}
+                .
+              </p>
+            )}
+            {isFitness && (
+              <p className="text-sm leading-relaxed text-gray-800">
+                This certifies that{" "}
+                <strong>{user?.name ?? "the above-named student"}</strong> was
+                examined at the College Infirmary on{" "}
+                <strong>{fmtDate(certificate.appointment_date)}</strong> and is
+                declared medically fit to resume academic and physical
+                activities.
+              </p>
+            )}
+            {!isMedicalLeave && !isFitness && (
+              <p className="text-sm leading-relaxed text-gray-800">
+                This certifies that the following student was examined at the
+                College Infirmary and this{" "}
+                <strong>{certificate.certificate_type}</strong> was issued on{" "}
+                <strong>{issueDate}</strong>.
+              </p>
+            )}
           </div>
 
           {/* Patient details */}
@@ -181,6 +236,51 @@ function CertificateDocumentPageInner() {
             </div>
           </div>
 
+          {/* Medical Leave — leave period block */}
+          {isMedicalLeave && (
+            <div className="mb-8 rounded-lg border border-teal-100 bg-teal-50 p-5">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-teal-600">
+                Leave Period
+              </p>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="mb-0.5 text-xs text-gray-400">From</p>
+                  <p className="font-medium text-gray-900">
+                    {certificate.leave_start_date
+                      ? fmtDate(certificate.leave_start_date)
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-0.5 text-xs text-gray-400">Until</p>
+                  <p className="font-medium text-gray-900">
+                    {certificate.leave_end_date
+                      ? fmtDate(certificate.leave_end_date)
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-0.5 text-xs text-gray-400">Duration</p>
+                  <p className="font-medium text-gray-900">
+                    {days != null ? `${days} ${days === 1 ? "day" : "days"}` : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fitness — clearance notes block */}
+          {isFitness && (
+            <div className="mb-8 rounded-lg border border-teal-100 bg-teal-50 p-5">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-teal-600">
+                Clearance Details
+              </p>
+              <p className="text-sm leading-relaxed text-gray-800">
+                {certificate.certificate_notes ?? "—"}
+              </p>
+            </div>
+          )}
+
           {/* Seal space */}
           <div className="mb-8 flex h-28 items-center justify-center rounded-lg border-2 border-dashed border-gray-200">
             <p className="text-xs uppercase tracking-widest text-gray-300">
@@ -213,11 +313,13 @@ function CertificateDocumentPageInner() {
 
 export default function CertificateDocumentPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <p className="animate-pulse text-sm text-gray-500">Loading…</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+          <p className="animate-pulse text-sm text-gray-500">Loading…</p>
+        </div>
+      }
+    >
       <CertificateDocumentPageInner />
     </Suspense>
   );

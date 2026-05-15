@@ -60,6 +60,10 @@ export interface StudentCertificateSummary {
   doctor_id: number;
   doctor_name: string;
   appointment_date: string;
+  // optional fields added by future backend work (#16, #17)
+  leave_start_date?: string;
+  leave_end_date?: string;
+  certificate_notes?: string;
 }
 
 export interface AppointmentSlot {

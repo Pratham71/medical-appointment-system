@@ -42,6 +42,9 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Pre-wired Medical Leave Certificate template with leave period block (from/until/duration) and Fitness Certificate with clearance details block — shows data when backend adds fields (#16, #17)
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Made certificate document template type-aware with distinct formal statements for Medical Leave, Fitness, and generic certificate types
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Added optional leave_start_date, leave_end_date, certificate_notes fields to StudentCertificateSummary type for future backend compatibility
 [2026-05-15] [UI] [TEAM] [feat/backend/api] - Replaced report and certificate modal/download pattern with dedicated A4 print-ready document template routes
 [2026-05-15] [UI] [TEAM] [feat/backend/api] - Added auto-print trigger via ?print=1 query param and Back + Print controls on document pages
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed Reports/Certificates tab state resetting on back navigation — active tab now encoded in URL as ?tab= (#19)
