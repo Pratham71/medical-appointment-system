@@ -42,6 +42,10 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed raw ISO slot_date displaying in book appointment step 2 and confirmation — now formatted consistently
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed certificate type dropdown having wrong labels — now matches DB types (Consultation Proof, Medical Leave Certificate, Fitness Certificate)
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Hidden Mark Complete button for cancelled appointments on doctor appointment detail (frontend guard for #13)
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed missing setLoading(false) on auth redirects in doctor dashboard and appointment detail pages
 [2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Opened GitHub issue #21 for Google OAuth (future scope); admin dashboard #11 and role assignment remain active scope
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed "Dr. Dr. Name" double prefix bug — seed data stores names with "Dr." prefix, frontend was prepending another; added doctorName() util to strip it before display
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed patient history accordion — only one entry open at a time, opening a new one closes the previous (#20)

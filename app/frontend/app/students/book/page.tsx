@@ -12,6 +12,10 @@ function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
 
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export default function BookAppointmentPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
@@ -70,7 +74,7 @@ export default function BookAppointmentPage() {
           <h2 className="text-lg font-semibold text-brand-text mb-2">Appointment Booked!</h2>
           <p className="text-brand-muted text-sm mb-6">
             Your appointment with Dr. {doctorName(selectedSlot?.doctor_name ?? "")} on{" "}
-            {selectedSlot?.slot_date} at {selectedSlot?.start_time.slice(0, 5)} has been confirmed.
+            {fmtDate(selectedSlot?.slot_date ?? "")} at {selectedSlot?.start_time.slice(0, 5)} has been confirmed.
           </p>
           <button
             onClick={() => router.push("/students/appointments")}
@@ -196,7 +200,7 @@ export default function BookAppointmentPage() {
                   onClick={() => { setSelectedSlot(s); setStep(3); }}
                   className="px-3 py-2 border border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-btn text-sm font-medium transition-colors"
                 >
-                  {s.slot_date} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
+                  {fmtDate(s.slot_date)} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
                 </button>
               ))}
             </div>
@@ -221,7 +225,7 @@ export default function BookAppointmentPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-muted">Date</span>
-                <span className="text-brand-text font-medium">{selectedSlot.slot_date}</span>
+                <span className="text-brand-text font-medium">{fmtDate(selectedSlot.slot_date)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-muted">Time</span>

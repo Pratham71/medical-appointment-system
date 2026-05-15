@@ -49,7 +49,7 @@ export default function AppointmentDetailPage() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user) { router.replace("/login"); return; }
+    if (!user) { router.replace("/login"); setLoading(false); return; }
     Promise.all([getDoctorAppointmentDetail(id), getReportDetail(id)])
       .then(([d, report]) => {
         setDetail(d);
@@ -322,9 +322,9 @@ export default function AppointmentDetailPage() {
                           onChange={(e) => setCertTypeId(e.target.value)}
                           className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none"
                         >
-                          <option value="1">Medical Certificate</option>
-                          <option value="2">Fitness Certificate</option>
-                          <option value="3">Sick Leave Certificate</option>
+                          <option value="1">Consultation Proof</option>
+                          <option value="2">Medical Leave Certificate</option>
+                          <option value="3">Fitness Certificate</option>
                         </select>
                       </div>
                       <button
@@ -342,7 +342,7 @@ export default function AppointmentDetailPage() {
           </div>
 
           {/* Mark Complete */}
-          {detail.status.toLowerCase() !== "completed" && (
+          {detail.status.toLowerCase() !== "completed" && detail.status.toLowerCase() !== "cancelled" && (
             <button
               onClick={handleComplete}
               disabled={saving}

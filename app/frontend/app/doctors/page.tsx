@@ -27,11 +27,11 @@ export default function DoctorDashboardPage() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user) { router.replace("/login"); return; }
-    if (user.role_name === "student") { router.replace("/students"); return; }
-    if (user.role_name === "admin") { router.replace("/admin"); return; }
-    if (user.role_name === "staff") { router.replace("/staff"); return; }
-    if (user.role_name !== "doctor") { router.replace("/login"); return; }
+    if (!user) { router.replace("/login"); setLoading(false); return; }
+    if (user.role_name === "student") { router.replace("/students"); setLoading(false); return; }
+    if (user.role_name === "admin") { router.replace("/admin"); setLoading(false); return; }
+    if (user.role_name === "staff") { router.replace("/staff"); setLoading(false); return; }
+    if (user.role_name !== "doctor") { router.replace("/login"); setLoading(false); return; }
 
     Promise.all([getDoctorDashboard(), getDoctorAppointments()])
       .then(([d, a]) => { setDashboard(d); setAppointments(a); })
