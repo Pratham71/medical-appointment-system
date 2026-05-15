@@ -1,7 +1,10 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
 import { logout } from "@/lib/api";
+import Modal from "@/components/ui/Modal";
 
 interface NavItem {
   href: string;
@@ -109,6 +112,7 @@ const staffNav: NavItem[] = [
 export default function Sidebar({ role }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const nav =
     role === "student"
       ? studentNav
@@ -119,6 +123,7 @@ export default function Sidebar({ role }: Props) {
           : staffNav;
 
   const handleLogout = async () => {
+    setConfirmLogout(false);
     await logout();
     router.replace("/login");
   };
@@ -131,6 +136,20 @@ export default function Sidebar({ role }: Props) {
   }
 
   return (
+    <>
+    <AnimatePresence>
+      {confirmLogout && (
+        <Modal
+          title="Sign out"
+          message="Are you sure you want to sign out?"
+          confirmLabel="Yes, sign out"
+          cancelLabel="Cancel"
+          danger
+          onConfirm={handleLogout}
+          onCancel={() => setConfirmLogout(false)}
+        />
+      )}
+    </AnimatePresence>
     <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-brand-border flex flex-col z-40">
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-brand-border">
@@ -169,7 +188,7 @@ export default function Sidebar({ role }: Props) {
       {/* Logout */}
       <div className="p-3 border-t border-brand-border">
         <button
-          onClick={handleLogout}
+          onClick={() => setConfirmLogout(true)}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,5 +198,6 @@ export default function Sidebar({ role }: Props) {
         </button>
       </div>
     </aside>
+    </>
   );
 }
