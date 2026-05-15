@@ -72,6 +72,7 @@ Appointment APIs
 [x] Implement mark appointment complete
 [ ] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
 [ ] [TOFIX] Add doctor availability management with default Monday-Sunday availability (GitHub issue #14)
+[ ] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
 
 Student APIs
 
