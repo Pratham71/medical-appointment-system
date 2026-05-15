@@ -140,6 +140,12 @@ export default function MyAppointmentsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => router.push(`/students/appointments/${a.appointment_id}?from=${tab}`)}
+                        className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors"
+                      >
+                        View
+                      </button>
                       {a.status.toLowerCase() === "booked" && (
                         <button
                           onClick={() => setCancelId(a.appointment_id)}

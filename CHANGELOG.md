@@ -42,6 +42,7 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [UI] [TEAM] [feat/student-appointment-view] - Add View button on all student appointments, dedicated detail page /students/appointments/[id] with reference number, date/time/doctor, Cancel button for booked, View Report link for completed (closes #25)
 [2026-05-15] [UI] [TEAM] [feat/login-improvements] - Login page: entrance animations (panels slide in from sides, form/features stagger in), spinner on submit button, rate limit countdown with 30s timer, auto-focus on email field
 [2026-05-15] [DOCS] [TEAM] [feat/login-improvements] - Opened GitHub issue #23 for forgot password / password reset flow
 [2026-05-15] [UI] [TEAM] [feat/framer-motion] - Add Framer Motion animations — page transitions in DashboardShell, staggered StatsCard entrance + hover lift, Modal scale-in/out with AnimatePresence, smooth accordion height animation in patient history, step slide transitions in book appointment flow, fade-in entrance on 404 error page
