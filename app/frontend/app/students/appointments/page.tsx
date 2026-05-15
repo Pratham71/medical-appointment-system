@@ -24,7 +24,7 @@ export default function MyAppointmentsPage() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user) { router.replace("/login"); return; }
+    if (!user) { router.replace("/login"); setLoading(false); return; }
     getStudentAppointments()
       .then(setAppointments)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))

@@ -42,6 +42,10 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed patient history accordion — only one entry open at a time, opening a new one closes the previous (#20)
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed patient search showing "No student found" before any search is performed — now only shows after a search (#20)
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Patient history profile card now shows student name, roll number, and correct initials passed from search results
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed missing setLoading(false) on auth redirect in doctor appointments, student appointments, and patient history pages
 [2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Opened GitHub issue #20 — doctor patient history search feedback and accordion expansion
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Closed GitHub issue #19 — Reports/Certificates tab state fix verified and merged
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed report issue date using today instead of appointment date — now uses slot_date for reproducible printed documents

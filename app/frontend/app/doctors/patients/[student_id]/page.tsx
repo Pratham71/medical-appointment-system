@@ -1,6 +1,7 @@
 "use client";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getPatientHistory, getStoredUser } from "@/lib/api";
 import type { PatientHistoryItem } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
@@ -10,19 +11,36 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export default function PatientHistoryPage() {
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+function PatientHistoryPageInner() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const studentId = Number(params.student_id);
+
+  const patientName = searchParams.get("name") ?? "";
+  const patientRoll = searchParams.get("roll") ?? "";
 
   const [history, setHistory] = useState<PatientHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user) { router.replace("/login"); return; }
+    if (!user) {
+      router.replace("/login");
+      setLoading(false);
+      return;
+    }
     getPatientHistory(studentId)
       .then(setHistory)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
@@ -30,14 +48,8 @@ export default function PatientHistoryPage() {
   }, [studentId, router]);
 
   function toggle(id: number) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setExpanded((prev) => (prev === id ? null : id));
   }
-
-  const patientInitials = "P";
 
   return (
     <DashboardShell role="doctor" title="Patient History">
@@ -57,22 +69,26 @@ export default function PatientHistoryPage() {
       {/* Patient profile card */}
       <div className="bg-white rounded-card border border-brand-border shadow-card p-5 mb-5 flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center text-white text-lg font-semibold flex-shrink-0">
-          {patientInitials}
+          {patientName ? initials(patientName) : "?"}
         </div>
         <div className="flex-1">
           <h2 className="text-base font-semibold text-brand-text">
-            {history[0] ? `Patient #${studentId}` : `Patient #${studentId}`}
+            {patientName || `Patient #${studentId}`}
           </h2>
+          {patientRoll && (
+            <p className="text-xs font-mono text-brand-muted mt-0.5">{patientRoll}</p>
+          )}
           <p className="text-xs font-mono text-brand-muted mt-0.5">Student ID: {studentId}</p>
-          <p className="text-sm text-brand-muted mt-1">
-            {history.length} visit{history.length !== 1 ? "s" : ""} recorded
-          </p>
+          {!loading && (
+            <p className="text-sm text-brand-muted mt-1">
+              {history.length} visit{history.length !== 1 ? "s" : ""} recorded
+            </p>
+          )}
         </div>
       </div>
 
       {loading && <p className="text-brand-muted text-sm animate-pulse">Loading…</p>}
 
-      {/* Timeline */}
       {!loading && history.length === 0 && (
         <p className="text-brand-muted text-sm">No visit history found for this patient.</p>
       )}
@@ -105,7 +121,7 @@ export default function PatientHistoryPage() {
                   )}
                 </div>
                 <svg
-                  className={`w-4 h-4 text-brand-muted transition-transform flex-shrink-0 ml-2 ${expanded.has(item.appointment_id) ? "rotate-180" : ""}`}
+                  className={`w-4 h-4 text-brand-muted transition-transform flex-shrink-0 ml-2 ${expanded === item.appointment_id ? "rotate-180" : ""}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -114,7 +130,7 @@ export default function PatientHistoryPage() {
                 </svg>
               </button>
 
-              {expanded.has(item.appointment_id) && (
+              {expanded === item.appointment_id && (
                 <div className="px-4 pb-4 border-t border-brand-border text-sm space-y-2 pt-3">
                   <div className="flex gap-2">
                     <span className="text-brand-muted w-24 flex-shrink-0">Time</span>
@@ -155,5 +171,17 @@ export default function PatientHistoryPage() {
         ))}
       </div>
     </DashboardShell>
+  );
+}
+
+export default function PatientHistoryPage() {
+  return (
+    <Suspense fallback={
+      <DashboardShell role="doctor" title="Patient History">
+        <p className="animate-pulse text-sm text-brand-muted">Loading…</p>
+      </DashboardShell>
+    }>
+      <PatientHistoryPageInner />
+    </Suspense>
   );
 }

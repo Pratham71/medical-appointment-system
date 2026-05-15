@@ -109,7 +109,7 @@ Frontend To Fix
 [ ] [TOFIX] Fitness Certificate missing clearance details and certificate notes — frontend template pre-wired, needs backend schema (GitHub issue #17)
 [ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — frontend warning added, needs backend validation (GitHub issue #18)
 [x] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
-[ ] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
+[x] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
 [ ] [TOFIX] Build full admin dashboard and admin workflows — waiting on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 

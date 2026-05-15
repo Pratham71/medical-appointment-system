@@ -12,6 +12,7 @@ export default function PatientSearchPage() {
   const [results, setResults] = useState<PatientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
   const canSearch = query.trim().length >= 2;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,6 +20,7 @@ export default function PatientSearchPage() {
     if (!canSearch) return;
     setLoading(true);
     setError("");
+    setHasSearched(true);
     try {
       setResults(await searchPatients(query.trim()));
     } catch (err: unknown) {
@@ -70,7 +72,7 @@ export default function PatientSearchPage() {
             <button
               key={patient.student_id}
               type="button"
-              onClick={() => router.push(`/doctors/patients/${patient.student_id}`)}
+              onClick={() => router.push(`/doctors/patients/${patient.student_id}?name=${encodeURIComponent(patient.student_name)}&roll=${encodeURIComponent(patient.roll_number)}`)}
               className="w-full rounded-card border border-brand-border px-4 py-3 text-left transition hover:border-teal-200 hover:bg-teal-50"
             >
               <div className="flex items-center justify-between gap-4">
@@ -86,10 +88,8 @@ export default function PatientSearchPage() {
               </p>
             </button>
           ))}
-          {!loading && canSearch && results.length === 0 && (
-            <p className="text-sm text-brand-muted">
-              Search by patient name or college roll number.
-            </p>
+          {!loading && hasSearched && results.length === 0 && (
+            <p className="text-sm text-brand-muted">No student found.</p>
           )}
         </div>
       </div>
