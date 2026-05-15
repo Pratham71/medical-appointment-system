@@ -42,8 +42,7 @@ changelog/branches/db.md
 
 Current Entries
 
-[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Opened GitHub issue #21 for Google OAuth with BITS Dubai college ID; updated TODO with backend and frontend task breakdown
-[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Marked admin dashboard (#11) as future scope in TODO and GitHub
+[2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Opened GitHub issue #21 for Google OAuth (future scope); admin dashboard #11 and role assignment remain active scope
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed "Dr. Dr. Name" double prefix bug — seed data stores names with "Dr." prefix, frontend was prepending another; added doctorName() util to strip it before display
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed patient history accordion — only one entry open at a time, opening a new one closes the previous (#20)
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed patient search showing "No student found" before any search is performed — now only shows after a search (#20)

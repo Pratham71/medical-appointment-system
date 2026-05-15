@@ -51,15 +51,15 @@ Auth and Security Tasks
 [x] Add staff login, seed account, routing, and safe staff landing page
 [ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
 
-Google OAuth Tasks (GitHub issue #21)
+Google OAuth Tasks — Future Scope (GitHub issue #21)
 
-[ ] [BACKEND] Add Google OAuth2 provider — verify @dubai.bits-pilani.ac.in domain, reject all others
-[ ] [BACKEND] Extract college ID from email prefix (f20xx0XXX format) and auto-register student on first login
-[ ] [BACKEND] Update users/students table schema and seed data to use college email format
-[ ] [BACKEND] Issue JWT on successful OAuth callback, link existing accounts by email
-[ ] [FRONTEND] Replace login form with Sign in with Google button
-[ ] [FRONTEND] Handle OAuth redirect and callback route, store JWT same as current login
-[ ] [FRONTEND] Show error for non-college Google accounts
+[ ] [FUTURE] [BACKEND] Add Google OAuth2 provider — verify @dubai.bits-pilani.ac.in domain, reject all others
+[ ] [FUTURE] [BACKEND] Extract college ID from email prefix (f20xx0XXX format) and auto-register student on first login
+[ ] [FUTURE] [BACKEND] Update users/students table schema and seed data to use college email format
+[ ] [FUTURE] [BACKEND] Issue JWT on successful OAuth callback, link existing accounts by email
+[ ] [FUTURE] [FRONTEND] Replace login form with Sign in with Google button
+[ ] [FUTURE] [FRONTEND] Handle OAuth redirect and callback route, store JWT same as current login
+[ ] [FUTURE] [FRONTEND] Show error for non-college Google accounts
 
 Appointment APIs
 
@@ -120,7 +120,7 @@ Frontend To Fix
 [ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — frontend warning added, needs backend validation (GitHub issue #18)
 [x] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
 [x] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
-[ ] [FUTURE] Build full admin dashboard and admin workflows — future scope, blocked on backend admin routes and OAuth landing (GitHub issue #11)
+[ ] [TOFIX] Build full admin dashboard and admin workflows — blocked on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 
 Testing and Documentation Tasks
