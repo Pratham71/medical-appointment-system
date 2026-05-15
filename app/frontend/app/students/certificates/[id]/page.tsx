@@ -34,7 +34,7 @@ function CertificateDocumentPageInner() {
       setLoading(false);
       return;
     }
-    if (!id || isNaN(id)) {
+    if (isNaN(id) || id <= 0) {
       setError("Invalid certificate ID");
       setLoading(false);
       return;
