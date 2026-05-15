@@ -107,8 +107,8 @@ Frontend To Fix
 [x] [TOFIX] Create printable/downloadable templates for medical certificates after templates are supplied
 [ ] [TOFIX] Medical Leave Certificate missing leave start/end dates and duration — frontend template pre-wired, needs backend schema (GitHub issue #16)
 [ ] [TOFIX] Fitness Certificate missing clearance details and certificate notes — frontend template pre-wired, needs backend schema (GitHub issue #17)
-[ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — needs backend validation (GitHub issue #18)
-[ ] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
+[ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — frontend warning added, needs backend validation (GitHub issue #18)
+[x] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
 [ ] [TOFIX] Build full admin dashboard and admin workflows
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 

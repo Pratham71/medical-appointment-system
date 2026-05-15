@@ -42,6 +42,7 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Closed GitHub issue #19 — Reports/Certificates tab state fix verified and merged
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed report issue date using today instead of appointment date — now uses slot_date for reproducible printed documents
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed empty-string diagnosis and remarks rendering blank instead of "Not recorded" on report template
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed report footer mt-auto not anchoring in non-flex container
