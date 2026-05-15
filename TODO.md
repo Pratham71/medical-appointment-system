@@ -96,6 +96,8 @@ Certificate APIs
 Frontend Tasks
 
 [x] Setup Next.js frontend
+[x] Add custom error pages — 404, 500, 503 (service unavailable), global error fallback
+[x] Auto-logout on invalid/expired bearer token (401)
 [x] Add one-command full-stack dev startup
 [x] Build login page
 [x] Build MVP student pages

@@ -42,6 +42,11 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/error-pages-autologout] - Auto-logout on 401 invalid bearer token — clearSession() + redirect to /login in api.ts request handler
+[2026-05-15] [UI] [TEAM] [feat/error-pages-autologout] - Add custom 404 page — Newsreader teal "404", Go to Dashboard + Go Back buttons, matches design system
+[2026-05-15] [UI] [TEAM] [feat/error-pages-autologout] - Add custom 500 error page — detects network/service errors and shows 503 Service Unavailable design instead, collapsible error details in JetBrains Mono
+[2026-05-15] [UI] [TEAM] [feat/error-pages-autologout] - Add global-error.tsx fallback for root-level crashes
+
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed raw ISO slot_date displaying in book appointment step 2 and confirmation — now formatted consistently
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed certificate type dropdown having wrong labels — now matches DB types (Consultation Proof, Medical Leave Certificate, Fitness Certificate)
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Hidden Mark Complete button for cancelled appointments on doctor appointment detail (frontend guard for #13)
