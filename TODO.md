@@ -58,6 +58,8 @@ Appointment APIs
 [x] Implement book appointment
 [x] Implement cancel appointment
 [x] Implement mark appointment complete
+[ ] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
+[ ] [TOFIX] Add doctor availability management with default Monday-Sunday availability (GitHub issue #14)
 
 Student APIs
 
@@ -79,6 +81,7 @@ Certificate APIs
 
 [x] Implement create certificate
 [x] Implement list student certificates
+[ ] [TOFIX] Make certificates more informative with leave/custom date ranges and stronger certificate details (GitHub issue #15)
 
 Frontend Tasks
 
@@ -98,9 +101,14 @@ Frontend To Fix
 [x] [TOFIX] Preserve doctor report and prescription context on appointment detail
 [x] [TOFIX] Fix doctor's today's schedule local-date filtering
 [x] [TOFIX] Replace patient history student ID input with name or roll-number lookup
-[ ] [TOFIX] Create printable/downloadable templates for medical reports after templates are supplied
-[ ] [TOFIX] Create printable/downloadable templates for prescriptions after templates are supplied
-[ ] [TOFIX] Create printable/downloadable templates for medical certificates after templates are supplied
+[x] Add root DESIGN.md brief for report, prescription, and certificate templates
+[x] [TOFIX] Create printable/downloadable templates for medical reports after templates are supplied
+[x] [TOFIX] Create printable/downloadable templates for prescriptions after templates are supplied (embedded in report template)
+[x] [TOFIX] Create printable/downloadable templates for medical certificates after templates are supplied
+[ ] [TOFIX] Medical Leave Certificate missing leave start/end dates and duration (GitHub issue #16)
+[ ] [TOFIX] Fitness Certificate missing clearance details and certificate notes (GitHub issue #17)
+[ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — needs backend validation (GitHub issue #18)
+[ ] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
 [ ] [TOFIX] Build full admin dashboard and admin workflows
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
 
