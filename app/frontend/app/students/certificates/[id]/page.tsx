@@ -43,7 +43,10 @@ function CertificateDocumentPageInner() {
     getStudentCertificates()
       .then((certs) => {
         const found = certs.find((c) => c.certificate_id === id) ?? null;
-        if (!found) setError("Certificate not found");
+        if (!found) {
+          setError("Certificate not found");
+          return;
+        }
         setCertificate(found);
       })
       .catch((e: unknown) =>

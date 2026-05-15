@@ -34,6 +34,7 @@ export default function ReportsPage() {
     const user = getStoredUser();
     if (!user) {
       router.replace("/login");
+      setLoading(false);
       return;
     }
     Promise.all([getStudentReports(), getStudentCertificates()])
