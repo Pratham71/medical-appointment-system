@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getReportDetail, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { ReportDetail } from "@/lib/types";
 
 function fmtDate(d: string) {
@@ -157,7 +158,7 @@ function ReportDocumentPageInner() {
                 {fmtTime(appointment.end_time)}
               </p>
               <p className="mt-0.5 text-xs text-gray-500">
-                Dr. {appointment.doctor_name}
+                Dr. {doctorName(appointment.doctor_name)}
               </p>
             </div>
           </div>
@@ -223,7 +224,7 @@ function ReportDocumentPageInner() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  Dr. {appointment.doctor_name}
+                  Dr. {doctorName(appointment.doctor_name)}
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500">
                   College Infirmary

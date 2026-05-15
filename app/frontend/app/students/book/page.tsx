@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSlots, bookAppointment, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { AppointmentSlot } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 
@@ -68,7 +69,7 @@ export default function BookAppointmentPage() {
           </div>
           <h2 className="text-lg font-semibold text-brand-text mb-2">Appointment Booked!</h2>
           <p className="text-brand-muted text-sm mb-6">
-            Your appointment with Dr. {selectedSlot?.doctor_name} on{" "}
+            Your appointment with Dr. {doctorName(selectedSlot?.doctor_name ?? "")} on{" "}
             {selectedSlot?.slot_date} at {selectedSlot?.start_time.slice(0, 5)} has been confirmed.
           </p>
           <button
@@ -149,9 +150,9 @@ export default function BookAppointmentPage() {
                 return (
                   <div key={key} className="border border-brand-border rounded-card p-4 hover:border-teal-300 transition-colors">
                     <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold mb-3">
-                      {name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
+                      {doctorName(name).split(" ").slice(0, 2).map((w) => w[0]).join("")}
                     </div>
-                    <p className="text-sm font-semibold text-brand-text">Dr. {name}</p>
+                    <p className="text-sm font-semibold text-brand-text">Dr. {doctorName(name)}</p>
                     <p className="text-xs text-brand-muted mt-0.5 mb-3">
                       {doctorSlots.length} slot{doctorSlots.length !== 1 ? "s" : ""} available
                     </p>
@@ -184,7 +185,7 @@ export default function BookAppointmentPage() {
               ← Back
             </button>
             <h2 className="text-base font-semibold text-brand-text mb-1">
-              Dr. {selectedSlot.doctor_name}
+              Dr. {doctorName(selectedSlot.doctor_name)}
             </h2>
             <p className="text-sm text-brand-muted mb-5">Choose an available time slot</p>
 
@@ -216,7 +217,7 @@ export default function BookAppointmentPage() {
             <div className="bg-brand-raised rounded-card p-4 border border-brand-border mb-5 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-brand-muted">Doctor</span>
-                <span className="text-brand-text font-medium">Dr. {selectedSlot.doctor_name}</span>
+                <span className="text-brand-text font-medium">Dr. {doctorName(selectedSlot.doctor_name)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-muted">Date</span>

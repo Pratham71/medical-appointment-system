@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getPatientHistory, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { PatientHistoryItem } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -112,7 +113,7 @@ function PatientHistoryPageInner() {
               >
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className="text-sm font-medium text-brand-text">{fmtDate(item.slot_date)}</span>
-                  <span className="text-sm text-brand-muted">Dr. {item.doctor_name}</span>
+                  <span className="text-sm text-brand-muted">Dr. {doctorName(item.doctor_name)}</span>
                   <StatusBadge status={item.status} />
                   {item.certificate_id && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 ring-1 ring-purple-200">

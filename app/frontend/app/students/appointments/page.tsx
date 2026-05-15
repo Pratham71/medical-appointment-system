@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStudentAppointments, cancelAppointment, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { StudentAppointmentSummary } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -130,7 +131,7 @@ export default function MyAppointmentsPage() {
                   <td className="px-4 py-3 text-brand-text font-mono text-xs">
                     {a.start_time.slice(0, 5)}
                   </td>
-                  <td className="px-4 py-3 text-brand-text">Dr. {a.doctor_name}</td>
+                  <td className="px-4 py-3 text-brand-text">Dr. {doctorName(a.doctor_name)}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={a.status} />
                   </td>

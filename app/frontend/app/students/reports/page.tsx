@@ -7,6 +7,7 @@ import {
   getStudentReports,
   getStoredUser,
 } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type {
   StudentCertificateSummary,
   StudentReportSummary,
@@ -109,7 +110,7 @@ function ReportsPageInner() {
                   </span>
                 </div>
                 <p className="text-sm text-brand-muted">
-                  Dr. {report.doctor_name}
+                  Dr. {doctorName(report.doctor_name)}
                 </p>
                 {report.diagnosis && (
                   <p className="mt-1 max-w-md truncate text-xs text-brand-muted">
@@ -166,7 +167,7 @@ function ReportsPageInner() {
                   </span>
                 </div>
                 <p className="text-sm text-brand-muted">
-                  Dr. {certificate.doctor_name}
+                  Dr. {doctorName(certificate.doctor_name)}
                 </p>
                 <p className="mt-0.5 text-xs text-brand-muted">
                   Appointment: {fmtDate(certificate.appointment_date)}

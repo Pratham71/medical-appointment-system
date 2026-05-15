@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStudentDashboard, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { StudentDashboard } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatsCard from "@/components/ui/StatsCard";
@@ -85,7 +86,7 @@ export default function StudentDashboardPage() {
                   {fmt(data.next_appointment.slot_date, data.next_appointment.start_time)}
                 </p>
                 <p className="text-sm text-brand-muted mt-0.5">
-                  Dr. {data.next_appointment.doctor_name}
+                  Dr. {doctorName(data.next_appointment.doctor_name)}
                 </p>
               </div>
               <div className="flex items-center gap-3">

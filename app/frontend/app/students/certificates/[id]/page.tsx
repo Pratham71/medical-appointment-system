@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getStudentCertificates, getStoredUser } from "@/lib/api";
+import { doctorName } from "@/lib/utils";
 import type { AuthenticatedUser, StudentCertificateSummary } from "@/lib/types";
 
 function fmtDate(d: string) {
@@ -246,7 +247,7 @@ function CertificateDocumentPageInner() {
               </div>
               <div>
                 <p className="mb-0.5 text-xs text-gray-400">Issuing Doctor</p>
-                <p className="text-gray-900">Dr. {certificate.doctor_name}</p>
+                <p className="text-gray-900">Dr. {doctorName(certificate.doctor_name)}</p>
               </div>
             </div>
           </div>
@@ -308,7 +309,7 @@ function CertificateDocumentPageInner() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  Dr. {certificate.doctor_name}
+                  Dr. {doctorName(certificate.doctor_name)}
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500">
                   College Infirmary
