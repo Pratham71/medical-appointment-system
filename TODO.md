@@ -50,6 +50,7 @@ Auth and Security Tasks
 [x] Add brute-force protection for login
 [x] Add staff login, seed account, routing, and safe staff landing page
 [ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
+[ ] [TOFIX] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
 
 Google OAuth Tasks — Future Scope (GitHub issue #21)
 

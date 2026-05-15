@@ -42,6 +42,8 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [UI] [TEAM] [feat/login-improvements] - Login page: entrance animations (panels slide in from sides, form/features stagger in), spinner on submit button, rate limit countdown with 30s timer, auto-focus on email field
+[2026-05-15] [DOCS] [TEAM] [feat/login-improvements] - Opened GitHub issue #23 for forgot password / password reset flow
 [2026-05-15] [UI] [TEAM] [feat/framer-motion] - Add Framer Motion animations — page transitions in DashboardShell, staggered StatsCard entrance + hover lift, Modal scale-in/out with AnimatePresence, smooth accordion height animation in patient history, step slide transitions in book appointment flow, fade-in entrance on 404 error page
 [2026-05-15] [FIX] [TEAM] [feat/error-pages-autologout] - Auto-logout on 401 invalid bearer token — clearSession() + redirect to /login in api.ts request handler
 [2026-05-15] [UI] [TEAM] [feat/error-pages-autologout] - Add custom 404 page — Newsreader teal "404", Go to Dashboard + Go Back buttons, matches design system
