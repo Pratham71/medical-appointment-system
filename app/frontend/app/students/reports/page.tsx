@@ -1,6 +1,7 @@
 "use client";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getStudentCertificates,
   getStudentReports,
@@ -22,9 +23,12 @@ function fmtDate(d: string) {
   });
 }
 
-export default function ReportsPage() {
+function ReportsPageInner() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("reports");
+  const searchParams = useSearchParams();
+  const initialTab: Tab =
+    searchParams.get("tab") === "certificates" ? "certificates" : "reports";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [reports, setReports] = useState<StudentReportSummary[]>([]);
   const [certs, setCerts] = useState<StudentCertificateSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,13 +52,18 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  function switchTab(item: Tab) {
+    setTab(item);
+    router.replace(`/students/reports?tab=${item}`);
+  }
+
   return (
     <DashboardShell role="student" title="Reports & Certificates">
       <div className="mb-5 flex border-b border-brand-border">
         {(["reports", "certificates"] as Tab[]).map((item) => (
           <button
             key={item}
-            onClick={() => setTab(item)}
+            onClick={() => switchTab(item)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium capitalize transition-colors ${
               tab === item
                 ? "border-teal-600 text-teal-700"
@@ -190,5 +199,19 @@ export default function ReportsPage() {
         </div>
       )}
     </DashboardShell>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell role="student" title="Reports & Certificates">
+          <p className="animate-pulse text-sm text-brand-muted">Loading...</p>
+        </DashboardShell>
+      }
+    >
+      <ReportsPageInner />
+    </Suspense>
   );
 }
