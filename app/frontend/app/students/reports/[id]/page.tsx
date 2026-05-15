@@ -64,14 +64,20 @@ function ReportDocumentPageInner() {
 
   if (error || !report) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-gray-100">
         <p className="text-sm text-red-600">{error || "Report not found"}</p>
+        <button
+          onClick={() => router.back()}
+          className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm hover:bg-gray-50"
+        >
+          ← Back
+        </button>
       </div>
     );
   }
 
   const { appointment, note, prescription } = report;
-  const issueDate = fmtDate(new Date().toISOString().split("T")[0]);
+  const issueDate = fmtDate(appointment.slot_date);
 
   return (
     <>
@@ -162,7 +168,7 @@ function ReportDocumentPageInner() {
               Diagnosis
             </h2>
             <p className="text-sm leading-relaxed text-gray-800">
-              {note?.diagnosis ?? "Not recorded"}
+              {note?.diagnosis?.trim() || "Not recorded"}
             </p>
           </div>
 
@@ -172,7 +178,7 @@ function ReportDocumentPageInner() {
               Remarks
             </h2>
             <p className="text-sm leading-relaxed text-gray-800">
-              {note?.remarks ?? "Not recorded"}
+              {note?.remarks?.trim() || "Not recorded"}
             </p>
           </div>
 
@@ -213,7 +219,7 @@ function ReportDocumentPageInner() {
           )}
 
           {/* Footer */}
-          <div className="mt-auto border-t border-gray-200 pt-16">
+          <div className="mt-16 border-t border-gray-200 pt-6">
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">

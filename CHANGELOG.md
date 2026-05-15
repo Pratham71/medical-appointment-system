@@ -42,6 +42,11 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed report issue date using today instead of appointment date — now uses slot_date for reproducible printed documents
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed empty-string diagnosis and remarks rendering blank instead of "Not recorded" on report template
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Fixed report footer mt-auto not anchoring in non-flex container
+[2026-05-15] [FIX] [TEAM] [feat/backend/api] - Added back button to error states on both report and certificate document pages
+[2026-05-15] [UI] [TEAM] [feat/backend/api] - Added on-screen warning when certificate issue_date precedes appointment_date (#18)
 [2026-05-15] [UI] [TEAM] [feat/backend/api] - Pre-wired Medical Leave Certificate template with leave period block (from/until/duration) and Fitness Certificate with clearance details block — shows data when backend adds fields (#16, #17)
 [2026-05-15] [UI] [TEAM] [feat/backend/api] - Made certificate document template type-aware with distinct formal statements for Medical Leave, Fitness, and generic certificate types
 [2026-05-15] [UI] [TEAM] [feat/backend/api] - Added optional leave_start_date, leave_end_date, certificate_notes fields to StudentCertificateSummary type for future backend compatibility

@@ -84,15 +84,23 @@ function CertificateDocumentPageInner() {
 
   if (error || !certificate) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-gray-100">
         <p className="text-sm text-red-600">
           {error || "Certificate not found"}
         </p>
+        <button
+          onClick={() => router.back()}
+          className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm hover:bg-gray-50"
+        >
+          ← Back
+        </button>
       </div>
     );
   }
 
   const issueDate = fmtDate(certificate.issue_date);
+  const issuedBeforeAppointment =
+    new Date(certificate.issue_date) < new Date(certificate.appointment_date);
   const isMedicalLeave = certificate.certificate_type
     .toLowerCase()
     .includes("leave");
@@ -133,6 +141,13 @@ function CertificateDocumentPageInner() {
           Print / Save as PDF
         </button>
       </div>
+
+      {/* Data inconsistency warning — hidden when printing */}
+      {issuedBeforeAppointment && (
+        <div className="no-print fixed left-1/2 top-4 z-10 -translate-x-1/2 rounded border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700 shadow-sm">
+          Issue date precedes appointment date — possible data error
+        </div>
+      )}
 
       {/* Page wrapper */}
       <div className="min-h-screen bg-gray-100 py-8 print:bg-white print:py-0">
