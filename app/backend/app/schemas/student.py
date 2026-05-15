@@ -31,6 +31,7 @@ class StudentAppointmentSummary(BaseModel):
     doctor_id: int
     doctor_name: str
     status: str
+    reason: str | None = None
 
 
 class StudentReportSummary(BaseModel):

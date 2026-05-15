@@ -119,6 +119,7 @@ export interface DoctorAppointmentDetail {
   student_email: string;
   doctor_id: number;
   doctor_name: string;
+  reason: string | null;
   diagnosis: string | null;
   remarks: string | null;
   certificate_id: number | null;
@@ -133,6 +134,7 @@ export interface PatientHistoryItem {
   doctor_id: number;
   doctor_name: string;
   status: string;
+  reason: string | null;
   diagnosis: string | null;
   remarks: string | null;
   certificate_id: number | null;

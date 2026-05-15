@@ -172,6 +172,11 @@ export default function AppointmentDetailPage() {
                 <p className="text-xs font-mono text-brand-muted mt-0.5">
                   ID: {detail.student_id} · {detail.student_email}
                 </p>
+                {detail.reason && (
+                  <p className="text-xs text-brand-muted mt-1">
+                    <span className="font-medium">Reason:</span> {detail.reason}
+                  </p>
+                )}
               </div>
               <div className="text-right text-sm text-brand-muted flex-shrink-0">
                 <p>{fmtDate(detail.slot_date)}</p>

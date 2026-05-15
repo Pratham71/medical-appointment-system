@@ -33,6 +33,7 @@ class DoctorAppointmentDetail(BaseModel):
     student_email: str
     doctor_id: int
     doctor_name: str
+    reason: str | None = None
     diagnosis: str | None = None
     remarks: str | None = None
     certificate_id: int | None = None
@@ -47,6 +48,7 @@ class PatientHistoryItem(BaseModel):
     doctor_id: int
     doctor_name: str
     status: str
+    reason: str | None = None
     diagnosis: str | None = None
     remarks: str | None = None
     certificate_id: int | None = None

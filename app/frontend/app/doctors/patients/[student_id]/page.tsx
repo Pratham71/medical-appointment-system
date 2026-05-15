@@ -148,6 +148,12 @@ function PatientHistoryPageInner() {
                       {item.start_time.slice(0, 5)} – {item.end_time.slice(0, 5)}
                     </span>
                   </div>
+                  {item.reason && (
+                    <div className="flex gap-2">
+                      <span className="text-brand-muted w-24 flex-shrink-0">Reason</span>
+                      <span className="text-brand-text">{item.reason}</span>
+                    </div>
+                  )}
                   {item.diagnosis && (
                     <div className="flex gap-2">
                       <span className="text-brand-muted w-24 flex-shrink-0">Diagnosis</span>
