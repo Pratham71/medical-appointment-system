@@ -37,6 +37,7 @@ export default function BookAppointmentPage() {
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refreshingSlots, setRefreshingSlots] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -88,6 +89,28 @@ export default function BookAppointmentPage() {
         isFutureSlot(s, fromDate)
     );
 
+  const refreshSlots = async () => {
+    setRefreshingSlots(true);
+    try {
+      const fresh = await getSlots(fromDate);
+      setSlots(fresh);
+      return fresh;
+    } catch {
+      return slots;
+    } finally {
+      setRefreshingSlots(false);
+    }
+  };
+
+  const selectDoctor = async (doctorId: number) => {
+    const fresh = await refreshSlots();
+    const firstSlot = fresh.find(
+      (s) => s.doctor_id === doctorId && s.slot_date === fromDate && isFutureSlot(s, fromDate)
+    ) ?? null;
+    setSelectedSlot(firstSlot);
+    setStep(2);
+  };
+
   const handleBook = async () => {
     if (!selectedSlot) return;
     setLoading(true);
@@ -96,7 +119,11 @@ export default function BookAppointmentPage() {
       await bookAppointment(selectedSlot.slot_id, reason || undefined);
       setSuccess(true);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Booking failed");
+      const msg = e instanceof Error ? e.message : "Booking failed";
+      setError(msg);
+      if (msg.toLowerCase().includes("conflict") || msg.toLowerCase().includes("already booked")) {
+        await refreshSlots();
+      }
     } finally {
       setLoading(false);
     }
@@ -232,11 +259,8 @@ export default function BookAppointmentPage() {
                       {hasSlots ? "Available" : doc.unavailability_note ? `Unavailable - ${doc.unavailability_note}` : "Unavailable today"}
                     </span>
                     <button
-                      disabled={!hasSlots}
-                      onClick={() => {
-                        setSelectedSlot(todaySlots[0]);
-                        setStep(2);
-                      }}
+                      disabled={!hasSlots || refreshingSlots}
+                      onClick={() => selectDoctor(doc.doctor_id)}
                       className="w-full border border-teal-600 text-teal-600 hover:bg-teal-50 text-xs font-medium py-1.5 rounded-btn transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                       {hasSlots ? "Select" : "No slots today"}
@@ -262,6 +286,10 @@ export default function BookAppointmentPage() {
             </h2>
             <p className="text-sm text-brand-muted mb-5">Choose an available time slot</p>
 
+            {refreshingSlots && (
+              <p className="text-xs text-brand-muted animate-pulse mb-3">Checking availability…</p>
+            )}
+
             <div className="flex flex-wrap gap-2">
               {slots.filter((s) =>
                 s.doctor_id === selectedSlot.doctor_id &&
@@ -273,8 +301,9 @@ export default function BookAppointmentPage() {
                   initial={{ opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.15, delay: i * 0.04 }}
+                  disabled={refreshingSlots}
                   onClick={() => { setSelectedSlot(s); setStep(3); }}
-                  className="px-3 py-2 border border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-btn text-sm font-medium transition-colors"
+                  className="px-3 py-2 border border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-btn text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
                   {fmtDate(s.slot_date)} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
                 </motion.button>
