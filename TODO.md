@@ -79,6 +79,7 @@ Appointment APIs
 [x] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
 [ ] [TOFIX] [BACKEND] Auto-cancel bookings when doctor sets unavailability override — on override save, cancel appointments in the blocked time window, free their slots, store cancellation_reason on appointment, trigger student notification (GitHub issue #30)
 [ ] [TOFIX] Show doctor unavailability reason on booking page when selected date is blocked — greyed card with amber "Unavailable — <reason>" badge, disabled Select button (GitHub issue #31)
+[ ] [TOFIX] [BACKEND] Add GET /appointments/doctors?date= endpoint returning all doctors with availability status and override reason for a given date — required for frontend to show unavailable doctors on booking page instead of them disappearing (the v_available_appointment_slots view filters them out at DB level)
 [ ] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, needs exposing in API response and rendering in frontend (GitHub issue #31)
 [ ] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
 
