@@ -26,6 +26,12 @@ function timeValue(value: string | null) {
   return value ? value.slice(0, 5) : "";
 }
 
+// Normalise "HH:MM" → "HH:MM:SS" for the backend, empty string → null
+function normaliseTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.length === 5 ? `${value}:00` : value;
+}
+
 function updateWeeklyRows(
   settings: DoctorAvailabilitySettings,
   saved: DoctorWeeklyAvailability
@@ -101,8 +107,8 @@ export default function DoctorAvailabilityPage() {
       for (const rule of settings.weekly_availability) {
         const saved = await updateDoctorWeeklyAvailability(rule.weekday, {
           is_available: rule.is_available,
-          start_time: rule.is_available ? rule.start_time : null,
-          end_time: rule.is_available ? rule.end_time : null,
+          start_time: rule.is_available ? normaliseTime(rule.start_time) : null,
+          end_time: rule.is_available ? normaliseTime(rule.end_time) : null,
         });
         setSettings((current) => (current ? updateWeeklyRows(current, saved) : current));
       }
@@ -122,8 +128,8 @@ export default function DoctorAvailabilityPage() {
     try {
       const saved = await updateDoctorAvailabilityOverride(overrideDate, {
         is_available: overrideAvailable,
-        start_time: overrideAvailable ? overrideStart || null : null,
-        end_time: overrideAvailable ? overrideEnd || null : null,
+        start_time: overrideAvailable ? normaliseTime(overrideStart) : null,
+        end_time: overrideAvailable ? normaliseTime(overrideEnd) : null,
         note: overrideNote.trim() || null,
       });
       setSettings((current) => (current ? updateOverrideRows(current, saved) : current));
