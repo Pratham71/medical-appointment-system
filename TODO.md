@@ -37,6 +37,7 @@ Database Tasks
 [x] Add MySQL indexes
 [x] Add MySQL raw SQL query modules
 [x] Add MySQL views for dashboard and report queries
+[x] Add non-destructive MySQL sync migration for older local databases after availability/certificate schema changes
 [x] Run MySQL EXPLAIN query analysis on a live database
 
 Auth and Security Tasks
@@ -76,6 +77,7 @@ Appointment APIs
 [x] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
 [x] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
 [x] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
+[ ] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
 
 Student APIs
 
@@ -130,7 +132,7 @@ Frontend To Fix
 [x] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
 [x] [TOFIX] Add View button on booked appointments + student appointment detail page /students/appointments/[id] (GitHub issue #25)
 [ ] [TOFIX] Booking reason not showing on doctor appointment detail and patient history pages — backend schema and query updated but field not rendering on doctor side; investigate
-[ ] [TOFIX] User profile + onboarding flow — hosteler status, room number, hostel block, local + international contact numbers, emergency contact; multi-step onboarding on first login, profile page in sidebar; backend needs student_profiles table (GitHub issue #27)
+[ ] [FUTURE] User profile + onboarding flow — hosteler status, room number, hostel block, local + international contact numbers, emergency contact; multi-step onboarding on first login, profile page in sidebar; backend needs student_profiles table (GitHub issue #27)
 [ ] [TOFIX] Emergency button — quick-dial infirmary/hostel/security via tel: links (frontend), automated alert POST /emergency/alert with email/SMS notifications to staff (backend needs notification provider) (GitHub issue #26)
 [ ] [TOFIX] Build full admin dashboard and admin workflows — blocked on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
