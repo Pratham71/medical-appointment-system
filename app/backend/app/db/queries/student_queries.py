@@ -115,7 +115,13 @@ def list_certificates(connection: Any, student_id: int) -> list[dict[str, Any]]:
             v_student_certificate_summaries.issue_date,
             v_student_certificate_summaries.doctor_id,
             v_student_certificate_summaries.doctor_name,
-            v_student_certificate_summaries.appointment_date
+            v_student_certificate_summaries.appointment_date,
+            v_student_certificate_summaries.appointment_reason,
+            v_student_certificate_summaries.diagnosis,
+            v_student_certificate_summaries.remarks,
+            v_student_certificate_summaries.leave_start_date,
+            v_student_certificate_summaries.leave_end_date,
+            v_student_certificate_summaries.certificate_notes
         FROM v_student_certificate_summaries
         WHERE v_student_certificate_summaries.student_id = %s
         ORDER BY v_student_certificate_summaries.issue_date DESC

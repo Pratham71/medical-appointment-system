@@ -51,7 +51,7 @@ Auth and Security Tasks
 [x] Add staff login, seed account, routing, and safe staff landing page
 [ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
 [ ] [TOFIX] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
-[ ] [TOFIX] Allow editing completed appointment notes/prescriptions — doctor override for own appointments, admin override for any; needs backend PATCH support + audit trail + admin dashboard (#11) (GitHub issue #24)
+[ ] [FUTURE] Revisit completed-appointment edit override only if approved — current MVP intentionally locks completed appointments from doctor edits; any future override needs admin approval + audit trail (GitHub issue #24)
 
 Google OAuth Tasks — Future Scope (GitHub issue #21)
 
@@ -70,9 +70,12 @@ Appointment APIs
 [x] Implement book appointment
 [x] Implement cancel appointment
 [x] Implement mark appointment complete
-[ ] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
-[ ] [TOFIX] Add doctor availability management with default Monday-Sunday availability (GitHub issue #14)
+[x] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
+[x] [TOFIX] Prevent editing notes, prescriptions, or certificates after an appointment is completed or cancelled
+[x] [TOFIX] Hide elapsed same-day appointment slots using local time and reject direct booking attempts for elapsed slots
+[ ] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
 [ ] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
+[ ] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
 
 Student APIs
 
@@ -94,7 +97,7 @@ Certificate APIs
 
 [x] Implement create certificate
 [x] Implement list student certificates
-[ ] [TOFIX] Make certificates more informative with leave/custom date ranges and stronger certificate details (GitHub issue #15)
+[x] [TOFIX] Make certificates more informative with leave/custom date ranges and stronger certificate details (GitHub issue #15)
 
 Frontend Tasks
 
@@ -120,9 +123,9 @@ Frontend To Fix
 [x] [TOFIX] Create printable/downloadable templates for medical reports after templates are supplied
 [x] [TOFIX] Create printable/downloadable templates for prescriptions after templates are supplied (embedded in report template)
 [x] [TOFIX] Create printable/downloadable templates for medical certificates after templates are supplied
-[ ] [TOFIX] Medical Leave Certificate missing leave start/end dates and duration — frontend template pre-wired, needs backend schema (GitHub issue #16)
-[ ] [TOFIX] Fitness Certificate missing clearance details and certificate notes — frontend template pre-wired, needs backend schema (GitHub issue #17)
-[ ] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — frontend warning added, needs backend validation (GitHub issue #18)
+[x] [TOFIX] Medical Leave Certificate missing leave start/end dates and duration — frontend template pre-wired, needs backend schema (GitHub issue #16)
+[x] [TOFIX] Fitness Certificate missing clearance details and certificate notes — frontend template pre-wired, needs backend schema (GitHub issue #17)
+[x] [TOFIX] Fix certificate issue_date allowed to precede appointment_date — frontend warning added, needs backend validation (GitHub issue #18)
 [x] [TOFIX] Fix Reports/Certificates tab state resetting on back navigation from document view (GitHub issue #19)
 [x] [TOFIX] Doctor patient history — show search result name or "No student found", accordion-style history expansion (GitHub issue #20)
 [x] [TOFIX] Add View button on booked appointments + student appointment detail page /students/appointments/[id] (GitHub issue #25)

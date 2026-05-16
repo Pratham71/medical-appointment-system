@@ -1,10 +1,14 @@
-from datetime import date
+from datetime import date, time
 from typing import Any
 
 from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 
 
-def list_available_slots(connection: Any, from_date: date) -> list[dict[str, Any]]:
+def list_available_slots(
+    connection: Any,
+    from_date: date,
+    current_time: time | None = None,
+) -> list[dict[str, Any]]:
     sql = """
         SELECT
             v_available_appointment_slots.slot_id,
@@ -14,13 +18,21 @@ def list_available_slots(connection: Any, from_date: date) -> list[dict[str, Any
             v_available_appointment_slots.start_time,
             v_available_appointment_slots.end_time
         FROM v_available_appointment_slots
-        WHERE v_available_appointment_slots.slot_date >= %s
+        WHERE v_available_appointment_slots.slot_date = %s
+    """
+    params: tuple[Any, ...] = (from_date,)
+    if current_time is not None:
+        sql += """
+            AND v_available_appointment_slots.start_time > %s
+        """
+        params = (from_date, current_time)
+    sql += """
         ORDER BY
             v_available_appointment_slots.slot_date,
             v_available_appointment_slots.start_time,
             v_available_appointment_slots.doctor_name
     """
-    return fetch_all(connection, sql, (from_date,))
+    return fetch_all(connection, sql, params)
 
 
 def get_available_slot_for_update(
@@ -30,7 +42,9 @@ def get_available_slot_for_update(
     sql = """
         SELECT
             appointment_slots.slot_id,
-            appointment_slots.staff_id
+            appointment_slots.staff_id,
+            appointment_slots.slot_date,
+            appointment_slots.start_time
         FROM appointment_slots
         INNER JOIN slot_statuses
             ON slot_statuses.slot_status_id = appointment_slots.slot_status_id
@@ -48,8 +62,11 @@ def get_appointment_for_update(
     sql = """
         SELECT
             appointments.appointment_id,
-            appointments.slot_id
+            appointments.slot_id,
+            appointment_statuses.status_name AS status
         FROM appointments
+        INNER JOIN appointment_statuses
+            ON appointment_statuses.status_id = appointments.status_id
         WHERE appointments.appointment_id = %s
         FOR UPDATE
     """

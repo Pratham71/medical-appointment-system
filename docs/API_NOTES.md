@@ -62,9 +62,20 @@ POST /reports/{appointment_id}/notes
 POST /reports/{appointment_id}/prescription
 GET /reports/{appointment_id}
 
+Report write notes:
+- Completed and cancelled appointments are locked; doctors cannot edit notes or prescriptions after the appointment reaches a terminal status.
+
 Certificates
 POST /certificates/{appointment_id}
 GET /certificates/student/{student_id}
+
+Certificate request/response notes:
+- `POST /certificates/{appointment_id}` accepts `certificate_type_id`, optional `issue_date`, optional `leave_start_date`, optional `leave_end_date`, and optional `certificate_notes`.
+- Certificate issue date must not be before the appointment date.
+- Certificates cannot be issued for future appointments.
+- Completed and cancelled appointments are locked; doctors cannot issue or update certificates after the appointment reaches a terminal status.
+- Leave date fields must be provided together and `leave_end_date` must be on or after `leave_start_date`.
+- Certificate responses include appointment reference, patient name, issuing doctor, appointment date, appointment reason, diagnosis, remarks, leave dates, and certificate notes where available.
 
 Future APIs
 GET /live/queue

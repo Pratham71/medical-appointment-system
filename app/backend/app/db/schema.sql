@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TRIGGER IF EXISTS trg_medical_certificates_validate_update;
+DROP TRIGGER IF EXISTS trg_medical_certificates_validate_insert;
+
 DROP VIEW IF EXISTS v_student_certificate_summaries;
 DROP VIEW IF EXISTS v_student_report_summaries;
 DROP VIEW IF EXISTS v_doctor_appointment_summaries;
@@ -104,10 +107,13 @@ CREATE TABLE appointments (
     student_id INT NOT NULL,
     slot_id INT NOT NULL,
     status_id INT NOT NULL,
+    active_slot_id INT GENERATED ALWAYS AS (
+        CASE WHEN status_id = 2 THEN NULL ELSE slot_id END
+    ) STORED,
     reason VARCHAR(500) NULL,
     booked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE (slot_id),
+    UNIQUE (active_slot_id),
     CONSTRAINT fk_appointments_student
         FOREIGN KEY (student_id) REFERENCES students(student_id),
     CONSTRAINT fk_appointments_slot
@@ -160,8 +166,17 @@ CREATE TABLE medical_certificates (
     appointment_id INT NOT NULL,
     certificate_type_id INT NOT NULL,
     issue_date DATE NOT NULL,
+    leave_start_date DATE NULL,
+    leave_end_date DATE NULL,
+    certificate_notes TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (appointment_id, certificate_type_id),
+    CONSTRAINT chk_medical_certificates_leave_range
+        CHECK (
+            leave_start_date IS NULL
+            OR leave_end_date IS NULL
+            OR leave_end_date >= leave_start_date
+        ),
     CONSTRAINT fk_medical_certificates_appointment
         FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
         ON DELETE CASCADE,
@@ -180,6 +195,68 @@ CREATE INDEX idx_medical_notes_appointment ON medical_notes(appointment_id);
 CREATE INDEX idx_prescriptions_appointment ON prescriptions(appointment_id);
 CREATE INDEX idx_prescription_items_prescription ON prescription_items(prescription_id);
 CREATE INDEX idx_medical_certificates_type ON medical_certificates(certificate_type_id);
+
+DELIMITER //
+
+CREATE TRIGGER trg_medical_certificates_validate_insert
+BEFORE INSERT ON medical_certificates
+FOR EACH ROW
+BEGIN
+    DECLARE appointment_date DATE;
+
+    SELECT appointment_slots.slot_date
+    INTO appointment_date
+    FROM appointments
+    INNER JOIN appointment_slots
+        ON appointment_slots.slot_id = appointments.slot_id
+    WHERE appointments.appointment_id = NEW.appointment_id;
+
+    IF appointment_date IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Appointment not found for certificate';
+    END IF;
+
+    IF NEW.issue_date < appointment_date THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Certificate issue date cannot be before appointment date';
+    END IF;
+
+    IF appointment_date > CURRENT_DATE THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Cannot issue certificate for a future appointment';
+    END IF;
+END//
+
+CREATE TRIGGER trg_medical_certificates_validate_update
+BEFORE UPDATE ON medical_certificates
+FOR EACH ROW
+BEGIN
+    DECLARE appointment_date DATE;
+
+    SELECT appointment_slots.slot_date
+    INTO appointment_date
+    FROM appointments
+    INNER JOIN appointment_slots
+        ON appointment_slots.slot_id = appointments.slot_id
+    WHERE appointments.appointment_id = NEW.appointment_id;
+
+    IF appointment_date IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Appointment not found for certificate';
+    END IF;
+
+    IF NEW.issue_date < appointment_date THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Certificate issue date cannot be before appointment date';
+    END IF;
+
+    IF appointment_date > CURRENT_DATE THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Cannot issue certificate for a future appointment';
+    END IF;
+END//
+
+DELIMITER ;
 
 CREATE VIEW v_available_appointment_slots AS
 SELECT
@@ -293,7 +370,13 @@ SELECT
     medical_certificates.issue_date,
     staff.staff_id AS doctor_id,
     doctor_users.name AS doctor_name,
-    appointment_slots.slot_date AS appointment_date
+    appointment_slots.slot_date AS appointment_date,
+    appointments.reason AS appointment_reason,
+    medical_notes.diagnosis,
+    medical_notes.remarks,
+    medical_certificates.leave_start_date,
+    medical_certificates.leave_end_date,
+    medical_certificates.certificate_notes
 FROM medical_certificates
 INNER JOIN appointments
     ON appointments.appointment_id = medical_certificates.appointment_id
@@ -305,4 +388,6 @@ INNER JOIN certificate_types
 INNER JOIN appointment_slots
     ON appointment_slots.slot_id = appointments.slot_id
 INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
-INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id;
+INNER JOIN users AS doctor_users ON doctor_users.user_id = staff.user_id
+LEFT JOIN medical_notes
+    ON medical_notes.appointment_id = appointments.appointment_id;

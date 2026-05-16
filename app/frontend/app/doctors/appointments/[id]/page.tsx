@@ -25,6 +25,16 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
+function addDaysDateKey(dateKey: string, days: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const value = new Date(year, month - 1, day);
+  value.setDate(value.getDate() + days);
+  const yyyy = value.getFullYear();
+  const mm = String(value.getMonth() + 1).padStart(2, "0");
+  const dd = String(value.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function AppointmentDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -46,6 +56,16 @@ export default function AppointmentDetailPage() {
 
   // Certificate state
   const [certTypeId, setCertTypeId] = useState("1");
+  const [leaveStartDate, setLeaveStartDate] = useState("");
+  const [leaveEndDate, setLeaveEndDate] = useState("");
+  const [certificateNotes, setCertificateNotes] = useState("");
+  const isAppointmentLocked =
+    detail?.status.toLowerCase() === "completed" ||
+    detail?.status.toLowerCase() === "cancelled";
+  const lockedEditMessage =
+    detail?.status.toLowerCase() === "cancelled"
+      ? "Cancelled appointments cannot be edited."
+      : "Completed appointments cannot be edited.";
 
   useEffect(() => {
     const user = getStoredUser();
@@ -53,6 +73,8 @@ export default function AppointmentDetailPage() {
     Promise.all([getDoctorAppointmentDetail(id), getReportDetail(id)])
       .then(([d, report]) => {
         setDetail(d);
+        setLeaveStartDate(d.slot_date);
+        setLeaveEndDate(addDaysDateKey(d.slot_date, 2));
         const note = report.note;
         if (note?.diagnosis ?? d.diagnosis) {
           setDiagnosis(note?.diagnosis ?? d.diagnosis ?? "");
@@ -74,6 +96,10 @@ export default function AppointmentDetailPage() {
   }, [id, router]);
 
   const handleSaveNotes = async () => {
+    if (isAppointmentLocked) {
+      setError(lockedEditMessage);
+      return;
+    }
     if (!diagnosis.trim()) return;
     setSaving(true);
     setError("");
@@ -89,6 +115,10 @@ export default function AppointmentDetailPage() {
   };
 
   const handleSavePrescription = async () => {
+    if (isAppointmentLocked) {
+      setError(lockedEditMessage);
+      return;
+    }
     const valid = prescRows.filter((r) => r.medicine_name.trim() && r.dosage.trim());
     if (!valid.length) return;
     setSaving(true);
@@ -105,10 +135,37 @@ export default function AppointmentDetailPage() {
   };
 
   const handleIssueCert = async () => {
-    setSaving(true);
+    if (isAppointmentLocked) {
+      setError(lockedEditMessage);
+      return;
+    }
     setError("");
+    const certificatePayload: {
+      leave_start_date?: string;
+      leave_end_date?: string;
+      certificate_notes?: string;
+    } = {};
+
+    if (certTypeId === "1") {
+      if (!leaveStartDate || !leaveEndDate) {
+        setError("Leave start and end dates are required.");
+        return;
+      }
+      if (leaveEndDate < leaveStartDate) {
+        setError("Leave end date cannot be before leave start date.");
+        return;
+      }
+      certificatePayload.leave_start_date = leaveStartDate;
+      certificatePayload.leave_end_date = leaveEndDate;
+    }
+
+    if (certTypeId === "2" && certificateNotes.trim()) {
+      certificatePayload.certificate_notes = certificateNotes.trim();
+    }
+
+    setSaving(true);
     try {
-      await issueCertificate(id, Number(certTypeId));
+      await issueCertificate(id, Number(certTypeId), certificatePayload);
       setSuccessMsg("Certificate issued.");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (e: unknown) {
@@ -158,6 +215,12 @@ export default function AppointmentDetailPage() {
 
       {detail && (
         <div className="space-y-5">
+          {isAppointmentLocked && (
+            <div className="bg-slate-50 border border-brand-border text-brand-muted text-sm rounded-card px-4 py-3">
+              {lockedEditMessage}
+            </div>
+          )}
+
           {/* Patient info card */}
           <div className="bg-white rounded-card border-l-4 border-teal-600 border-t border-r border-b border-brand-border shadow-card p-5">
             <div className="flex items-center gap-4">
@@ -216,6 +279,7 @@ export default function AppointmentDetailPage() {
                     <textarea
                       value={diagnosis}
                       onChange={(e) => setDiagnosis(e.target.value)}
+                      readOnly={isAppointmentLocked}
                       rows={3}
                       maxLength={255}
                       placeholder="Primary diagnosis…"
@@ -229,6 +293,7 @@ export default function AppointmentDetailPage() {
                     <textarea
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
+                      readOnly={isAppointmentLocked}
                       rows={4}
                       maxLength={1000}
                       placeholder="Additional notes, observations…"
@@ -237,7 +302,7 @@ export default function AppointmentDetailPage() {
                   </div>
                   <button
                     onClick={handleSaveNotes}
-                    disabled={saving || !diagnosis.trim()}
+                    disabled={saving || !diagnosis.trim() || isAppointmentLocked}
                     className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
                   >
                     {saving ? "Saving…" : "Save Notes"}
@@ -264,6 +329,7 @@ export default function AppointmentDetailPage() {
                               <input
                                 value={row.medicine_name}
                                 onChange={(e) => setPrescRows((p) => p.map((r, j) => j === i ? { ...r, medicine_name: e.target.value } : r))}
+                                readOnly={isAppointmentLocked}
                                 placeholder="e.g. Paracetamol 500mg"
                                 className="w-full border border-brand-border rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-600 focus:ring-offset-0 focus:outline-none"
                               />
@@ -272,6 +338,7 @@ export default function AppointmentDetailPage() {
                               <input
                                 value={row.dosage}
                                 onChange={(e) => setPrescRows((p) => p.map((r, j) => j === i ? { ...r, dosage: e.target.value } : r))}
+                                readOnly={isAppointmentLocked}
                                 placeholder="e.g. 1 tablet twice daily"
                                 className="w-full border border-brand-border rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-600 focus:ring-offset-0 focus:outline-none"
                               />
@@ -280,6 +347,7 @@ export default function AppointmentDetailPage() {
                               {prescRows.length > 1 && (
                                 <button
                                   onClick={() => setPrescRows((p) => p.filter((_, j) => j !== i))}
+                                  disabled={isAppointmentLocked}
                                   className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none"
                                 >
                                   ×
@@ -294,13 +362,14 @@ export default function AppointmentDetailPage() {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setPrescRows((p) => [...p, { medicine_name: "", dosage: "" }])}
+                      disabled={isAppointmentLocked}
                       className="text-sm text-teal-600 hover:text-teal-700 transition-colors font-medium"
                     >
                       + Add Row
                     </button>
                     <button
                       onClick={handleSavePrescription}
-                      disabled={saving}
+                      disabled={saving || isAppointmentLocked}
                       className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
                     >
                       {saving ? "Saving…" : "Save Prescription"}
@@ -325,16 +394,61 @@ export default function AppointmentDetailPage() {
                         <select
                           value={certTypeId}
                           onChange={(e) => setCertTypeId(e.target.value)}
+                          disabled={isAppointmentLocked}
                           className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none"
                         >
-                          <option value="1">Consultation Proof</option>
-                          <option value="2">Medical Leave Certificate</option>
-                          <option value="3">Fitness Certificate</option>
+                          <option value="1">Medical Leave Certificate</option>
+                          <option value="2">Fitness Certificate</option>
+                          <option value="3">Consultation Proof</option>
                         </select>
                       </div>
+                      {certTypeId === "1" && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium text-brand-text mb-1.5">
+                              Leave From
+                            </label>
+                            <input
+                              type="date"
+                              value={leaveStartDate}
+                              onChange={(e) => setLeaveStartDate(e.target.value)}
+                              readOnly={isAppointmentLocked}
+                              className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-brand-text mb-1.5">
+                              Leave To
+                            </label>
+                            <input
+                              type="date"
+                              value={leaveEndDate}
+                              onChange={(e) => setLeaveEndDate(e.target.value)}
+                              readOnly={isAppointmentLocked}
+                              className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {certTypeId === "2" && (
+                        <div>
+                          <label className="block text-sm font-medium text-brand-text mb-1.5">
+                            Clearance Notes
+                          </label>
+                          <textarea
+                            value={certificateNotes}
+                            onChange={(e) => setCertificateNotes(e.target.value)}
+                            readOnly={isAppointmentLocked}
+                            rows={4}
+                            maxLength={1000}
+                            placeholder="Cleared for physical activities, attendance, or other restrictions"
+                            className="w-full border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none resize-none transition"
+                          />
+                        </div>
+                      )}
                       <button
                         onClick={handleIssueCert}
-                        disabled={saving}
+                        disabled={saving || isAppointmentLocked}
                         className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
                       >
                         {saving ? "Issuing…" : "Issue Certificate"}

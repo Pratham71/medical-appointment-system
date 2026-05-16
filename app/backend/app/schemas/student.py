@@ -53,3 +53,9 @@ class StudentCertificateSummary(BaseModel):
     doctor_id: int
     doctor_name: str
     appointment_date: date
+    appointment_reason: str | None = None
+    diagnosis: str | None = None
+    remarks: str | None = None
+    leave_start_date: date | None = None
+    leave_end_date: date | None = None
+    certificate_notes: str | None = None

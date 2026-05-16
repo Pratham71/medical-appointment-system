@@ -42,6 +42,17 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [DOCS] [TEAM] [fix/backend-appointment-certificates] - Added GitHub issue #29 and TODO tracking for a doctor availability tab with Sunday unavailable by default and manual override workflow
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Locked completed/cancelled appointments from further doctor edits across medical notes, prescriptions, and certificates; doctor detail form now renders read-only/disabled for locked appointments
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Filtered available appointment slots by exact selected date and local current time so elapsed same-day slots are not shown or bookable
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Fixed cancelled appointment lifecycle (#13): backend rejects cancelled-to-completed transitions, cancelling releases the slot, and schema now uses generated active_slot_id uniqueness so cancelled slots can be rebooked without double-booking active appointments
+[2026-05-16] [DB] [TEAM] [fix/backend-appointment-certificates] - Added certificate issue-date integrity enforcement (#18): service validation plus MySQL insert/update triggers reject certificates before appointment date and future appointment certificate issuance
+[2026-05-16] [API] [TEAM] [fix/backend-appointment-certificates] - Expanded certificate responses (#15): certificate APIs now return doctor, appointment date, appointment reason, diagnosis, and remarks for richer certificate templates
+[2026-05-16] [API] [TEAM] [fix/backend-appointment-certificates] - Added medical leave certificate date range support (#16): POST /certificates accepts leave_start_date and leave_end_date, stores them, validates range order, and returns them in certificate summaries
+[2026-05-16] [API] [TEAM] [fix/backend-appointment-certificates] - Added fitness certificate clearance notes (#17): POST /certificates accepts certificate_notes, persists them, and returns them for student certificate templates
+[2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Wired doctor certificate form to send leave date ranges and fitness clearance notes, with certificate type IDs aligned to MySQL seed data
+[2026-05-16] [TEST] [TEAM] [fix/backend-appointment-certificates] - Added regression coverage for appointment status transitions, certificate date integrity, leave dates, certificate notes, and doctor certificate form payload wiring
+
 [2026-05-15] [FIX] [TEAM] [feat/student-appointment-view] - Fixed booking showing 108 slots — filter to selected date only instead of all slots from that date onwards
 [2026-05-15] [API] [TEAM] [feat/student-appointment-view] - Added reason field to student list_appointments query and StudentAppointmentSummary type
 [2026-05-15] [UI] [TEAM] [feat/student-appointment-view] - Show booking reason on student appointment detail page when present

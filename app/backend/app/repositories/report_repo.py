@@ -5,12 +5,29 @@ from app.backend.app.db.queries import report_queries
 from app.backend.app.schemas.report import MedicalNoteCreate, PrescriptionCreate
 
 
+_LOCKED_EDIT_STATUSES = {"completed", "cancelled"}
+
+
+def get_appointment_write_context(appointment_id: int) -> dict[str, Any] | None:
+    with session.connection_scope() as connection:
+        return report_queries.get_appointment_write_context(connection, appointment_id)
+
+
 def add_medical_note(
     appointment_id: int, payload: MedicalNoteCreate
 ) -> dict[str, Any] | None:
     with session.transaction_scope() as connection:
-        if report_queries.get_appointment_exists(connection, appointment_id) is None:
+        appointment = report_queries.get_appointment_write_context(
+            connection,
+            appointment_id,
+        )
+        if appointment is None:
             return None
+        if appointment["status"].lower() in _LOCKED_EDIT_STATUSES:
+            return {
+                "appointment_id": appointment_id,
+                "blocked_status": appointment["status"],
+            }
 
         report_queries.upsert_medical_note(
             connection,
@@ -25,8 +42,17 @@ def add_prescription(
     appointment_id: int, payload: PrescriptionCreate
 ) -> dict[str, Any] | None:
     with session.transaction_scope() as connection:
-        if report_queries.get_appointment_exists(connection, appointment_id) is None:
+        appointment = report_queries.get_appointment_write_context(
+            connection,
+            appointment_id,
+        )
+        if appointment is None:
             return None
+        if appointment["status"].lower() in _LOCKED_EDIT_STATUSES:
+            return {
+                "appointment_id": appointment_id,
+                "blocked_status": appointment["status"],
+            }
 
         prescription = report_queries.get_prescription_by_appointment(
             connection,

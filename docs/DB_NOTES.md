@@ -10,6 +10,7 @@ Current Focus
 - Constraints
 - Queries
 - Views for common dashboard and report reads
+- MySQL triggers for certificate date integrity
 - Authenticated user context for student and staff access
 - Staff login seed account and non-doctor staff row
 - Login brute-force protection
@@ -68,7 +69,7 @@ Route → Service → Repository → Query → DB
 
 Constraints
 - Unique email in users
-- Unique slot_id in appointments (prevents double booking)
+- Unique generated active_slot_id in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot
 - Foreign keys across all related tables
 - Add CHECK constraints where needed
 
@@ -93,9 +94,9 @@ Views
 - v_student_certificate_summaries
 
 Triggers
-- Not required for the MVP right now.
-- Double booking is handled with UNIQUE(slot_id) and appointment booking transactions.
-- Add triggers later only if the project needs audit logging or automatic history tables.
+- Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.
+- Double booking is handled with active appointment uniqueness and appointment booking transactions.
+- Add audit/history triggers later only if the project needs them.
 
 Transactions
 - Use transaction when booking appointment:
@@ -114,6 +115,7 @@ DBMS Concepts to Demonstrate
 - Views
 - Transactions
 - MySQL EXPLAIN query analysis
+- MySQL triggers for cross-table integrity rules
 - Auth-backed access control
 - Idempotent transaction handling
 

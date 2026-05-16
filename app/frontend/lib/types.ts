@@ -61,10 +61,13 @@ export interface StudentCertificateSummary {
   doctor_id: number;
   doctor_name: string;
   appointment_date: string;
+  appointment_reason?: string | null;
+  diagnosis?: string | null;
+  remarks?: string | null;
   // optional fields added by future backend work (#16, #17)
   leave_start_date?: string;
   leave_end_date?: string;
-  certificate_notes?: string;
+  certificate_notes?: string | null;
 }
 
 export interface AppointmentSlot {
@@ -194,4 +197,13 @@ export interface CertificateResponse {
   certificate_type_id: number;
   certificate_type: string;
   issue_date: string;
+  leave_start_date?: string | null;
+  leave_end_date?: string | null;
+  certificate_notes?: string | null;
+  doctor_id: number;
+  doctor_name: string;
+  appointment_date: string;
+  appointment_reason?: string | null;
+  diagnosis?: string | null;
+  remarks?: string | null;
 }

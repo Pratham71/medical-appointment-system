@@ -9,8 +9,19 @@ import DashboardShell from "@/components/layout/DashboardShell";
 
 type Step = 1 | 2 | 3;
 
-function todayISO() {
-  return new Date().toISOString().split("T")[0];
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isFutureSlot(slot: AppointmentSlot, selectedDate: string) {
+  if (selectedDate !== getLocalDateKey()) return true;
+  const [year, month, day] = slot.slot_date.split("-").map(Number);
+  const [hour, minute] = slot.start_time.split(":").map(Number);
+  const slotStart = new Date(year, month - 1, day, hour, minute);
+  return slotStart > new Date();
 }
 
 function fmtDate(d: string) {
@@ -21,7 +32,7 @@ export default function BookAppointmentPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [slots, setSlots] = useState<AppointmentSlot[]>([]);
-  const [fromDate, setFromDate] = useState(todayISO());
+  const [fromDate, setFromDate] = useState(getLocalDateKey());
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,7 +53,7 @@ export default function BookAppointmentPage() {
   }, [fromDate]);
 
   // Group slots by doctor — only show slots for the selected date
-  const byDoctor = slots.filter((s) => s.slot_date === fromDate).reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
+  const byDoctor = slots.filter((s) => s.slot_date === fromDate && isFutureSlot(s, fromDate)).reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
     const key = `${s.doctor_id}:${s.doctor_name}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(s);
@@ -144,7 +155,7 @@ export default function BookAppointmentPage() {
                 <input
                   type="date"
                   value={fromDate}
-                  min={todayISO()}
+                  min={getLocalDateKey()}
                   onChange={(e) => setFromDate(e.target.value)}
                   className="text-xs border border-brand-border rounded px-2 py-1"
                 />

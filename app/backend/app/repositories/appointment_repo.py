@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, time
 from typing import Any
 
 from mysql.connector import IntegrityError, errorcode
@@ -11,9 +11,21 @@ class _BookingConflict(Exception):
     pass
 
 
-def list_available_slots(from_date: date) -> list[dict[str, Any]]:
+_ALLOWED_STATUS_TRANSITIONS = {
+    "booked": {"cancelled", "completed"},
+}
+
+
+def list_available_slots(
+    from_date: date,
+    current_time: time | None = None,
+) -> list[dict[str, Any]]:
     with session.connection_scope() as connection:
-        return appointment_queries.list_available_slots(connection, from_date)
+        return appointment_queries.list_available_slots(
+            connection,
+            from_date,
+            current_time,
+        )
 
 
 def book_appointment(
@@ -24,6 +36,8 @@ def book_appointment(
             slot = appointment_queries.get_available_slot_for_update(connection, slot_id)
             if slot is None:
                 return None
+            if _slot_has_elapsed(slot):
+                return {"expired": True, "slot_id": slot_id, "status": "available"}
 
             booked_status_id = appointment_queries.get_appointment_status_id(
                 connection,
@@ -68,6 +82,18 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
         if appointment is None:
             return None
 
+        current_status = appointment["status"]
+        if current_status == status_name:
+            return appointment_queries.get_status_result(connection, appointment_id)
+
+        allowed_next_statuses = _ALLOWED_STATUS_TRANSITIONS.get(current_status, set())
+        if status_name not in allowed_next_statuses:
+            return {
+                "appointment_id": appointment_id,
+                "status": current_status,
+                "invalid_transition": True,
+            }
+
         status_id = appointment_queries.get_appointment_status_id(
             connection,
             status_name,
@@ -75,11 +101,27 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
         if status_id is None:
             return None
 
+        available_slot_status_id = None
+        if status_name == "cancelled":
+            available_slot_status_id = appointment_queries.get_slot_status_id(
+                connection,
+                "available",
+            )
+            if available_slot_status_id is None:
+                return None
+
         appointment_queries.update_appointment_status(
             connection,
             appointment_id=appointment_id,
             status_id=status_id,
         )
+
+        if available_slot_status_id is not None:
+            appointment_queries.update_slot_status(
+                connection,
+                slot_id=appointment["slot_id"],
+                slot_status_id=available_slot_status_id,
+            )
 
         return appointment_queries.get_status_result(connection, appointment_id)
 
@@ -90,3 +132,12 @@ def get_access_context(appointment_id: int) -> dict[str, Any] | None:
             connection,
             appointment_id,
         )
+
+
+def _slot_has_elapsed(slot: dict[str, Any]) -> bool:
+    slot_start = datetime.combine(slot["slot_date"], slot["start_time"])
+    return slot_start <= _get_local_now()
+
+
+def _get_local_now() -> datetime:
+    return datetime.now()

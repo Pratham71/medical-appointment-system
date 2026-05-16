@@ -1,13 +1,22 @@
 from contextlib import contextmanager
-from datetime import time, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 import pytest
 
 from app.backend.app.core.config import Settings
+from app.backend.app.api.errors import ConflictError
 from app.backend.app.db import session
 from app.backend.app.db.queries._helpers import fetch_all
-from app.backend.app.repositories import appointment_repo
+from app.backend.app.repositories import appointment_repo, certificate_repo
+from app.backend.app.schemas.certificate import CertificateCreate, CertificateResponse
+from app.backend.app.schemas.report import (
+    MedicalNoteCreate,
+    PrescriptionCreate,
+    PrescriptionItemCreate,
+)
+from app.backend.app.schemas.student import StudentCertificateSummary
+from app.backend.app.services import appointment_service, certificate_service, report_service
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -165,7 +174,8 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
         assert f"create table {table_name}" in schema
 
     assert "engine=innodb" in schema
-    assert "unique (slot_id)" in schema
+    assert "active_slot_id int generated always as" in schema
+    assert "unique (active_slot_id)" in schema
     assert "foreign key" in schema
     assert "idx_appointments_student" in schema
     assert "idx_appointment_slots_staff_date" in schema
@@ -188,6 +198,40 @@ def test_schema_defines_reporting_views():
 
     assert "drop view if exists v_appointment_details" in schema
     assert "select *" not in schema
+
+
+def test_schema_enforces_certificate_issue_date_against_appointment_date():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "trg_medical_certificates_validate_insert" in schema
+    assert "trg_medical_certificates_validate_update" in schema
+    assert "new.issue_date < appointment_date" in schema
+    assert "appointment_date > current_date" in schema
+    assert "signal sqlstate '45000'" in schema
+
+
+def test_certificate_summary_view_includes_medical_context():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "appointments.reason as appointment_reason" in schema
+    assert "medical_notes.diagnosis" in schema
+    assert "medical_notes.remarks" in schema
+
+
+def test_certificate_schema_and_view_include_leave_dates():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "leave_start_date date null" in schema
+    assert "leave_end_date date null" in schema
+    assert "medical_certificates.leave_start_date" in schema
+    assert "medical_certificates.leave_end_date" in schema
+
+
+def test_certificate_schema_and_view_include_certificate_notes():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "certificate_notes text null" in schema
+    assert "medical_certificates.certificate_notes" in schema
 
 
 def test_seed_inserts_mvp_lookup_and_sample_data():
@@ -237,18 +281,145 @@ def test_query_helpers_convert_mysql_time_deltas_to_time_values():
     ]
 
 
-def test_cancel_status_does_not_mark_unique_slot_available(monkeypatch):
+def test_appointment_service_filters_today_slots_after_local_time(monkeypatch):
+    captured = {}
+
+    def fake_list_available_slots(from_date, current_time=None):
+        captured["from_date"] = from_date
+        captured["current_time"] = current_time
+        return []
+
+    monkeypatch.setattr(
+        appointment_service,
+        "_get_local_now",
+        lambda: datetime(2026, 5, 15, 9, 30),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_available_slots",
+        fake_list_available_slots,
+    )
+
+    result = appointment_service.list_available_slots(date(2026, 5, 15))
+
+    assert result == []
+    assert captured == {
+        "from_date": date(2026, 5, 15),
+        "current_time": time(9, 30),
+    }
+
+
+def test_appointment_service_does_not_filter_future_date_by_current_time(monkeypatch):
+    captured = {}
+
+    def fake_list_available_slots(from_date, current_time=None):
+        captured["from_date"] = from_date
+        captured["current_time"] = current_time
+        return []
+
+    monkeypatch.setattr(
+        appointment_service,
+        "_get_local_now",
+        lambda: datetime(2026, 5, 15, 9, 30),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_available_slots",
+        fake_list_available_slots,
+    )
+
+    appointment_service.list_available_slots(date(2026, 5, 16))
+
+    assert captured == {
+        "from_date": date(2026, 5, 16),
+        "current_time": None,
+    }
+
+
+def test_book_appointment_rejects_elapsed_slot(monkeypatch):
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "book_appointment",
+        lambda student_id, slot_id, reason: {
+            "expired": True,
+            "slot_id": slot_id,
+            "status": "available",
+        },
+    )
+
+    with pytest.raises(ConflictError, match="Appointment slot is no longer available"):
+        appointment_service.book_appointment(
+            payload=type("Payload", (), {"slot_id": 7, "reason": "Fever"})(),
+            student_id=1,
+        )
+
+
+def test_repository_rejects_elapsed_slot_before_insert(monkeypatch):
+    inserts = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_available_slot_for_update(connection, slot_id):
+            return {
+                "slot_id": slot_id,
+                "staff_id": 1,
+                "slot_date": date(2026, 5, 15),
+                "start_time": time(8, 30),
+            }
+
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            return 1
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            return 2
+
+        @staticmethod
+        def insert_appointment(connection, student_id, slot_id, status_id, reason):
+            inserts.append((student_id, slot_id, status_id, reason))
+            return 99
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "_get_local_now", lambda: datetime(2026, 5, 15, 9, 30), raising=False)
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = appointment_repo.book_appointment(1, 7, "Fever")
+
+    assert result == {"expired": True, "slot_id": 7, "status": "available"}
+    assert inserts == []
+
+
+def test_available_slot_query_filters_exact_date_and_elapsed_today_slots():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "slot_date = %s" in source
+    assert "start_time > %s" in source
+    assert "slot_date >= %s" not in source
+
+
+def test_cancel_status_marks_slot_available(monkeypatch):
     slot_updates = []
 
     class FakeAppointmentQueries:
         @staticmethod
         def get_appointment_for_update(connection, appointment_id):
-            return {"appointment_id": appointment_id, "slot_id": 10}
+            return {"appointment_id": appointment_id, "slot_id": 10, "status": "booked"}
 
         @staticmethod
         def get_appointment_status_id(connection, status_name):
-            assert status_name == "cancelled"
-            return 2
+            return {"cancelled": 2, "available": 1}[status_name]
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
 
         @staticmethod
         def update_appointment_status(connection, appointment_id, status_id):
@@ -272,4 +443,425 @@ def test_cancel_status_does_not_mark_unique_slot_available(monkeypatch):
     result = appointment_repo.update_status(5, "cancelled")
 
     assert result == {"appointment_id": 5, "status": "cancelled"}
+    assert slot_updates == [(10, 1)]
+
+
+def test_repository_rejects_completing_cancelled_appointment(monkeypatch):
+    status_updates = []
+    slot_updates = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_for_update(connection, appointment_id):
+            return {"appointment_id": appointment_id, "slot_id": 10, "status": "cancelled"}
+
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "completed"
+            return 3
+
+        @staticmethod
+        def update_appointment_status(connection, appointment_id, status_id):
+            status_updates.append((appointment_id, status_id))
+
+        @staticmethod
+        def update_slot_status(connection, slot_id, slot_status_id):
+            slot_updates.append((slot_id, slot_status_id))
+
+        @staticmethod
+        def get_status_result(connection, appointment_id):
+            return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = appointment_repo.update_status(5, "completed")
+
+    assert result == {
+        "appointment_id": 5,
+        "status": "cancelled",
+        "invalid_transition": True,
+    }
+    assert status_updates == []
     assert slot_updates == []
+
+
+def test_complete_cancelled_appointment_raises_conflict(monkeypatch):
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "update_status",
+        lambda appointment_id, status_name: {
+            "appointment_id": appointment_id,
+            "status": "cancelled",
+            "invalid_transition": True,
+        },
+    )
+
+    with pytest.raises(ConflictError, match="Cannot change appointment from cancelled"):
+        appointment_service.complete_appointment(5)
+
+
+def test_certificate_service_rejects_issue_date_before_appointment_date(monkeypatch):
+    created = []
+
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "get_appointment_certificate_context",
+        lambda appointment_id: {"appointment_id": appointment_id, "appointment_date": date(2026, 5, 15)},
+        raising=False,
+    )
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "create_certificate",
+        lambda appointment_id, payload: created.append((appointment_id, payload)),
+    )
+
+    payload = CertificateCreate(certificate_type_id=1, issue_date=date(2026, 5, 14))
+
+    with pytest.raises(
+        ConflictError,
+        match="Certificate issue date cannot be before appointment date",
+    ):
+        certificate_service.create_certificate(5, payload)
+
+    assert created == []
+
+
+def test_certificate_service_rejects_future_appointment(monkeypatch):
+    future_date = date.today() + timedelta(days=1)
+    created = []
+
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "get_appointment_certificate_context",
+        lambda appointment_id: {"appointment_id": appointment_id, "appointment_date": future_date},
+        raising=False,
+    )
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "create_certificate",
+        lambda appointment_id, payload: created.append((appointment_id, payload)),
+    )
+
+    payload = CertificateCreate(certificate_type_id=1)
+
+    with pytest.raises(
+        ConflictError,
+        match="Cannot issue certificate for a future appointment",
+    ):
+        certificate_service.create_certificate(5, payload)
+
+    assert created == []
+
+
+def test_report_service_rejects_notes_for_completed_appointment(monkeypatch):
+    writes = []
+
+    monkeypatch.setattr(
+        report_service.report_repo,
+        "get_appointment_write_context",
+        lambda appointment_id: {"appointment_id": appointment_id, "status": "completed"},
+        raising=False,
+    )
+    monkeypatch.setattr(
+        report_service.report_repo,
+        "add_medical_note",
+        lambda appointment_id, payload: writes.append((appointment_id, payload)),
+    )
+
+    with pytest.raises(ConflictError, match="Completed appointments cannot be edited"):
+        report_service.add_medical_note(
+            5,
+            MedicalNoteCreate(diagnosis="Fever", remarks="Rest"),
+        )
+
+    assert writes == []
+
+
+def test_report_service_rejects_prescription_for_completed_appointment(monkeypatch):
+    writes = []
+
+    monkeypatch.setattr(
+        report_service.report_repo,
+        "get_appointment_write_context",
+        lambda appointment_id: {"appointment_id": appointment_id, "status": "completed"},
+        raising=False,
+    )
+    monkeypatch.setattr(
+        report_service.report_repo,
+        "add_prescription",
+        lambda appointment_id, payload: writes.append((appointment_id, payload)),
+    )
+
+    with pytest.raises(ConflictError, match="Completed appointments cannot be edited"):
+        report_service.add_prescription(
+            5,
+            PrescriptionCreate(
+                items=[
+                    PrescriptionItemCreate(
+                        medicine_name="Paracetamol",
+                        dosage="500mg",
+                    )
+                ],
+            ),
+        )
+
+    assert writes == []
+
+
+def test_certificate_service_rejects_completed_appointment_edit(monkeypatch):
+    writes = []
+
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "get_appointment_certificate_context",
+        lambda appointment_id: {
+            "appointment_id": appointment_id,
+            "appointment_date": date(2026, 5, 15),
+            "status": "completed",
+        },
+    )
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "create_certificate",
+        lambda appointment_id, payload: writes.append((appointment_id, payload)),
+    )
+
+    with pytest.raises(ConflictError, match="Completed appointments cannot be edited"):
+        certificate_service.create_certificate(
+            5,
+            CertificateCreate(
+                certificate_type_id=2,
+                issue_date=date(2026, 5, 16),
+            ),
+        )
+
+    assert writes == []
+
+
+def test_certificate_response_models_include_medical_context_fields():
+    row = {
+        "certificate_id": 1,
+        "appointment_id": 2,
+        "student_id": 1,
+        "student_name": "Asha Kumar",
+        "certificate_type_id": 1,
+        "certificate_type": "Consultation Proof",
+        "issue_date": date(2026, 5, 16),
+        "doctor_id": 1,
+        "doctor_name": "Dr. Meera Rao",
+        "appointment_date": date(2026, 5, 15),
+        "appointment_reason": "Fever and headache",
+        "diagnosis": "Seasonal fever",
+        "remarks": "Rest advised",
+    }
+
+    response = CertificateResponse(**row)
+    summary = StudentCertificateSummary(**row)
+
+    assert response.doctor_name == "Dr. Meera Rao"
+    assert response.appointment_date == date(2026, 5, 15)
+    assert response.appointment_reason == "Fever and headache"
+    assert response.diagnosis == "Seasonal fever"
+    assert response.remarks == "Rest advised"
+    assert summary.appointment_reason == "Fever and headache"
+    assert summary.diagnosis == "Seasonal fever"
+    assert summary.remarks == "Rest advised"
+
+
+def test_certificate_create_accepts_leave_date_range():
+    payload = CertificateCreate(
+        certificate_type_id=1,
+        leave_start_date=date(2026, 5, 15),
+        leave_end_date=date(2026, 5, 17),
+    )
+
+    assert payload.leave_start_date == date(2026, 5, 15)
+    assert payload.leave_end_date == date(2026, 5, 17)
+
+
+def test_certificate_repository_persists_leave_dates(monkeypatch):
+    captured = {}
+
+    class FakeCertificateQueries:
+        @staticmethod
+        def get_appointment_certificate_context(connection, appointment_id):
+            return {
+                "appointment_id": appointment_id,
+                "appointment_date": date(2026, 5, 15),
+                "status": "booked",
+            }
+
+        @staticmethod
+        def upsert_certificate(
+            connection,
+            appointment_id,
+            certificate_type_id,
+            issue_date,
+            leave_start_date,
+            leave_end_date,
+            certificate_notes=None,
+        ):
+            captured["payload"] = {
+                "appointment_id": appointment_id,
+                "certificate_type_id": certificate_type_id,
+                "issue_date": issue_date,
+                "leave_start_date": leave_start_date,
+                "leave_end_date": leave_end_date,
+                "certificate_notes": certificate_notes,
+            }
+
+        @staticmethod
+        def get_certificate_by_appointment_type(connection, appointment_id, certificate_type_id):
+            return {
+                "certificate_id": 1,
+                "appointment_id": appointment_id,
+                "student_id": 1,
+                "student_name": "Asha Kumar",
+                "certificate_type_id": certificate_type_id,
+                "certificate_type": "Medical Leave",
+                "issue_date": date(2026, 5, 16),
+                "doctor_id": 1,
+                "doctor_name": "Dr. Meera Rao",
+                "appointment_date": date(2026, 5, 15),
+                "appointment_reason": "Fever",
+                "diagnosis": "Seasonal fever",
+                "remarks": "Rest advised",
+                "leave_start_date": date(2026, 5, 15),
+                "leave_end_date": date(2026, 5, 17),
+            }
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(certificate_repo, "certificate_queries", FakeCertificateQueries)
+    monkeypatch.setattr(certificate_repo.session, "transaction_scope", fake_transaction_scope)
+
+    payload = CertificateCreate(
+        certificate_type_id=1,
+        issue_date=date(2026, 5, 16),
+        leave_start_date=date(2026, 5, 15),
+        leave_end_date=date(2026, 5, 17),
+    )
+
+    result = certificate_repo.create_certificate(5, payload)
+
+    assert captured["payload"]["leave_start_date"] == date(2026, 5, 15)
+    assert captured["payload"]["leave_end_date"] == date(2026, 5, 17)
+    assert result["leave_start_date"] == date(2026, 5, 15)
+    assert result["leave_end_date"] == date(2026, 5, 17)
+
+
+def test_certificate_create_accepts_certificate_notes():
+    payload = CertificateCreate(
+        certificate_type_id=2,
+        certificate_notes="Cleared to resume academic attendance",
+    )
+
+    assert payload.certificate_notes == "Cleared to resume academic attendance"
+
+
+def test_certificate_repository_persists_certificate_notes(monkeypatch):
+    captured = {}
+
+    class FakeCertificateQueries:
+        @staticmethod
+        def get_appointment_certificate_context(connection, appointment_id):
+            return {
+                "appointment_id": appointment_id,
+                "appointment_date": date(2026, 5, 15),
+                "status": "booked",
+            }
+
+        @staticmethod
+        def upsert_certificate(
+            connection,
+            appointment_id,
+            certificate_type_id,
+            issue_date,
+            leave_start_date,
+            leave_end_date,
+            certificate_notes,
+        ):
+            captured["payload"] = {
+                "appointment_id": appointment_id,
+                "certificate_type_id": certificate_type_id,
+                "issue_date": issue_date,
+                "leave_start_date": leave_start_date,
+                "leave_end_date": leave_end_date,
+                "certificate_notes": certificate_notes,
+            }
+
+        @staticmethod
+        def get_certificate_by_appointment_type(connection, appointment_id, certificate_type_id):
+            return {
+                "certificate_id": 1,
+                "appointment_id": appointment_id,
+                "student_id": 1,
+                "student_name": "Asha Kumar",
+                "certificate_type_id": certificate_type_id,
+                "certificate_type": "Fitness Certificate",
+                "issue_date": date(2026, 5, 16),
+                "doctor_id": 1,
+                "doctor_name": "Dr. Meera Rao",
+                "appointment_date": date(2026, 5, 15),
+                "appointment_reason": "Fitness clearance",
+                "diagnosis": "Fit",
+                "remarks": "No restrictions",
+                "leave_start_date": None,
+                "leave_end_date": None,
+                "certificate_notes": "Cleared to resume academic attendance",
+            }
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(certificate_repo, "certificate_queries", FakeCertificateQueries)
+    monkeypatch.setattr(certificate_repo.session, "transaction_scope", fake_transaction_scope)
+
+    payload = CertificateCreate(
+        certificate_type_id=2,
+        issue_date=date(2026, 5, 16),
+        certificate_notes="Cleared to resume academic attendance",
+    )
+
+    result = certificate_repo.create_certificate(5, payload)
+
+    assert captured["payload"]["certificate_notes"] == "Cleared to resume academic attendance"
+    assert result["certificate_notes"] == "Cleared to resume academic attendance"
+
+
+def test_certificate_service_rejects_invalid_leave_date_range(monkeypatch):
+    created = []
+
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "get_appointment_certificate_context",
+        lambda appointment_id: {"appointment_id": appointment_id, "appointment_date": date(2026, 5, 15)},
+    )
+    monkeypatch.setattr(
+        certificate_service.certificate_repo,
+        "create_certificate",
+        lambda appointment_id, payload: created.append((appointment_id, payload)),
+    )
+
+    payload = CertificateCreate(
+        certificate_type_id=1,
+        issue_date=date(2026, 5, 16),
+        leave_start_date=date(2026, 5, 18),
+        leave_end_date=date(2026, 5, 17),
+    )
+
+    with pytest.raises(
+        ConflictError,
+        match="Leave end date cannot be before leave start date",
+    ):
+        certificate_service.create_certificate(5, payload)
+
+    assert created == []

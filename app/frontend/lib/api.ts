@@ -203,13 +203,26 @@ export async function savePrescription(
 
 // ── Certificates ──────────────────────────────────────────────────────────────
 
+type CertificatePayload = {
+  leave_start_date?: string;
+  leave_end_date?: string;
+  certificate_notes?: string;
+};
+
 export async function issueCertificate(
   appointmentId: number,
-  certificateTypeId: number
+  certificateTypeId: number,
+  certificatePayload: CertificatePayload = {}
 ): Promise<CertificateResponse> {
   return request<CertificateResponse>(
     `/certificates/${appointmentId}`,
-    { method: "POST", body: JSON.stringify({ certificate_type_id: certificateTypeId }) },
+    {
+      method: "POST",
+      body: JSON.stringify({
+        certificate_type_id: certificateTypeId,
+        ...certificatePayload,
+      }),
+    },
     true
   );
 }

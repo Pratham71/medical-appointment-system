@@ -155,6 +155,9 @@ The selected database engine is MySQL.
 - `POST /certificates/{appointment_id}`
 - `GET /certificates/student/{student_id}`
 
+Certificates include issuing doctor, appointment reference, appointment date,
+medical context, optional leave date range, and optional fitness clearance notes.
+
 ## Setup and Run
 
 ### Prerequisites

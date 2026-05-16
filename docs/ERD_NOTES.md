@@ -60,8 +60,9 @@ Appointments
 
 - appointment_id (PK)
 - student_id (FK)
-- slot_id (FK, UNIQUE)
+- slot_id (FK)
 - status_id (FK)
+- active_slot_id (generated, UNIQUE for non-cancelled appointments)
 - reason
 
 Medical_Notes
@@ -94,6 +95,9 @@ Medical_Certificates
 - appointment_id (FK)
 - certificate_type_id (FK)
 - issue_date
+- leave_start_date
+- leave_end_date
+- certificate_notes
 
 Relationships
 
@@ -117,7 +121,7 @@ Normalization
 
 Constraints
 
-- UNIQUE(slot_id) in appointments.
+- UNIQUE(active_slot_id) in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot.
 - Foreign keys across all related tables.
 - UNIQUE(appointment_id) in medical_notes and prescriptions.
 - UNIQUE(appointment_id, certificate_type_id) in medical_certificates.

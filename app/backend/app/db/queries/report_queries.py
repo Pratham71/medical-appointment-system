@@ -12,6 +12,22 @@ def get_appointment_exists(connection: Any, appointment_id: int) -> dict[str, An
     return fetch_one(connection, sql, (appointment_id,))
 
 
+def get_appointment_write_context(
+    connection: Any,
+    appointment_id: int,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            appointments.appointment_id,
+            appointment_statuses.status_name AS status
+        FROM appointments
+        INNER JOIN appointment_statuses
+            ON appointment_statuses.status_id = appointments.status_id
+        WHERE appointments.appointment_id = %s
+    """
+    return fetch_one(connection, sql, (appointment_id,))
+
+
 def upsert_medical_note(
     connection: Any,
     appointment_id: int,
