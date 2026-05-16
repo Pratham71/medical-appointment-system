@@ -51,6 +51,7 @@ export default function AppointmentDetailPage() {
   const [cancelReasonCode, setCancelReasonCode] =
     useState<AppointmentCancelReasonCode>("no_show");
   const [cancelReasonNote, setCancelReasonNote] = useState("");
+  const [showCancelForm, setShowCancelForm] = useState(false);
 
   // Notes state
   const [diagnosis, setDiagnosis] = useState("");
@@ -502,49 +503,90 @@ export default function AppointmentDetailPage() {
           </div>
 
           {!isAppointmentLocked && (
-            <div className="bg-white rounded-card border border-brand-border shadow-card p-5">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                <div className="flex-1 min-w-0">
-                  <label className="block text-sm font-medium text-brand-text mb-1.5">
-                    Cancellation reason
-                  </label>
-                  <select
-                    value={cancelReasonCode}
-                    onChange={(e) =>
-                      setCancelReasonCode(e.target.value as AppointmentCancelReasonCode)
-                    }
-                    disabled={saving}
-                    className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-none"
-                  >
-                    <option value="no_show">No-show</option>
-                    <option value="student_request">Student request</option>
-                    <option value="doctor_unavailable">Doctor unavailable</option>
-                    <option value="emergency_priority">Emergency case priority</option>
-                    <option value="duplicate_booking">Duplicate booking</option>
-                    <option value="other">Other</option>
-                  </select>
+            <div className="rounded-card border border-red-200 bg-red-50 overflow-hidden">
+              {/* Header row — always visible */}
+              <button
+                onClick={() => setShowCancelForm((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-red-100"
+              >
+                <div className="flex items-center gap-2.5">
+                  <svg className="h-4 w-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-sm font-medium text-red-700">Cancel Appointment</span>
                 </div>
-                <div className="flex-[1.4] min-w-0">
-                  <label className="block text-sm font-medium text-brand-text mb-1.5">
-                    Note <span className="text-brand-muted font-normal">(optional)</span>
-                  </label>
-                  <input
-                    value={cancelReasonNote}
-                    onChange={(e) => setCancelReasonNote(e.target.value)}
-                    disabled={saving}
-                    maxLength={500}
-                    placeholder="Add context for the student record"
-                    className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={handleCancelAppointment}
-                  disabled={saving}
-                  className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
+                <motion.svg
+                  animate={{ rotate: showCancelForm ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-4 w-4 text-red-400"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  {saving ? "Cancelling..." : "Cancel Appointment"}
-                </button>
-              </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </motion.svg>
+              </button>
+
+              {/* Expandable form */}
+              <AnimatePresence initial={false}>
+                {showCancelForm && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="border-t border-red-200 px-5 py-4 space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
+                          Reason
+                        </label>
+                        <select
+                          value={cancelReasonCode}
+                          onChange={(e) => setCancelReasonCode(e.target.value as AppointmentCancelReasonCode)}
+                          disabled={saving}
+                          className="w-full border border-red-200 bg-white rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-red-400 focus:ring-offset-1 focus:outline-none"
+                        >
+                          <option value="no_show">No-show</option>
+                          <option value="student_request">Student request</option>
+                          <option value="doctor_unavailable">Doctor unavailable</option>
+                          <option value="emergency_priority">Emergency case priority</option>
+                          <option value="duplicate_booking">Duplicate booking</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
+                          Note <span className="text-red-400 font-normal normal-case">(optional — visible to student)</span>
+                        </label>
+                        <input
+                          value={cancelReasonNote}
+                          onChange={(e) => setCancelReasonNote(e.target.value)}
+                          disabled={saving}
+                          maxLength={500}
+                          placeholder="e.g. Doctor on emergency duty — please rebook"
+                          className="w-full border border-red-200 bg-white rounded-btn px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-red-400 focus:ring-offset-1 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 pt-1">
+                        <button
+                          onClick={handleCancelAppointment}
+                          disabled={saving}
+                          className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
+                        >
+                          {saving ? "Cancelling…" : "Confirm Cancellation"}
+                        </button>
+                        <button
+                          onClick={() => setShowCancelForm(false)}
+                          disabled={saving}
+                          className="text-sm text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
@@ -553,7 +595,7 @@ export default function AppointmentDetailPage() {
             <button
               onClick={handleComplete}
               disabled={saving}
-              className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-medium py-3 rounded-btn text-sm transition-colors"
+              className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-semibold py-3 rounded-btn text-sm transition-colors shadow-sm"
             >
               {saving ? "Processing…" : "Mark Appointment Complete"}
             </button>
