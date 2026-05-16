@@ -42,6 +42,13 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Add emergency quick-dial button — floating pulsing red button in student shell, modal with tel: links for infirmary, hostel warden, campus security; shows 999 as last resort
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Doctor appointment detail and patient history now always show booking reason with "Not provided" fallback instead of hiding when null
+
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Added non-destructive MySQL sync migration to repair older local databases where doctor availability tables and certificate summary view columns were missing, causing availability/certificate API 500s
+[2026-05-16] [DOCS] [TEAM] [fix/backend-appointment-certificates] - Documented the live schema sync migration command in setup and DB notes
+[2026-05-16] [TEST] [TEAM] [fix/backend-appointment-certificates] - Added regression coverage for the live schema migration contents
+
 [2026-05-16] [DB] [TEAM] [fix/backend-appointment-certificates] - Added doctor availability schema (#14/#28): weekly availability rules, date-level overrides, indexes, seeded Monday-Saturday availability, and Sunday unavailable by default
 [2026-05-16] [API] [TEAM] [fix/backend-appointment-certificates] - Added doctor availability APIs (#14/#28): GET /doctors/availability, PUT weekly rules, PUT date overrides, and DELETE date overrides using authenticated doctor context
 [2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Added doctor Availability page and sidebar tab (#29) for weekly toggles and date-level override management

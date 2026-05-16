@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getStoredUser } from "@/lib/api";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import EmergencyButton from "@/components/ui/EmergencyButton";
 
 interface Props {
   role: "student" | "doctor" | "admin" | "staff";
@@ -44,6 +45,7 @@ export default function DashboardShell({ role, title, children }: Props) {
           </motion.div>
         </AnimatePresence>
       </main>
+      {role === "student" && <EmergencyButton />}
     </div>
   );
 }
