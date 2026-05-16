@@ -12,7 +12,9 @@ import type {
   StudentCertificateSummary,
   StudentReportSummary,
 } from "@/lib/types";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
+import { SkeletonCards } from "@/components/ui/Skeleton";
 
 type Tab = "reports" | "certificates";
 
@@ -82,20 +84,23 @@ function ReportsPageInner() {
         </div>
       )}
 
-      {loading && (
-        <p className="animate-pulse text-sm text-brand-muted">Loading...</p>
-      )}
+      {loading && <SkeletonCards count={3} />}
 
+      <AnimatePresence mode="wait">
       {!loading && tab === "reports" && (
+      <motion.div key="reports" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
         <div className="space-y-3">
           {reports.length === 0 && (
             <p className="text-sm text-brand-muted">
               No reports available yet.
             </p>
           )}
-          {reports.map((report) => (
-            <div
+          {reports.map((report, i) => (
+            <motion.div
               key={report.appointment_id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: Math.min(i * 0.05, 0.35) }}
               className="flex items-center justify-between rounded-card border border-brand-border bg-white p-4 shadow-card"
             >
               <div className="min-w-0 flex-1">
@@ -140,21 +145,26 @@ function ReportsPageInner() {
                   Download
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
+      </motion.div>
       )}
 
       {!loading && tab === "certificates" && (
+      <motion.div key="certificates" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
         <div className="space-y-3">
           {certs.length === 0 && (
             <p className="text-sm text-brand-muted">
               No certificates available yet.
             </p>
           )}
-          {certs.map((certificate) => (
-            <div
+          {certs.map((certificate, i) => (
+            <motion.div
               key={certificate.certificate_id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: Math.min(i * 0.05, 0.35) }}
               className="flex items-center justify-between rounded-card border border-brand-border bg-white p-4 shadow-card"
             >
               <div className="flex-1">
@@ -195,10 +205,12 @@ function ReportsPageInner() {
                   Download
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
+      </motion.div>
       )}
+      </AnimatePresence>
     </DashboardShell>
   );
 }

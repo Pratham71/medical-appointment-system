@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDoctorAppointments, getStoredUser } from "@/lib/api";
 import type { DoctorAppointmentSummary } from "@/lib/types";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { SkeletonTableRows } from "@/components/ui/Skeleton";
 
 type Tab = "today" | "all";
 
@@ -72,9 +74,11 @@ export default function DoctorAppointmentsPage() {
         ))}
       </div>
 
+      <AnimatePresence mode="wait">
+      <motion.div key={tab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
       <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
         {loading ? (
-          <div className="p-6 text-brand-muted text-sm animate-pulse">Loading…</div>
+          <table className="w-full text-sm"><tbody><SkeletonTableRows rows={4} cols={5} /></tbody></table>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-brand-muted text-sm">
             {tab === "today" ? "No appointments scheduled for today." : "No appointments found."}
@@ -92,8 +96,14 @@ export default function DoctorAppointmentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border">
-              {filtered.map((a) => (
-                <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
+              {filtered.map((a, i) => (
+                <motion.tr
+                  key={a.appointment_id}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }}
+                  className="hover:bg-brand-raised transition-colors"
+                >
                   {tab === "all" && <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>}
                   <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
                   <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
@@ -109,12 +119,14 @@ export default function DoctorAppointmentsPage() {
                       View Details →
                     </button>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+      </motion.div>
+      </AnimatePresence>
     </DashboardShell>
   );
 }

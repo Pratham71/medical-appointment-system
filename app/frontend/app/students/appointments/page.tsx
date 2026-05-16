@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { getStudentAppointments, cancelAppointment, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
 import type { StudentAppointmentSummary } from "@/lib/types";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Modal from "@/components/ui/Modal";
+import { SkeletonTableRows } from "@/components/ui/Skeleton";
 
 type Tab = "upcoming" | "past" | "cancelled";
 
@@ -101,9 +102,19 @@ export default function MyAppointmentsPage() {
         </div>
       )}
 
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
       <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
         {loading ? (
-          <div className="p-6 text-brand-muted text-sm animate-pulse">Loading…</div>
+          <table className="w-full text-sm">
+            <tbody><SkeletonTableRows rows={4} cols={5} /></tbody>
+          </table>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-brand-muted text-sm">
             No {tab} appointments.
@@ -128,8 +139,14 @@ export default function MyAppointmentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border">
-              {filtered.map((a) => (
-                <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
+              {filtered.map((a, i) => (
+                <motion.tr
+                  key={a.appointment_id}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }}
+                  className="hover:bg-brand-raised transition-colors"
+                >
                   <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
                   <td className="px-4 py-3 text-brand-text font-mono text-xs">
                     {a.start_time.slice(0, 5)}
@@ -156,12 +173,14 @@ export default function MyAppointmentsPage() {
                       )}
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+      </motion.div>
+      </AnimatePresence>
     </DashboardShell>
   );
 }

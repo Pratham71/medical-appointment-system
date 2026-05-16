@@ -12,6 +12,7 @@ import {
   getStoredUser,
 } from "@/lib/api";
 import type { AppointmentCancelReasonCode, DoctorAppointmentDetail } from "@/lib/types";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
 
@@ -232,9 +233,15 @@ export default function AppointmentDetailPage() {
         <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-card px-4 py-3 mb-5">{error}</div>
       )}
 
-      {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-card px-4 py-3 mb-5">{successMsg}</div>
-      )}
+      <AnimatePresence>
+        {successMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-card px-4 py-3 mb-5"
+          >{successMsg}</motion.div>
+        )}
+      </AnimatePresence>
 
       {detail && (
         <div className="space-y-5">
@@ -291,6 +298,8 @@ export default function AppointmentDetailPage() {
             </div>
 
             <div className="p-5">
+              <AnimatePresence mode="wait">
+              <motion.div key={tab} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
               {/* Notes */}
               {tab === "notes" && (
                 <div className="space-y-4">
@@ -345,8 +354,15 @@ export default function AppointmentDetailPage() {
                         </tr>
                       </thead>
                       <tbody>
+                        <AnimatePresence initial={false}>
                         {prescRows.map((row, i) => (
-                          <tr key={i}>
+                          <motion.tr
+                            key={i}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.18 }}
+                          >
                             <td className="py-1.5 pr-3">
                               <input
                                 value={row.medicine_name}
@@ -376,8 +392,9 @@ export default function AppointmentDetailPage() {
                                 </button>
                               )}
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
+                        </AnimatePresence>
                       </tbody>
                     </table>
                   </div>
@@ -479,6 +496,8 @@ export default function AppointmentDetailPage() {
                   )}
                 </div>
               )}
+              </motion.div>
+              </AnimatePresence>
             </div>
           </div>
 

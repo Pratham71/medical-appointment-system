@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { searchPatients } from "@/lib/api";
 import type { PatientSearchResult } from "@/lib/types";
+import { motion } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 
 export default function PatientSearchPage() {
@@ -68,10 +69,13 @@ export default function PatientSearchPage() {
         )}
 
         <div className="mt-5 space-y-2">
-          {results.map((patient) => (
-            <button
+          {results.map((patient, i) => (
+            <motion.button
               key={patient.student_id}
               type="button"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: i * 0.06 }}
               onClick={() => router.push(`/doctors/patients/${patient.student_id}?name=${encodeURIComponent(patient.student_name)}&roll=${encodeURIComponent(patient.roll_number)}`)}
               className="w-full rounded-card border border-brand-border px-4 py-3 text-left transition hover:border-teal-200 hover:bg-teal-50"
             >
@@ -86,7 +90,7 @@ export default function PatientSearchPage() {
               <p className="mt-1 text-xs text-brand-muted">
                 {patient.department} - Year {patient.year_level}
               </p>
-            </button>
+            </motion.button>
           ))}
           {!loading && hasSearched && results.length === 0 && (
             <p className="text-sm text-brand-muted">No student found.</p>

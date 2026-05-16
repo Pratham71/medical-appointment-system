@@ -267,14 +267,17 @@ export default function BookAppointmentPage() {
                 s.doctor_id === selectedSlot.doctor_id &&
                 s.slot_date === fromDate &&
                 isFutureSlot(s, fromDate)
-              ).map((s) => (
-                <button
+              ).map((s, i) => (
+                <motion.button
                   key={s.slot_id}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.15, delay: i * 0.04 }}
                   onClick={() => { setSelectedSlot(s); setStep(3); }}
                   className="px-3 py-2 border border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-btn text-sm font-medium transition-colors"
                 >
                   {fmtDate(s.slot_date)} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>

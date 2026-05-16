@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { logout } from "@/lib/api";
 import Modal from "@/components/ui/Modal";
 
@@ -172,11 +172,16 @@ export default function Sidebar({ role }: Props) {
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-        {nav.map((item) => {
+        {nav.map((item, i) => {
           const active = isActive(item.href);
           return (
-            <Link
+            <motion.div
               key={item.href}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: i * 0.05 }}
+            >
+            <Link
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors relative ${
                 active
@@ -190,6 +195,7 @@ export default function Sidebar({ role }: Props) {
               {item.icon}
               {item.label}
             </Link>
+            </motion.div>
           );
         })}
       </nav>

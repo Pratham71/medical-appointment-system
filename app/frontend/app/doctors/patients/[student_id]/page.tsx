@@ -97,7 +97,13 @@ function PatientHistoryPageInner() {
 
       <div className="space-y-3">
         {history.map((item, i) => (
-          <div key={item.appointment_id} className="relative flex gap-4">
+          <motion.div
+            key={item.appointment_id}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2, delay: Math.min(i * 0.06, 0.4) }}
+            className="relative flex gap-4"
+          >
             {/* Timeline line */}
             <div className="flex flex-col items-center">
               <div className="w-3 h-3 rounded-full bg-teal-600 mt-5 flex-shrink-0 z-10" />
@@ -185,7 +191,7 @@ function PatientHistoryPageInner() {
               )}
               </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </DashboardShell>
