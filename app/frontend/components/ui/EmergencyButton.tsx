@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendEmergencyAlert } from "@/lib/api";
+import ToastContainer, { useToast } from "@/components/ui/Toast";
 
 const EMERGENCY_CONTACTS = [
   { label: "College Infirmary", number: "+971-4-XXX-XXXX", description: "Medical emergencies" },
@@ -11,24 +12,29 @@ const EMERGENCY_CONTACTS = [
 
 export default function EmergencyButton() {
   const [open, setOpen] = useState(false);
-  const [alertSent, setAlertSent] = useState(false);
   const [alertSending, setAlertSending] = useState(false);
+  const { toasts, show, dismiss } = useToast();
 
   const handleSendAlert = async () => {
     setAlertSending(true);
     try {
       await sendEmergencyAlert("Student triggered emergency alert from app");
-      setAlertSent(true);
-      window.setTimeout(() => setAlertSent(false), 5000);
+      show("Alert sent to infirmary", "success");
     } catch {
-      // Phone links remain available if the backend alert cannot be sent.
+      show("Alert failed — please call directly", "warning");
     } finally {
       setAlertSending(false);
     }
   };
 
+  const handleDial = (contact: typeof EMERGENCY_CONTACTS[0]) => {
+    show(`Dialling ${contact.label}…`, "info");
+  };
+
   return (
     <>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+
       {/* Floating button */}
       <motion.button
         onClick={() => setOpen(true)}
@@ -87,6 +93,7 @@ export default function EmergencyButton() {
                   <a
                     key={contact.label}
                     href={`tel:${contact.number}`}
+                    onClick={() => handleDial(contact)}
                     className="flex items-center justify-between rounded-lg border border-brand-border px-4 py-3 hover:border-red-200 hover:bg-red-50 transition-colors group"
                   >
                     <div>
@@ -110,14 +117,10 @@ export default function EmergencyButton() {
               <div className="px-4 pb-3">
                 <button
                   onClick={handleSendAlert}
-                  disabled={alertSending || alertSent}
+                  disabled={alertSending}
                   className="w-full rounded-lg bg-red-500 py-2.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors"
                 >
-                  {alertSent
-                    ? "Alert sent to infirmary"
-                    : alertSending
-                      ? "Sending..."
-                      : "Send Alert to Infirmary"}
+                  {alertSending ? "Sending…" : "Send Alert to Infirmary"}
                 </button>
               </div>
 

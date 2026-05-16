@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getStudentDashboard, getStoredUser } from "@/lib/api";
+import { getStudentDashboard, getStudentAppointments, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
-import type { StudentDashboard } from "@/lib/types";
+import type { StudentAppointmentSummary, StudentDashboard } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatsCard from "@/components/ui/StatsCard";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -12,9 +12,15 @@ function fmt(date: string, time: string) {
   return `${new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${time.slice(0, 5)}`;
 }
 
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export default function StudentDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<StudentDashboard | null>(null);
+  const [todayCancelled, setTodayCancelled] = useState<StudentAppointmentSummary[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -25,8 +31,15 @@ export default function StudentDashboardPage() {
     if (user.role_name === "staff") { router.replace("/staff"); return; }
     if (user.role_name !== "student") { router.replace("/login"); return; }
 
-    getStudentDashboard()
-      .then(setData)
+    const today = todayKey();
+    Promise.all([getStudentDashboard(), getStudentAppointments()])
+      .then(([dashboard, appointments]) => {
+        setData(dashboard);
+        const cancelled = appointments.filter(
+          (a) => a.slot_date === today && a.status.toLowerCase() === "cancelled"
+        );
+        setTodayCancelled(cancelled);
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"));
   }, [router]);
 
@@ -77,6 +90,38 @@ export default function StudentDashboardPage() {
               }
             />
           </div>
+
+          {/* Same-day cancelled appointments */}
+          {todayCancelled.map((a) => (
+            <div
+              key={a.appointment_id}
+              className="rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border bg-red-50 p-4 flex items-center justify-between"
+            >
+              <div>
+                <p className="text-xs text-red-500 uppercase tracking-wide font-medium mb-1">
+                  Appointment Cancelled Today
+                </p>
+                <p className="text-sm font-semibold text-brand-text">
+                  {fmt(a.slot_date, a.start_time)}
+                </p>
+                <p className="text-sm text-brand-muted mt-0.5">
+                  Dr. {doctorName(a.doctor_name)}
+                </p>
+                {a.reason && (
+                  <p className="text-xs text-brand-muted mt-0.5">Reason: {a.reason}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={a.status} />
+                <button
+                  onClick={() => router.push("/students/book")}
+                  className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                >
+                  Rebook →
+                </button>
+              </div>
+            </div>
+          ))}
 
           {/* Next appointment banner */}
           {data.next_appointment ? (
