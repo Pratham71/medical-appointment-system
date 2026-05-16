@@ -28,6 +28,7 @@ from app.backend.app.services import (
 ROOT = Path(__file__).resolve().parents[1]
 DB_DIR = ROOT / "app" / "backend" / "app" / "db"
 QUERY_DIR = DB_DIR / "queries"
+MIGRATION_DIR = DB_DIR / "migrations"
 
 
 class FakeConnection:
@@ -202,6 +203,22 @@ def test_schema_defines_doctor_availability_rules():
     assert "create table doctor_availability_overrides" in schema
     assert "override_date date not null" in schema
     assert "unique (staff_id, override_date)" in schema
+
+
+def test_live_schema_migration_repairs_availability_and_certificate_views():
+    migration = (
+        MIGRATION_DIR / "2026_05_16_sync_live_schema.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "create table if not exists doctor_weekly_availability" in migration
+    assert "create table if not exists doctor_availability_overrides" in migration
+    assert "from doctor_availability" in migration
+    assert "when doctor_availability.day_of_week = 6 then false" in migration
+    assert "create or replace view v_available_appointment_slots" in migration
+    assert "left join doctor_weekly_availability" in migration
+    assert "create or replace view v_student_certificate_summaries" in migration
+    assert "appointments.reason as appointment_reason" in migration
+    assert "medical_notes.diagnosis" in migration
 
 
 def test_available_slots_view_respects_doctor_availability_rules():

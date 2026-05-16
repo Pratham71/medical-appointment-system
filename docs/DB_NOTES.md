@@ -17,6 +17,7 @@ Current Focus
 - Login brute-force protection
 - Idempotency/replay-safe write request support
 - Rate limiting support
+- Non-destructive live schema sync migration for older local MySQL databases
 
 ERD
 - Do NOT create ER diagram yet
@@ -98,6 +99,9 @@ Views
 - v_doctor_appointment_summaries
 - v_student_report_summaries
 - v_student_certificate_summaries
+
+Migrations
+- `app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql` repairs older local MySQL databases by adding doctor weekly availability tables, copying legacy `doctor_availability` rows when present, and replacing availability/certificate summary views without dropping appointment data.
 
 Triggers
 - Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.
