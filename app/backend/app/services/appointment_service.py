@@ -7,6 +7,7 @@ from app.backend.app.schemas.appointment import (
     AppointmentBookResponse,
     AppointmentCancelRequest,
     AppointmentSlot,
+    AppointmentSlotWithStatus,
     AppointmentStatusResponse,
     DoctorAvailabilityStatus,
 )
@@ -31,6 +32,13 @@ def list_available_slots(from_date: date | None = None) -> list[AppointmentSlot]
         appointment_repo.ensure_slots_for_date(start_date)
     rows = appointment_repo.list_available_slots(start_date, current_time)
     return [AppointmentSlot(**row) for row in rows]
+
+
+def list_all_slots_for_doctor(
+    doctor_id: int, slot_date: date
+) -> list[AppointmentSlotWithStatus]:
+    rows = appointment_repo.list_all_slots_for_doctor(doctor_id, slot_date)
+    return [AppointmentSlotWithStatus(**row) for row in rows]
 
 
 def list_doctors_with_availability(

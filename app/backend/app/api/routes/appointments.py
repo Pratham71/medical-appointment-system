@@ -14,6 +14,7 @@ from app.backend.app.schemas.appointment import (
     AppointmentBookResponse,
     AppointmentCancelRequest,
     AppointmentSlot,
+    AppointmentSlotWithStatus,
     AppointmentStatusResponse,
     DoctorAvailabilityStatus,
 )
@@ -30,6 +31,18 @@ def get_doctors(
 ) -> list[DoctorAvailabilityStatus]:
     try:
         return appointment_service.list_doctors_with_availability(for_date)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.get("/slots/all", response_model=list[AppointmentSlotWithStatus])
+def get_all_slots_for_doctor(
+    doctor_id: int = Query(..., gt=0),
+    slot_date: date = Query(...),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> list[AppointmentSlotWithStatus]:
+    try:
+        return appointment_service.list_all_slots_for_doctor(doctor_id, slot_date)
     except Exception as exc:
         raise service_error_to_http(exc) from exc
 

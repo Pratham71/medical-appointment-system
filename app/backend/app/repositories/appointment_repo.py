@@ -59,6 +59,11 @@ def list_available_slots(
         )
 
 
+def list_all_slots_for_doctor(doctor_id: int, slot_date: date) -> list[dict[str, Any]]:
+    with session.connection_scope() as connection:
+        return appointment_queries.list_all_slots_for_doctor(connection, doctor_id, slot_date)
+
+
 def list_doctors_with_availability(for_date: date) -> list[dict[str, Any]]:
     with session.connection_scope() as connection:
         return appointment_queries.list_doctors_with_availability(

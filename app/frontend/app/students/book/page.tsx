@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getSlots, getDoctorsForDate, bookAppointment, getStoredUser } from "@/lib/api";
+import { getSlots, getDoctorsForDate, getAllSlotsForDoctor, bookAppointment, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
-import type { AppointmentSlot, DoctorAvailabilityStatus } from "@/lib/types";
+import type { AppointmentSlot, AppointmentSlotWithStatus, DoctorAvailabilityStatus } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 
 type Step = 1 | 2 | 3;
@@ -36,6 +36,7 @@ export default function BookAppointmentPage() {
   const [fromDate, setFromDate] = useState(getLocalDateKey());
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
   const [reason, setReason] = useState("");
+  const [detailedSlots, setDetailedSlots] = useState<AppointmentSlotWithStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshingSlots, setRefreshingSlots] = useState(false);
   const [error, setError] = useState("");
@@ -103,7 +104,11 @@ export default function BookAppointmentPage() {
   };
 
   const selectDoctor = async (doctorId: number) => {
-    const fresh = await refreshSlots();
+    const [fresh, detailed] = await Promise.all([
+      refreshSlots(),
+      getAllSlotsForDoctor(doctorId, fromDate).catch(() => [] as AppointmentSlotWithStatus[]),
+    ]);
+    setDetailedSlots(detailed);
     const firstSlot = fresh.find(
       (s) => s.doctor_id === doctorId && s.slot_date === fromDate && isFutureSlot(s, fromDate)
     ) ?? null;
@@ -291,23 +296,35 @@ export default function BookAppointmentPage() {
             )}
 
             <div className="flex flex-wrap gap-2">
-              {slots.filter((s) =>
-                s.doctor_id === selectedSlot.doctor_id &&
-                s.slot_date === fromDate &&
-                isFutureSlot(s, fromDate)
-              ).map((s, i) => (
-                <motion.button
-                  key={s.slot_id}
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.15, delay: i * 0.04 }}
-                  disabled={refreshingSlots}
-                  onClick={() => { setSelectedSlot(s); setStep(3); }}
-                  className="px-3 py-2 border border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-btn text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-wait"
-                >
-                  {fmtDate(s.slot_date)} · {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
-                </motion.button>
-              ))}
+              {(detailedSlots.length > 0
+                ? detailedSlots.filter((s) => isFutureSlot(s, fromDate))
+                : slots
+                    .filter((s) => s.doctor_id === selectedSlot.doctor_id && s.slot_date === fromDate && isFutureSlot(s, fromDate))
+                    .map((s) => ({ ...s, is_available: true, appointment_status: null } as AppointmentSlotWithStatus))
+              ).map((s, i) => {
+                const taken = !s.is_available;
+                const label = s.appointment_status === "completed" ? "Completed" : s.appointment_status === "booked" ? "Booked" : null;
+                return (
+                  <motion.button
+                    key={s.slot_id}
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.15, delay: i * 0.04 }}
+                    disabled={taken || refreshingSlots}
+                    onClick={() => { setSelectedSlot(s); setStep(3); }}
+                    className={`px-3 py-2 rounded-btn text-sm font-medium transition-colors border ${
+                      taken
+                        ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-70"
+                        : "border-teal-600 text-teal-700 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 disabled:cursor-wait"
+                    }`}
+                  >
+                    <span className={taken ? "line-through" : ""}>
+                      {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
+                    </span>
+                    {label && <span className="ml-1.5 text-xs font-normal">({label})</span>}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         )}

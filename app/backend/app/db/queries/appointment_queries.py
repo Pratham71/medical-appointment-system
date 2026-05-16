@@ -139,6 +139,38 @@ def insert_slot_if_missing(
     )
 
 
+def list_all_slots_for_doctor(
+    connection: Any,
+    doctor_id: int,
+    slot_date: date,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            appointment_slots.slot_id,
+            appointment_slots.staff_id AS doctor_id,
+            users.name AS doctor_name,
+            appointment_slots.slot_date,
+            appointment_slots.start_time,
+            appointment_slots.end_time,
+            IF(apt.status_name IS NULL, 1, 0) AS is_available,
+            apt.status_name AS appointment_status
+        FROM appointment_slots
+        INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
+        INNER JOIN users ON users.user_id = staff.user_id
+        LEFT JOIN (
+            SELECT appointments.slot_id, appointment_statuses.status_name
+            FROM appointments
+            INNER JOIN appointment_statuses
+                ON appointment_statuses.status_id = appointments.status_id
+            WHERE appointment_statuses.status_name IN ('booked', 'completed')
+        ) AS apt ON apt.slot_id = appointment_slots.slot_id
+        WHERE appointment_slots.staff_id = %s
+            AND appointment_slots.slot_date = %s
+        ORDER BY appointment_slots.start_time
+    """
+    return fetch_all(connection, sql, (doctor_id, slot_date))
+
+
 def list_available_slots(
     connection: Any,
     from_date: date,

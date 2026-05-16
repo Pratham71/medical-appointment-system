@@ -131,6 +131,10 @@ export async function getDoctorsForDate(forDate: string): Promise<DoctorAvailabi
   return request<DoctorAvailabilityStatus[]>(`/appointments/doctors?for_date=${forDate}`);
 }
 
+export async function getAllSlotsForDoctor(doctorId: number, slotDate: string): Promise<import("./types").AppointmentSlotWithStatus[]> {
+  return request<import("./types").AppointmentSlotWithStatus[]>(`/appointments/slots/all?doctor_id=${doctorId}&slot_date=${slotDate}`);
+}
+
 export async function bookAppointment(
   slotId: number,
   reason?: string

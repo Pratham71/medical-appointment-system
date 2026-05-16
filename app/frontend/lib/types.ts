@@ -80,6 +80,11 @@ export interface AppointmentSlot {
   end_time: string;
 }
 
+export interface AppointmentSlotWithStatus extends AppointmentSlot {
+  is_available: boolean;
+  appointment_status: "booked" | "completed" | null;
+}
+
 export interface DoctorAvailabilityStatus {
   doctor_id: number;
   doctor_name: string;

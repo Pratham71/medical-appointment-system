@@ -32,6 +32,17 @@ class DoctorAvailabilityStatus(BaseModel):
     unavailability_note: str | None = None
 
 
+class AppointmentSlotWithStatus(BaseModel):
+    slot_id: int
+    doctor_id: int
+    doctor_name: str
+    slot_date: date
+    start_time: time
+    end_time: time
+    is_available: bool
+    appointment_status: str | None = None  # 'booked' | 'completed' | None
+
+
 class AppointmentBookRequest(BaseModel):
     slot_id: int = Field(..., gt=0)
     reason: str | None = Field(default=None, max_length=500)
