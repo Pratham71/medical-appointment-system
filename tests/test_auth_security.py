@@ -7,7 +7,10 @@ from pydantic import ValidationError
 from app.backend.app.core.config import Settings
 from app.backend.app.core.security_controls import FixedWindowRateLimiter, LoginAttemptTracker
 from app.backend.app.main import app
-from app.backend.app.schemas.appointment import AppointmentBookResponse
+from app.backend.app.schemas.appointment import (
+    AppointmentBookResponse,
+    AppointmentStatusResponse,
+)
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.schemas.student import StudentDashboard
 from app.backend.app.services import (
@@ -304,6 +307,68 @@ def test_appointment_doctor_status_route_uses_authenticated_context(monkeypatch)
         }
     ]
     assert captured == [date(2026, 5, 18)]
+
+
+def test_doctor_cancel_appointment_submits_reason(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("doctor", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "can_access_appointment", lambda *args, **kwargs: True)
+
+    def fake_cancel(appointment_id, payload=None, actor_role="student"):
+        captured.append((appointment_id, payload.reason_code, payload.note, actor_role))
+        return AppointmentStatusResponse(
+            appointment_id=appointment_id,
+            status="cancelled",
+            message="Appointment cancelled",
+        )
+
+    monkeypatch.setattr(appointment_service, "cancel_appointment", fake_cancel)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/appointments/55/cancel",
+        headers={**_auth_header(), "Idempotency-Key": "doctor-cancel-55"},
+        json={"reason_code": "no_show", "note": "Student did not arrive"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "cancelled"
+    assert captured == [(55, "no_show", "Student did not arrive", "doctor")]
+
+
+def test_student_cancel_appointment_still_allows_empty_body(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "can_access_appointment", lambda *args, **kwargs: True)
+
+    def fake_cancel(appointment_id, payload=None, actor_role="student"):
+        captured.append((appointment_id, payload, actor_role))
+        return AppointmentStatusResponse(
+            appointment_id=appointment_id,
+            status="cancelled",
+            message="Appointment cancelled",
+        )
+
+    monkeypatch.setattr(appointment_service, "cancel_appointment", fake_cancel)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/appointments/55/cancel",
+        headers={**_auth_header(), "Idempotency-Key": "student-cancel-55"},
+    )
+
+    assert response.status_code == 200
+    assert captured == [(55, None, "student")]
 
 
 def test_state_changing_routes_require_idempotency_key(monkeypatch):

@@ -42,6 +42,11 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [DOCS] [TEAM] [fix/issues-26-30-31] - Added final project TODOs for admin workflow, staff workflow, appointment update email notifications, and final code hardening before submission
+[2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed doctor cancellation reason flow so selecting `Other` does not require an extra note; any selected reason can now submit cancellation
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Extended PATCH /appointments/{id}/cancel so doctors/admins can submit structured cancellation reasons while student cancellation remains body-free
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Added doctor appointment detail cancellation controls with reason options, optional note, and terminal appointment locking after cancellation
+[2026-05-16] [TEST] [TEAM] [fix/issues-26-30-31] - Added regression coverage for doctor cancellation reason validation, API request wiring, repository reason persistence, and frontend cancellation UI
 [2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Added GET /appointments/doctors?for_date= for issue #31, returning every doctor with specialization, availability status, slot count, and override unavailability note for the selected date
 [2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed future booking dates after seeded slots by lazily generating 30-minute appointment slots from doctor weekly availability; future weekdays now stay bookable and Sundays remain unavailable by default
 [2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added cancellation_reason to appointments with a non-destructive MySQL migration and refreshed appointment detail view for issue #30

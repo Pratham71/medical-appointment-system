@@ -98,6 +98,23 @@ def test_doctor_completed_appointment_detail_locks_editing() -> None:
     assert "disabled={saving || isAppointmentLocked}" in page
 
 
+def test_doctor_appointment_detail_can_cancel_with_reason() -> None:
+    page = read(
+        FRONTEND / "app" / "doctors" / "appointments" / "[id]" / "page.tsx"
+    )
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "AppointmentCancelReasonCode" in types
+    assert "cancelAppointment(id, cancelReasonCode, cancelReasonNote.trim())" in page
+    assert 'value="no_show"' in page
+    assert 'value="other"' in page
+    assert "Cancellation reason" in page
+    assert "handleCancelAppointment" in page
+    assert "reason_code" in api
+    assert 'cancelReasonCode === "other" && !cancelReasonNote.trim()' not in page
+
+
 def test_student_booking_uses_local_date_and_hides_elapsed_slots() -> None:
     page = read(FRONTEND / "app" / "students" / "book" / "page.tsx")
 

@@ -70,6 +70,13 @@ POST /appointments/book
 PATCH /appointments/{id}/cancel
 PATCH /appointments/{id}/complete
 
+Appointment cancellation notes:
+- Students can cancel their own booked appointments without a request body.
+- Doctors and admins can cancel accessible booked appointments with a request body containing `reason_code` and optional `note`.
+- Supported doctor/admin `reason_code` values: `no_show`, `student_request`, `doctor_unavailable`, `emergency_priority`, `duplicate_booking`, `other`.
+- Notes are optional for every reason, including `other`.
+- Doctor/admin cancellation reasons are stored in `appointments.cancellation_reason`, and cancelling releases the appointment slot.
+
 Reports
 POST /reports/{appointment_id}/notes
 POST /reports/{appointment_id}/prescription

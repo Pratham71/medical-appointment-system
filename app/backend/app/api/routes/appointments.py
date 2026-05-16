@@ -12,6 +12,7 @@ from app.backend.app.api.errors import service_error_to_http
 from app.backend.app.schemas.appointment import (
     AppointmentBookRequest,
     AppointmentBookResponse,
+    AppointmentCancelRequest,
     AppointmentSlot,
     AppointmentStatusResponse,
     DoctorAvailabilityStatus,
@@ -58,6 +59,7 @@ def book_appointment(
 @router.patch("/{appointment_id}/cancel", response_model=AppointmentStatusResponse)
 def cancel_appointment(
     appointment_id: int = Path(..., gt=0),
+    payload: AppointmentCancelRequest | None = None,
     current_user: AuthenticatedUser = Depends(
         require_roles("student", "doctor", "admin"),
     ),
@@ -70,7 +72,11 @@ def cancel_appointment(
             allow_doctor=True,
             allow_admin=True,
         )
-        return appointment_service.cancel_appointment(appointment_id)
+        return appointment_service.cancel_appointment(
+            appointment_id,
+            payload,
+            actor_role=current_user.role_name,
+        )
     except Exception as exc:
         raise service_error_to_http(exc) from exc
 

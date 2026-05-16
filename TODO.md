@@ -71,6 +71,7 @@ Appointment APIs
 [x] Implement book appointment
 [x] Implement cancel appointment
 [x] Implement mark appointment complete
+[x] Add doctor cancellation reasons on appointment cancel, stored in appointment cancellation_reason and reusable for future staff endpoints
 [x] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
 [x] [TOFIX] Prevent editing notes, prescriptions, or certificates after an appointment is completed or cancelled
 [x] [TOFIX] Hide elapsed same-day appointment slots using local time and reject direct booking attempts for elapsed slots
@@ -142,6 +143,13 @@ Frontend To Fix
 [ ] [FUTURE] Add external emergency notification provider for email/SMS/push delivery after provider choice is finalized
 [ ] [TOFIX] Build full admin dashboard and admin workflows — blocked on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
+
+Final Project TODOs
+
+[ ] [FINAL] Admin workflow and implementation - define the admin dashboard scope, then build backend admin routes and frontend screens for appointment oversight, student/doctor/staff directory views, availability review, emergency alert review, and high-level infirmary metrics; protect everything with admin RBAC and add API/frontend regression tests.
+[ ] [FINAL] Staff workflow and implementation - finalize front-desk staff responsibilities, then build staff routes and UI for appointment lookup, check-in/help-desk handling, cancelling or rescheduling appointments with reasons, emergency alert follow-up, and normal walk-in checkup support; reuse the shared appointment cancellation reason flow where possible.
+[ ] [FINAL] Email notifications for appointment updates - choose SMTP/provider settings, add environment-driven email configuration, create notification templates, and send emails for booking confirmation, cancellation with reason, doctor unavailability auto-cancel, reschedule-related updates, and important report/certificate availability events; keep credentials out of git and cover the notification service with tests.
+[ ] [FINAL] Code refinement and project hardening - clean up duplicated frontend/backend helpers, review API error messages, tighten route/service/repository boundaries, add live MySQL integration tests where useful, check accessibility/responsive UI issues, update final docs/screenshots, and remove stale TODOs before project submission.
 
 Testing and Documentation Tasks
 

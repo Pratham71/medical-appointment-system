@@ -112,7 +112,11 @@ def book_appointment(
         return {"conflict": True, "slot_id": slot_id, "status": "booked"}
 
 
-def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | None:
+def update_status(
+    appointment_id: int,
+    status_name: str,
+    cancellation_reason: str | None = None,
+) -> dict[str, Any] | None:
     with session.transaction_scope() as connection:
         appointment = appointment_queries.get_appointment_for_update(
             connection,
@@ -149,13 +153,23 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
             if available_slot_status_id is None:
                 return None
 
-        appointment_queries.update_appointment_status(
-            connection,
-            appointment_id=appointment_id,
-            status_id=status_id,
-        )
+        if status_name == "cancelled" and cancellation_reason:
+            appointment_queries.cancel_appointment_with_reason(
+                connection,
+                appointment_id=appointment_id,
+                cancelled_status_id=status_id,
+                available_slot_status_id=available_slot_status_id,
+                slot_id=appointment["slot_id"],
+                cancellation_reason=cancellation_reason,
+            )
+        else:
+            appointment_queries.update_appointment_status(
+                connection,
+                appointment_id=appointment_id,
+                status_id=status_id,
+            )
 
-        if available_slot_status_id is not None:
+        if available_slot_status_id is not None and not cancellation_reason:
             appointment_queries.update_slot_status(
                 connection,
                 slot_id=appointment["slot_id"],

@@ -1,14 +1,26 @@
 from datetime import date, datetime
 
-from app.backend.app.api.errors import ConflictError, NotFoundError
+from app.backend.app.api.errors import ConflictError, NotFoundError, ServiceError
 from app.backend.app.repositories import appointment_repo
 from app.backend.app.schemas.appointment import (
     AppointmentBookRequest,
     AppointmentBookResponse,
+    AppointmentCancelRequest,
     AppointmentSlot,
     AppointmentStatusResponse,
     DoctorAvailabilityStatus,
 )
+
+
+_CANCELLATION_REASON_LABELS = {
+    "no_show": "No-show",
+    "student_request": "Student requested cancellation",
+    "doctor_unavailable": "Doctor unavailable",
+    "emergency_priority": "Emergency case prioritized",
+    "duplicate_booking": "Duplicate booking",
+    "other": "Other",
+}
+_REASON_REQUIRED_ROLES = {"doctor", "admin"}
 
 
 def list_available_slots(from_date: date | None = None) -> list[AppointmentSlot]:
@@ -57,8 +69,23 @@ def book_appointment(
     )
 
 
-def cancel_appointment(appointment_id: int) -> AppointmentStatusResponse:
-    return _update_appointment_status(appointment_id, "cancelled", "Appointment cancelled")
+def cancel_appointment(
+    appointment_id: int,
+    payload: AppointmentCancelRequest | None = None,
+    actor_role: str = "student",
+) -> AppointmentStatusResponse:
+    cancellation_reason = None
+    if actor_role.lower() in _REASON_REQUIRED_ROLES:
+        if payload is None:
+            raise ServiceError("Cancellation reason is required")
+        cancellation_reason = _format_cancellation_reason(payload)
+
+    return _update_appointment_status(
+        appointment_id,
+        "cancelled",
+        "Appointment cancelled",
+        cancellation_reason=cancellation_reason,
+    )
 
 
 def complete_appointment(appointment_id: int) -> AppointmentStatusResponse:
@@ -66,9 +93,16 @@ def complete_appointment(appointment_id: int) -> AppointmentStatusResponse:
 
 
 def _update_appointment_status(
-    appointment_id: int, status_name: str, message: str
+    appointment_id: int,
+    status_name: str,
+    message: str,
+    cancellation_reason: str | None = None,
 ) -> AppointmentStatusResponse:
-    result = appointment_repo.update_status(appointment_id, status_name)
+    result = appointment_repo.update_status(
+        appointment_id,
+        status_name,
+        cancellation_reason=cancellation_reason,
+    )
     if result is None:
         raise NotFoundError("Appointment was not found")
     if result.get("invalid_transition"):
@@ -81,6 +115,13 @@ def _update_appointment_status(
         status=result["status"],
         message=message,
     )
+
+
+def _format_cancellation_reason(payload: AppointmentCancelRequest) -> str:
+    reason = _CANCELLATION_REASON_LABELS[payload.reason_code]
+    if payload.note:
+        return f"{reason}: {payload.note}"
+    return reason
 
 
 def _get_local_now() -> datetime:

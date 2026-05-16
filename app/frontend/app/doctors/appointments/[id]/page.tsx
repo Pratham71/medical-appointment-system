@@ -8,9 +8,10 @@ import {
   savePrescription,
   issueCertificate,
   completeAppointment,
+  cancelAppointment,
   getStoredUser,
 } from "@/lib/api";
-import type { DoctorAppointmentDetail } from "@/lib/types";
+import type { AppointmentCancelReasonCode, DoctorAppointmentDetail } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
 
@@ -46,6 +47,9 @@ export default function AppointmentDetailPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [cancelReasonCode, setCancelReasonCode] =
+    useState<AppointmentCancelReasonCode>("no_show");
+  const [cancelReasonNote, setCancelReasonNote] = useState("");
 
   // Notes state
   const [diagnosis, setDiagnosis] = useState("");
@@ -170,6 +174,25 @@ export default function AppointmentDetailPage() {
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Issue failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelAppointment = async () => {
+    if (isAppointmentLocked) {
+      setError(lockedEditMessage);
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await cancelAppointment(id, cancelReasonCode, cancelReasonNote.trim());
+      setDetail((prev) => (prev ? { ...prev, status: "cancelled" } : prev));
+      setSuccessMsg("Appointment cancelled.");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to cancel appointment");
     } finally {
       setSaving(false);
     }
@@ -458,6 +481,53 @@ export default function AppointmentDetailPage() {
               )}
             </div>
           </div>
+
+          {!isAppointmentLocked && (
+            <div className="bg-white rounded-card border border-brand-border shadow-card p-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-sm font-medium text-brand-text mb-1.5">
+                    Cancellation reason
+                  </label>
+                  <select
+                    value={cancelReasonCode}
+                    onChange={(e) =>
+                      setCancelReasonCode(e.target.value as AppointmentCancelReasonCode)
+                    }
+                    disabled={saving}
+                    className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-none"
+                  >
+                    <option value="no_show">No-show</option>
+                    <option value="student_request">Student request</option>
+                    <option value="doctor_unavailable">Doctor unavailable</option>
+                    <option value="emergency_priority">Emergency case priority</option>
+                    <option value="duplicate_booking">Duplicate booking</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="flex-[1.4] min-w-0">
+                  <label className="block text-sm font-medium text-brand-text mb-1.5">
+                    Note <span className="text-brand-muted font-normal">(optional)</span>
+                  </label>
+                  <input
+                    value={cancelReasonNote}
+                    onChange={(e) => setCancelReasonNote(e.target.value)}
+                    disabled={saving}
+                    maxLength={500}
+                    placeholder="Add context for the student record"
+                    className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleCancelAppointment}
+                  disabled={saving}
+                  className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
+                >
+                  {saving ? "Cancelling..." : "Cancel Appointment"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Mark Complete */}
           {detail.status.toLowerCase() !== "completed" && detail.status.toLowerCase() !== "cancelled" && (

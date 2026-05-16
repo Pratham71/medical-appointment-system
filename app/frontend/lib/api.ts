@@ -1,5 +1,6 @@
 import type {
   AppointmentBookResponse,
+  AppointmentCancelReasonCode,
   AppointmentSlot,
   AppointmentStatusResponse,
   AuthenticatedUser,
@@ -141,10 +142,21 @@ export async function bookAppointment(
   );
 }
 
-export async function cancelAppointment(id: number): Promise<AppointmentStatusResponse> {
+export async function cancelAppointment(
+  id: number,
+  reasonCode?: AppointmentCancelReasonCode,
+  note?: string
+): Promise<AppointmentStatusResponse> {
+  const body = reasonCode
+    ? JSON.stringify({
+        reason_code: reasonCode,
+        note: note?.trim() || null,
+      })
+    : undefined;
+
   return request<AppointmentStatusResponse>(
     `/appointments/${id}/cancel`,
-    { method: "PATCH" },
+    { method: "PATCH", body },
     true
   );
 }

@@ -910,6 +910,101 @@ def test_cancel_status_marks_slot_available(monkeypatch):
     assert slot_updates == [(10, 1)]
 
 
+def test_cancel_status_with_reason_stores_reason_and_marks_slot_available(monkeypatch):
+    calls = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_for_update(connection, appointment_id):
+            return {"appointment_id": appointment_id, "slot_id": 10, "status": "booked"}
+
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "cancelled"
+            return 2
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def cancel_appointment_with_reason(
+            connection,
+            appointment_id,
+            cancelled_status_id,
+            available_slot_status_id,
+            slot_id,
+            cancellation_reason,
+        ):
+            calls.append(
+                (
+                    appointment_id,
+                    cancelled_status_id,
+                    available_slot_status_id,
+                    slot_id,
+                    cancellation_reason,
+                )
+            )
+
+        @staticmethod
+        def get_status_result(connection, appointment_id):
+            return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = appointment_repo.update_status(
+        5,
+        "cancelled",
+        cancellation_reason="No-show: Student did not arrive",
+    )
+
+    assert result == {"appointment_id": 5, "status": "cancelled"}
+    assert calls == [(5, 2, 1, 10, "No-show: Student did not arrive")]
+
+
+def test_appointment_cancel_request_allows_other_without_note():
+    from app.backend.app.schemas.appointment import AppointmentCancelRequest
+
+    request = AppointmentCancelRequest(reason_code="other")
+
+    assert request.reason_code == "other"
+    assert request.note is None
+
+
+def test_doctor_cancel_service_formats_reason_and_note(monkeypatch):
+    from app.backend.app.schemas.appointment import AppointmentCancelRequest
+
+    captured = []
+
+    def fake_update_status(appointment_id, status_name, cancellation_reason=None):
+        captured.append((appointment_id, status_name, cancellation_reason))
+        return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "update_status",
+        fake_update_status,
+    )
+
+    result = appointment_service.cancel_appointment(
+        5,
+        AppointmentCancelRequest(
+            reason_code="no_show",
+            note="Student did not arrive",
+        ),
+        actor_role="doctor",
+    )
+
+    assert result.status == "cancelled"
+    assert captured == [(5, "cancelled", "No-show: Student did not arrive")]
+
+
 def test_repository_rejects_completing_cancelled_appointment(monkeypatch):
     status_updates = []
     slot_updates = []
@@ -958,7 +1053,7 @@ def test_complete_cancelled_appointment_raises_conflict(monkeypatch):
     monkeypatch.setattr(
         appointment_service.appointment_repo,
         "update_status",
-        lambda appointment_id, status_name: {
+        lambda appointment_id, status_name, cancellation_reason=None: {
             "appointment_id": appointment_id,
             "status": "cancelled",
             "invalid_transition": True,

@@ -96,6 +96,14 @@ export interface AppointmentBookResponse {
   message: string;
 }
 
+export type AppointmentCancelReasonCode =
+  | "no_show"
+  | "student_request"
+  | "doctor_unavailable"
+  | "emergency_priority"
+  | "duplicate_booking"
+  | "other";
+
 export interface AppointmentStatusResponse {
   appointment_id: number;
   status: string;
