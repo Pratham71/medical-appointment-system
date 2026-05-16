@@ -18,6 +18,7 @@ Current MVP Notes
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
 - Doctor patient search supports name or roll-number lookup and scopes doctor users to their own patients.
 - Doctor availability endpoints use the authenticated doctor staff context and support weekly rules plus date-level overrides.
+- Emergency alerts use the authenticated student context and store alert confirmations for staff follow-up.
 - Write endpoints use idempotency/replay protection where required.
 - Login includes brute-force protection.
 - Rate limiting is enabled for sensitive and high-traffic routes.
@@ -76,6 +77,15 @@ GET /reports/{appointment_id}
 
 Report write notes:
 - Completed and cancelled appointments are locked; doctors cannot edit notes or prescriptions after the appointment reaches a terminal status.
+
+Emergency
+POST /emergency/alert
+
+Emergency alert notes:
+- Student-only endpoint.
+- Requires `Authorization: Bearer <access_token>` and `Idempotency-Key`.
+- Stores an `emergency_alerts` row with student identity, message, and timestamp.
+- External email/SMS/push delivery is future scope until a notification provider is selected.
 
 Certificates
 POST /certificates/{appointment_id}

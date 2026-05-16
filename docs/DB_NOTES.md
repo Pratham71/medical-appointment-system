@@ -14,6 +14,7 @@ Current Focus
 - Authenticated user context for student and staff access
 - Staff login seed account and non-doctor staff row
 - Doctor weekly availability and date-level override tables
+- Emergency alert storage for student-triggered infirmary alerts
 - Login brute-force protection
 - Idempotency/replay-safe write request support
 - Rate limiting support
@@ -46,6 +47,7 @@ Core Tables (MVP)
 - prescription_items
 - certificate_types
 - medical_certificates
+- emergency_alerts
 
 Future Tables
 - appointment_events
@@ -92,6 +94,7 @@ Indexes
 - prescriptions(appointment_id)
 - prescription_items(prescription_id)
 - medical_certificates(certificate_type_id)
+- emergency_alerts(student_id, created_at)
 
 Views
 - v_available_appointment_slots
@@ -102,6 +105,8 @@ Views
 
 Migrations
 - `app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql` repairs older local MySQL databases by adding doctor weekly availability tables, copying legacy `doctor_availability` rows when present, and replacing availability/certificate summary views without dropping appointment data.
+- `app/backend/app/db/migrations/2026_05_16_add_cancellation_reason.sql` adds appointment cancellation context and refreshes the appointment detail view without dropping appointment data.
+- `app/backend/app/db/migrations/2026_05_16_add_emergency_alerts.sql` adds the emergency alert table and supporting index.
 
 Triggers
 - Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.
@@ -128,6 +133,7 @@ DBMS Concepts to Demonstrate
 - MySQL EXPLAIN query analysis
 - MySQL triggers for cross-table integrity rules
 - Doctor availability rules and date overrides
+- Emergency alert writes with authenticated student ownership
 - Auth-backed access control
 - Idempotent transaction handling
 

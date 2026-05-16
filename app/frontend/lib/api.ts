@@ -221,6 +221,19 @@ export async function getReportDetail(appointmentId: number): Promise<ReportDeta
   return request<ReportDetail>(`/reports/${appointmentId}`);
 }
 
+export async function sendEmergencyAlert(
+  message?: string
+): Promise<{ alert_id: number; created_at: string }> {
+  return request<{ alert_id: number; created_at: string }>(
+    "/emergency/alert",
+    {
+      method: "POST",
+      body: JSON.stringify({ message: message ?? null }),
+    },
+    true
+  );
+}
+
 // ── Reports ───────────────────────────────────────────────────────────────────
 
 export async function saveNotes(

@@ -47,6 +47,9 @@ Current Entries
 [2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added cancellation_reason to appointments with a non-destructive MySQL migration and refreshed appointment detail view for issue #30
 [2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Auto-cancel booked appointments when a doctor saves an unavailable date override, releasing affected slots and storing an infirmary cancellation reason
 [2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Student appointment detail now shows doctor-cancelled appointments with the cancellation reason, Reschedule action, and walk-in guidance
+[2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added emergency_alerts table and migration for issue #26 to store student emergency alert requests
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Added POST /emergency/alert using authenticated student context and idempotency protection, returning alert confirmation details
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Wired EmergencyButton Send Alert action to POST /emergency/alert while keeping quick-dial phone links available
 [2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Updated student booking page for issue #31 to fetch all doctors for the selected date and render unavailable doctors as disabled grey cards with amber reason badges instead of hiding them
 [2026-05-16] [TEST] [TEAM] [fix/issues-26-30-31] - Added regression coverage for the doctor availability status API route, service/query contract, OpenAPI surface, and booking-page frontend wiring
 

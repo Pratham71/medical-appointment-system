@@ -132,3 +132,15 @@ def test_student_cancelled_appointment_shows_reschedule_options() -> None:
     assert "Cancelled by infirmary" in detail_page
     assert "Reschedule" in detail_page
     assert "walk-in" in detail_page
+
+
+def test_emergency_button_sends_backend_alert() -> None:
+    button = read(FRONTEND / "components" / "ui" / "EmergencyButton.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+
+    assert "sendEmergencyAlert" in api
+    assert '"/emergency/alert"' in api
+    assert "sendEmergencyAlert" in button
+    assert "handleSendAlert" in button
+    assert "Send Alert to Infirmary" in button
+    assert "Alert sent to infirmary" in button

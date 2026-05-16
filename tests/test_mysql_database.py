@@ -316,6 +316,63 @@ def test_seed_inserts_mvp_lookup_and_sample_data():
     assert "insert into appointment_slots" in seed
 
 
+def test_schema_and_migration_define_emergency_alerts():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_16_add_emergency_alerts.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "create table emergency_alerts" in schema
+    assert "student_id int not null" in schema
+    assert "message varchar(500) not null" in schema
+    assert "foreign key (student_id) references students(student_id)" in schema
+    assert "create table if not exists emergency_alerts" in migration
+
+
+def test_emergency_alert_response_schema_accepts_alert_context():
+    from app.backend.app.schemas.emergency import EmergencyAlertResponse
+
+    response = EmergencyAlertResponse(
+        alert_id=1,
+        student_id=1,
+        student_name="Aarav Sharma",
+        roll_number="CSE-2026-001",
+        message="Need urgent medical help",
+        created_at=datetime(2026, 5, 16, 12, 0),
+    )
+
+    assert response.student_name == "Aarav Sharma"
+    assert response.roll_number == "CSE-2026-001"
+
+
+def test_emergency_service_defaults_blank_alert_message(monkeypatch):
+    from app.backend.app.services import emergency_service
+
+    captured = {}
+
+    def fake_create_alert(student_id: int, message: str):
+        captured["student_id"] = student_id
+        captured["message"] = message
+        return {
+            "alert_id": 1,
+            "student_id": student_id,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "message": message,
+            "created_at": datetime(2026, 5, 16, 12, 0),
+        }
+
+    monkeypatch.setattr(emergency_service.emergency_repo, "create_alert", fake_create_alert)
+
+    response = emergency_service.create_alert(1, "   ")
+
+    assert response.message == "Student requested emergency assistance"
+    assert captured == {
+        "student_id": 1,
+        "message": "Student requested emergency assistance",
+    }
+
+
 def test_query_files_keep_sql_parameterized_and_explicit():
     query_files = [
         path

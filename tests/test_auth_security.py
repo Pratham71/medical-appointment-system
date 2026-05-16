@@ -325,6 +325,43 @@ def test_state_changing_routes_require_idempotency_key(monkeypatch):
     assert response.json()["detail"] == "Idempotency-Key header is required"
 
 
+def test_student_emergency_alert_uses_authenticated_student_context(monkeypatch):
+    from app.backend.app.services import emergency_service
+
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_student_id_for_user", lambda user_id: 7)
+
+    def fake_create_alert(student_id: int, message: str | None):
+        captured.append((student_id, message))
+        return {
+            "alert_id": 99,
+            "student_id": student_id,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "message": message or "Student requested emergency assistance",
+            "created_at": "2026-05-16T12:00:00",
+        }
+
+    monkeypatch.setattr(emergency_service, "create_alert", fake_create_alert)
+
+    client = TestClient(app)
+    response = client.post(
+        "/emergency/alert",
+        headers={**_auth_header(), "Idempotency-Key": "emergency-alert"},
+        json={"message": "Need urgent medical help"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["alert_id"] == 99
+    assert captured == [(7, "Need urgent medical help")]
+
+
 def test_state_changing_routes_check_auth_before_idempotency():
     client = TestClient(app)
 
