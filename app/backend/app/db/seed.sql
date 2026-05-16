@@ -60,6 +60,21 @@ INSERT INTO staff (staff_id, user_id, employee_number, specialization, is_doctor
     (1, 2, 'DOC-001', 'General Medicine', TRUE),
     (2, 4, 'STAFF-001', NULL, FALSE);
 
+INSERT INTO doctor_weekly_availability (
+    staff_id,
+    weekday,
+    is_available,
+    start_time,
+    end_time
+) VALUES
+    (1, 0, TRUE, '09:00:00', '17:00:00'),
+    (1, 1, TRUE, '09:00:00', '17:00:00'),
+    (1, 2, TRUE, '09:00:00', '17:00:00'),
+    (1, 3, TRUE, '09:00:00', '17:00:00'),
+    (1, 4, TRUE, '09:00:00', '17:00:00'),
+    (1, 5, TRUE, '09:00:00', '17:00:00'),
+    (1, 6, FALSE, NULL, NULL);
+
 INSERT INTO appointment_slots (
     slot_id,
     staff_id,

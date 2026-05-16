@@ -4,6 +4,10 @@ import type {
   AppointmentStatusResponse,
   AuthenticatedUser,
   CertificateResponse,
+  DoctorAvailabilityOverride,
+  DoctorAvailabilityPayload,
+  DoctorAvailabilitySettings,
+  DoctorWeeklyAvailability,
   DoctorAppointmentDetail,
   DoctorAppointmentSummary,
   DoctorDashboard,
@@ -160,6 +164,42 @@ export async function getDoctorAppointments(): Promise<DoctorAppointmentSummary[
 
 export async function getDoctorAppointmentDetail(id: number): Promise<DoctorAppointmentDetail> {
   return request<DoctorAppointmentDetail>(`/doctors/appointment/${id}`);
+}
+
+export async function getDoctorAvailability(): Promise<DoctorAvailabilitySettings> {
+  return request<DoctorAvailabilitySettings>("/doctors/availability");
+}
+
+export async function updateDoctorWeeklyAvailability(
+  weekday: number,
+  payload: DoctorAvailabilityPayload
+): Promise<DoctorWeeklyAvailability> {
+  return request<DoctorWeeklyAvailability>(
+    `/doctors/availability/weekly/${weekday}`,
+    { method: "PUT", body: JSON.stringify(payload) },
+    true
+  );
+}
+
+export async function updateDoctorAvailabilityOverride(
+  overrideDate: string,
+  payload: DoctorAvailabilityPayload
+): Promise<DoctorAvailabilityOverride> {
+  return request<DoctorAvailabilityOverride>(
+    `/doctors/availability/overrides/${overrideDate}`,
+    { method: "PUT", body: JSON.stringify(payload) },
+    true
+  );
+}
+
+export async function deleteDoctorAvailabilityOverride(
+  overrideDate: string
+): Promise<void> {
+  await request(
+    `/doctors/availability/overrides/${overrideDate}`,
+    { method: "DELETE" },
+    true
+  );
 }
 
 export async function getPatientHistory(studentId: number): Promise<PatientHistoryItem[]> {

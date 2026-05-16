@@ -121,6 +121,82 @@ def test_doctor_patient_search_uses_authenticated_doctor_scope(monkeypatch):
     assert captured == [("Aarav", 5)]
 
 
+def test_doctor_availability_uses_authenticated_doctor_context(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("doctor", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_staff_id_for_user", lambda user_id: 5)
+
+    def fake_get_availability(staff_id: int):
+        captured.append(staff_id)
+        return {
+            "doctor_id": staff_id,
+            "weekly_availability": [
+                {
+                    "weekday": 0,
+                    "weekday_name": "Monday",
+                    "is_available": True,
+                    "start_time": None,
+                    "end_time": None,
+                },
+                {
+                    "weekday": 6,
+                    "weekday_name": "Sunday",
+                    "is_available": False,
+                    "start_time": None,
+                    "end_time": None,
+                },
+            ],
+            "date_overrides": [],
+        }
+
+    monkeypatch.setattr(doctor_service, "get_availability", fake_get_availability)
+
+    client = TestClient(app)
+    response = client.get("/doctors/availability", headers=_auth_header())
+
+    assert response.status_code == 200
+    assert response.json()["doctor_id"] == 5
+    assert captured == [5]
+
+
+def test_doctor_updates_weekly_availability_from_authenticated_context(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("doctor", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_staff_id_for_user", lambda user_id: 5)
+
+    def fake_update(staff_id: int, weekday: int, payload):
+        captured.append((staff_id, weekday, payload.is_available))
+        return {
+            "weekday": weekday,
+            "weekday_name": "Sunday",
+            "is_available": False,
+            "start_time": None,
+            "end_time": None,
+        }
+
+    monkeypatch.setattr(doctor_service, "upsert_weekly_availability", fake_update)
+
+    client = TestClient(app)
+    response = client.put(
+        "/doctors/availability/weekly/6",
+        headers={**_auth_header(), "Idempotency-Key": "doctor-weekly-sunday"},
+        json={"is_available": False},
+    )
+
+    assert response.status_code == 200
+    assert captured == [(5, 6, False)]
+
+
 def test_admin_patient_search_is_not_scoped_to_doctor(monkeypatch):
     captured = []
 

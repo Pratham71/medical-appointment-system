@@ -1,6 +1,7 @@
+from datetime import date, time
 from typing import Any
 
-from app.backend.app.db.queries._helpers import fetch_all, fetch_one
+from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 
 
 def get_dashboard_counts(connection: Any, staff_id: int) -> dict[str, Any] | None:
@@ -69,6 +70,148 @@ def list_appointments(connection: Any, staff_id: int) -> list[dict[str, Any]]:
             v_doctor_appointment_summaries.start_time
     """
     return fetch_all(connection, sql, (staff_id,))
+
+
+def list_weekly_availability(
+    connection: Any,
+    staff_id: int,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            doctor_weekly_availability.weekday,
+            doctor_weekly_availability.is_available,
+            doctor_weekly_availability.start_time,
+            doctor_weekly_availability.end_time
+        FROM doctor_weekly_availability
+        WHERE doctor_weekly_availability.staff_id = %s
+        ORDER BY doctor_weekly_availability.weekday
+    """
+    return fetch_all(connection, sql, (staff_id,))
+
+
+def get_weekly_availability_rule(
+    connection: Any,
+    staff_id: int,
+    weekday: int,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            doctor_weekly_availability.weekday,
+            doctor_weekly_availability.is_available,
+            doctor_weekly_availability.start_time,
+            doctor_weekly_availability.end_time
+        FROM doctor_weekly_availability
+        WHERE doctor_weekly_availability.staff_id = %s
+            AND doctor_weekly_availability.weekday = %s
+    """
+    return fetch_one(connection, sql, (staff_id, weekday))
+
+
+def upsert_weekly_availability(
+    connection: Any,
+    staff_id: int,
+    weekday: int,
+    is_available: bool,
+    start_time: time | None,
+    end_time: time | None,
+) -> None:
+    sql = """
+        INSERT INTO doctor_weekly_availability (
+            staff_id,
+            weekday,
+            is_available,
+            start_time,
+            end_time
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            is_available = VALUES(is_available),
+            start_time = VALUES(start_time),
+            end_time = VALUES(end_time)
+    """
+    execute(connection, sql, (staff_id, weekday, is_available, start_time, end_time))
+
+
+def list_availability_overrides(
+    connection: Any,
+    staff_id: int,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            doctor_availability_overrides.override_date,
+            doctor_availability_overrides.is_available,
+            doctor_availability_overrides.start_time,
+            doctor_availability_overrides.end_time,
+            doctor_availability_overrides.note
+        FROM doctor_availability_overrides
+        WHERE doctor_availability_overrides.staff_id = %s
+        ORDER BY doctor_availability_overrides.override_date
+    """
+    return fetch_all(connection, sql, (staff_id,))
+
+
+def get_availability_override(
+    connection: Any,
+    staff_id: int,
+    override_date: date,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            doctor_availability_overrides.override_date,
+            doctor_availability_overrides.is_available,
+            doctor_availability_overrides.start_time,
+            doctor_availability_overrides.end_time,
+            doctor_availability_overrides.note
+        FROM doctor_availability_overrides
+        WHERE doctor_availability_overrides.staff_id = %s
+            AND doctor_availability_overrides.override_date = %s
+    """
+    return fetch_one(connection, sql, (staff_id, override_date))
+
+
+def upsert_availability_override(
+    connection: Any,
+    staff_id: int,
+    override_date: date,
+    is_available: bool,
+    start_time: time | None,
+    end_time: time | None,
+    note: str | None,
+) -> None:
+    sql = """
+        INSERT INTO doctor_availability_overrides (
+            staff_id,
+            override_date,
+            is_available,
+            start_time,
+            end_time,
+            note
+        )
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            is_available = VALUES(is_available),
+            start_time = VALUES(start_time),
+            end_time = VALUES(end_time),
+            note = VALUES(note)
+    """
+    execute(
+        connection,
+        sql,
+        (staff_id, override_date, is_available, start_time, end_time, note),
+    )
+
+
+def delete_availability_override(
+    connection: Any,
+    staff_id: int,
+    override_date: date,
+) -> None:
+    sql = """
+        DELETE FROM doctor_availability_overrides
+        WHERE doctor_availability_overrides.staff_id = %s
+            AND doctor_availability_overrides.override_date = %s
+    """
+    execute(connection, sql, (staff_id, override_date))
 
 
 def get_appointment_detail(

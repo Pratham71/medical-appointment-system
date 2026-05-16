@@ -12,6 +12,7 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 - Appointment slot listing and booking
 - Student appointment history
 - Doctor appointment dashboard
+- Doctor weekly availability and date override management
 - Medical consultation notes
 - Prescription records
 - Medical certificate records
@@ -99,7 +100,7 @@ routes -> services -> repositories -> queries -> db
 
 ## Database Design
 
-The database is normalized around users, roles, students, staff, appointment slots, appointments, medical notes, prescriptions, prescription items, certificate types, and medical certificates.
+The database is normalized around users, roles, students, staff, doctor availability rules, appointment slots, appointments, medical notes, prescriptions, prescription items, certificate types, and medical certificates.
 
 Key database concepts covered:
 
@@ -111,6 +112,7 @@ Key database concepts covered:
 - Views
 - Indexing
 - Transactions
+- Triggers
 
 The selected database engine is MySQL.
 
@@ -133,6 +135,10 @@ The selected database engine is MySQL.
 
 - `GET /doctors/dashboard`
 - `GET /doctors/appointments`
+- `GET /doctors/availability`
+- `PUT /doctors/availability/weekly/{weekday}`
+- `PUT /doctors/availability/overrides/{override_date}`
+- `DELETE /doctors/availability/overrides/{override_date}`
 - `GET /doctors/appointment/{id}`
 - `GET /doctors/patients/search?q={name_or_roll_number}`
 - `GET /doctors/patient-history/{student_id}`
@@ -281,8 +287,8 @@ staff@college.edu
 
 ## Current Status
 
-The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, login brute-force protection, and doctor patient search.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
 
-The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, admin safe landing, and staff safe landing.
+The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin safe landing, and staff safe landing.
 
-Current known gaps include the full admin workflow, full staff workflow, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
+Current known gaps include the full admin workflow, full staff workflow, forgot password/password reset as future scope, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.

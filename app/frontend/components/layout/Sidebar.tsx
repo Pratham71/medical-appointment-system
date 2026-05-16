@@ -83,6 +83,15 @@ const doctorNav: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/doctors/availability",
+    label: "Availability",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zm2-6l2 2 4-4" />
+      </svg>
+    ),
+  },
 ];
 
 const adminNav: NavItem[] = [

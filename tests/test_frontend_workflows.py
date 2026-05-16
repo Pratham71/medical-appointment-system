@@ -44,6 +44,23 @@ def test_doctor_today_schedule_uses_local_date_key() -> None:
     assert 'new Date().toISOString().split("T")[0]' not in page
 
 
+def test_doctor_availability_page_is_wired_into_sidebar_and_api() -> None:
+    sidebar = read(FRONTEND / "components" / "layout" / "sidebar.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    availability_page = FRONTEND / "app" / "doctors" / "availability" / "page.tsx"
+
+    assert 'href: "/doctors/availability"' in sidebar
+    assert availability_page.exists()
+    page = read(availability_page)
+    assert "getDoctorAvailability" in page
+    assert "updateDoctorWeeklyAvailability" in page
+    assert "updateDoctorAvailabilityOverride" in page
+    assert "weekday_name" in page
+    assert "getDoctorAvailability" in api
+    assert "updateDoctorWeeklyAvailability" in api
+    assert "updateDoctorAvailabilityOverride" in api
+
+
 def test_patient_history_uses_name_or_roll_number_lookup() -> None:
     page = read(FRONTEND / "app" / "doctors" / "patients" / "page.tsx")
 

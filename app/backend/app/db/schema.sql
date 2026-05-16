@@ -15,6 +15,8 @@ DROP TABLE IF EXISTS medical_certificates;
 DROP TABLE IF EXISTS medical_notes;
 DROP TABLE IF EXISTS appointments;
 DROP TABLE IF EXISTS appointment_slots;
+DROP TABLE IF EXISTS doctor_availability_overrides;
+DROP TABLE IF EXISTS doctor_weekly_availability;
 DROP TABLE IF EXISTS slot_statuses;
 DROP TABLE IF EXISTS appointment_statuses;
 DROP TABLE IF EXISTS staff;
@@ -71,6 +73,51 @@ CREATE TABLE staff (
     CONSTRAINT fk_staff_user
         FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE doctor_weekly_availability (
+    availability_id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    weekday TINYINT UNSIGNED NOT NULL,
+    is_available BOOLEAN NOT NULL DEFAULT TRUE,
+    start_time TIME NULL,
+    end_time TIME NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (staff_id, weekday),
+    CONSTRAINT fk_doctor_weekly_availability_staff
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_doctor_weekly_availability_weekday
+        CHECK (weekday BETWEEN 0 AND 6),
+    CONSTRAINT chk_doctor_weekly_availability_time_range
+        CHECK (
+            start_time IS NULL
+            OR end_time IS NULL
+            OR end_time > start_time
+        )
+) ENGINE=InnoDB;
+
+CREATE TABLE doctor_availability_overrides (
+    override_id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    override_date DATE NOT NULL,
+    is_available BOOLEAN NOT NULL,
+    start_time TIME NULL,
+    end_time TIME NULL,
+    note VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (staff_id, override_date),
+    CONSTRAINT fk_doctor_availability_overrides_staff
+        FOREIGN KEY (staff_id) REFERENCES staff(staff_id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_doctor_availability_overrides_time_range
+        CHECK (
+            start_time IS NULL
+            OR end_time IS NULL
+            OR end_time > start_time
+        )
 ) ENGINE=InnoDB;
 
 CREATE TABLE appointment_statuses (
@@ -187,6 +234,10 @@ CREATE TABLE medical_certificates (
 CREATE INDEX idx_users_role ON users(role_id);
 CREATE INDEX idx_students_user ON students(user_id);
 CREATE INDEX idx_staff_user ON staff(user_id);
+CREATE INDEX idx_doctor_weekly_availability_staff_weekday
+    ON doctor_weekly_availability(staff_id, weekday);
+CREATE INDEX idx_doctor_availability_overrides_staff_date
+    ON doctor_availability_overrides(staff_id, override_date);
 CREATE INDEX idx_appointment_slots_staff_date ON appointment_slots(staff_id, slot_date);
 CREATE INDEX idx_appointment_slots_date_status ON appointment_slots(slot_date, slot_status_id);
 CREATE INDEX idx_appointments_student ON appointments(student_id);
@@ -273,8 +324,44 @@ INNER JOIN staff ON staff.staff_id = appointment_slots.staff_id
 INNER JOIN users ON users.user_id = staff.user_id
 INNER JOIN slot_statuses
     ON slot_statuses.slot_status_id = appointment_slots.slot_status_id
+LEFT JOIN doctor_availability_overrides
+    ON doctor_availability_overrides.staff_id = appointment_slots.staff_id
+    AND doctor_availability_overrides.override_date = appointment_slots.slot_date
+LEFT JOIN doctor_weekly_availability
+    ON doctor_weekly_availability.staff_id = appointment_slots.staff_id
+    AND doctor_weekly_availability.weekday = WEEKDAY(appointment_slots.slot_date)
 WHERE slot_statuses.status_name = 'available'
-    AND staff.is_doctor = TRUE;
+    AND staff.is_doctor = TRUE
+    AND (
+        (
+            doctor_availability_overrides.override_id IS NOT NULL
+            AND doctor_availability_overrides.is_available = TRUE
+            AND (
+                doctor_availability_overrides.start_time IS NULL
+                OR appointment_slots.start_time >=
+                    doctor_availability_overrides.start_time
+            )
+            AND (
+                doctor_availability_overrides.end_time IS NULL
+                OR appointment_slots.end_time <=
+                    doctor_availability_overrides.end_time
+            )
+        )
+        OR (
+            doctor_availability_overrides.override_id IS NULL
+            AND COALESCE(doctor_weekly_availability.is_available, WEEKDAY(appointment_slots.slot_date) < 6) = TRUE
+            AND (
+                doctor_weekly_availability.start_time IS NULL
+                OR appointment_slots.start_time >=
+                    doctor_weekly_availability.start_time
+            )
+            AND (
+                doctor_weekly_availability.end_time IS NULL
+                OR appointment_slots.end_time <=
+                    doctor_weekly_availability.end_time
+            )
+        )
+    );
 
 CREATE VIEW v_appointment_details AS
 SELECT

@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Path, Query
 
 from app.backend.app.api.dependencies import (
@@ -9,6 +11,12 @@ from app.backend.app.api.dependencies import (
 from app.backend.app.api.errors import service_error_to_http
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.schemas.doctor import (
+    DoctorAvailabilityDeleteResponse,
+    DoctorAvailabilityOverride,
+    DoctorAvailabilityOverrideUpdate,
+    DoctorAvailabilitySettings,
+    DoctorAvailabilityUpdate,
+    DoctorWeeklyAvailability,
     DoctorAppointmentDetail,
     DoctorAppointmentSummary,
     DoctorDashboard,
@@ -34,6 +42,64 @@ def appointments(
 ) -> list[DoctorAppointmentSummary]:
     try:
         return doctor_service.list_appointments(staff_id)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.get("/availability", response_model=DoctorAvailabilitySettings)
+def availability(
+    staff_id: int = Depends(require_doctor_staff_id),
+) -> DoctorAvailabilitySettings:
+    try:
+        return doctor_service.get_availability(staff_id)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.put(
+    "/availability/weekly/{weekday}",
+    response_model=DoctorWeeklyAvailability,
+)
+def update_weekly_availability(
+    payload: DoctorAvailabilityUpdate,
+    weekday: int = Path(..., ge=0, le=6),
+    staff_id: int = Depends(require_doctor_staff_id),
+) -> DoctorWeeklyAvailability:
+    try:
+        return doctor_service.upsert_weekly_availability(staff_id, weekday, payload)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.put(
+    "/availability/overrides/{override_date}",
+    response_model=DoctorAvailabilityOverride,
+)
+def update_availability_override(
+    payload: DoctorAvailabilityOverrideUpdate,
+    override_date: date = Path(...),
+    staff_id: int = Depends(require_doctor_staff_id),
+) -> DoctorAvailabilityOverride:
+    try:
+        return doctor_service.upsert_availability_override(
+            staff_id,
+            override_date,
+            payload,
+        )
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.delete(
+    "/availability/overrides/{override_date}",
+    response_model=DoctorAvailabilityDeleteResponse,
+)
+def delete_availability_override(
+    override_date: date = Path(...),
+    staff_id: int = Depends(require_doctor_staff_id),
+) -> DoctorAvailabilityDeleteResponse:
+    try:
+        return doctor_service.delete_availability_override(staff_id, override_date)
     except Exception as exc:
         raise service_error_to_http(exc) from exc
 

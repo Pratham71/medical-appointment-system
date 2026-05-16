@@ -17,6 +17,7 @@ Current MVP Notes
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
 - Doctor patient search supports name or roll-number lookup and scopes doctor users to their own patients.
+- Doctor availability endpoints use the authenticated doctor staff context and support weekly rules plus date-level overrides.
 - Write endpoints use idempotency/replay protection where required.
 - Login includes brute-force protection.
 - Rate limiting is enabled for sensitive and high-traffic routes.
@@ -47,9 +48,20 @@ GET /students/certificates
 Doctors
 GET /doctors/dashboard
 GET /doctors/appointments
+GET /doctors/availability
+PUT /doctors/availability/weekly/{weekday}
+PUT /doctors/availability/overrides/{override_date}
+DELETE /doctors/availability/overrides/{override_date}
 GET /doctors/appointment/{id}
 GET /doctors/patients/search?q={name_or_roll_number}
 GET /doctors/patient-history/{student_id}
+
+Doctor availability notes:
+- Weekday values use MySQL `WEEKDAY()` numbering: Monday `0` through Sunday `6`.
+- Doctors are available Monday-Saturday by default and unavailable on Sunday by default.
+- A date override takes priority over the weekly rule for that date.
+- Available slot reads hide slots outside the active weekly rule or date override.
+- Availability write endpoints require `Idempotency-Key`.
 
 Appointments
 GET /appointments/slots

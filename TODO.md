@@ -50,7 +50,7 @@ Auth and Security Tasks
 [x] Add brute-force protection for login
 [x] Add staff login, seed account, routing, and safe staff landing page
 [ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
-[ ] [TOFIX] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
+[ ] [FUTURE] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
 [ ] [FUTURE] Revisit completed-appointment edit override only if approved — current MVP intentionally locks completed appointments from doctor edits; any future override needs admin approval + audit trail (GitHub issue #24)
 
 Google OAuth Tasks — Future Scope (GitHub issue #21)
@@ -73,9 +73,9 @@ Appointment APIs
 [x] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
 [x] [TOFIX] Prevent editing notes, prescriptions, or certificates after an appointment is completed or cancelled
 [x] [TOFIX] Hide elapsed same-day appointment slots using local time and reject direct booking attempts for elapsed slots
-[ ] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
-[ ] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
-[ ] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
+[x] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
+[x] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
+[x] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
 
 Student APIs
 

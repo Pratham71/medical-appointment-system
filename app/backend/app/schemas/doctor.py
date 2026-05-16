@@ -1,6 +1,6 @@
 from datetime import date, time
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 
 class DoctorDashboard(BaseModel):
@@ -61,3 +61,51 @@ class PatientSearchResult(BaseModel):
     roll_number: str
     department: str
     year_level: int
+
+
+class DoctorAvailabilityUpdate(BaseModel):
+    is_available: bool
+    start_time: time | None = None
+    end_time: time | None = None
+
+    @model_validator(mode="after")
+    def validate_time_range(self) -> "DoctorAvailabilityUpdate":
+        if (self.start_time is None) != (self.end_time is None):
+            raise ValueError("Start and end time must be provided together")
+        if (
+            self.start_time is not None
+            and self.end_time is not None
+            and self.end_time <= self.start_time
+        ):
+            raise ValueError("End time must be after start time")
+        return self
+
+
+class DoctorAvailabilityOverrideUpdate(DoctorAvailabilityUpdate):
+    note: str | None = Field(default=None, max_length=255)
+
+
+class DoctorWeeklyAvailability(BaseModel):
+    weekday: int = Field(..., ge=0, le=6)
+    weekday_name: str
+    is_available: bool
+    start_time: time | None = None
+    end_time: time | None = None
+
+
+class DoctorAvailabilityOverride(BaseModel):
+    override_date: date
+    is_available: bool
+    start_time: time | None = None
+    end_time: time | None = None
+    note: str | None = None
+
+
+class DoctorAvailabilitySettings(BaseModel):
+    doctor_id: int
+    weekly_availability: list[DoctorWeeklyAvailability]
+    date_overrides: list[DoctorAvailabilityOverride]
+
+
+class DoctorAvailabilityDeleteResponse(BaseModel):
+    message: str

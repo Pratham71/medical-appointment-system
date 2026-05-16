@@ -129,6 +129,35 @@ export interface DoctorAppointmentDetail {
   certificate_type: string | null;
 }
 
+export interface DoctorWeeklyAvailability {
+  weekday: number;
+  weekday_name: string;
+  is_available: boolean;
+  start_time: string | null;
+  end_time: string | null;
+}
+
+export interface DoctorAvailabilityOverride {
+  override_date: string;
+  is_available: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  note: string | null;
+}
+
+export interface DoctorAvailabilitySettings {
+  doctor_id: number;
+  weekly_availability: DoctorWeeklyAvailability[];
+  date_overrides: DoctorAvailabilityOverride[];
+}
+
+export interface DoctorAvailabilityPayload {
+  is_available: boolean;
+  start_time?: string | null;
+  end_time?: string | null;
+  note?: string | null;
+}
+
 export interface PatientHistoryItem {
   appointment_id: number;
   slot_date: string;

@@ -3,6 +3,7 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from app.backend.app.core.config import Settings
 from app.backend.app.api.errors import ConflictError
@@ -16,7 +17,12 @@ from app.backend.app.schemas.report import (
     PrescriptionItemCreate,
 )
 from app.backend.app.schemas.student import StudentCertificateSummary
-from app.backend.app.services import appointment_service, certificate_service, report_service
+from app.backend.app.services import (
+    appointment_service,
+    certificate_service,
+    doctor_service,
+    report_service,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -162,6 +168,8 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
         "appointment_statuses",
         "slot_statuses",
         "appointment_slots",
+        "doctor_weekly_availability",
+        "doctor_availability_overrides",
         "appointments",
         "medical_notes",
         "prescriptions",
@@ -180,6 +188,30 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
     assert "idx_appointments_student" in schema
     assert "idx_appointment_slots_staff_date" in schema
     assert "idx_appointment_slots_date_status" in schema
+    assert "idx_doctor_weekly_availability_staff_weekday" in schema
+    assert "idx_doctor_availability_overrides_staff_date" in schema
+
+
+def test_schema_defines_doctor_availability_rules():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "create table doctor_weekly_availability" in schema
+    assert "weekday tinyint unsigned not null" in schema
+    assert "unique (staff_id, weekday)" in schema
+    assert "check (weekday between 0 and 6)" in schema
+    assert "create table doctor_availability_overrides" in schema
+    assert "override_date date not null" in schema
+    assert "unique (staff_id, override_date)" in schema
+
+
+def test_available_slots_view_respects_doctor_availability_rules():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+
+    assert "left join doctor_availability_overrides" in schema
+    assert "left join doctor_weekly_availability" in schema
+    assert "weekday(appointment_slots.slot_date)" in schema
+    assert "coalesce(doctor_weekly_availability.is_available, weekday(appointment_slots.slot_date) < 6)" in schema
+    assert "doctor_availability_overrides.is_available = true" in schema
 
 
 def test_schema_defines_reporting_views():
@@ -247,6 +279,8 @@ def test_seed_inserts_mvp_lookup_and_sample_data():
     assert "'staff'" in seed
     assert "staff@college.edu" in seed
     assert "false" in seed
+    assert "insert into doctor_weekly_availability" in seed
+    assert "(1, 6, false" in seed
     assert "insert into appointment_slots" in seed
 
 
@@ -402,6 +436,34 @@ def test_available_slot_query_filters_exact_date_and_elapsed_today_slots():
     assert "slot_date = %s" in source
     assert "start_time > %s" in source
     assert "slot_date >= %s" not in source
+
+
+def test_doctor_service_returns_default_weekly_availability_when_rows_missing(monkeypatch):
+    monkeypatch.setattr(
+        doctor_service.doctor_repo,
+        "get_availability",
+        lambda staff_id: {"weekly_availability": [], "date_overrides": []},
+    )
+
+    result = doctor_service.get_availability(1)
+
+    assert result.doctor_id == 1
+    assert [rule.weekday for rule in result.weekly_availability] == list(range(7))
+    assert result.weekly_availability[0].is_available is True
+    assert result.weekly_availability[5].is_available is True
+    assert result.weekly_availability[6].is_available is False
+    assert result.date_overrides == []
+
+
+def test_doctor_availability_update_rejects_invalid_time_range():
+    from app.backend.app.schemas.doctor import DoctorAvailabilityUpdate
+
+    with pytest.raises(ValidationError):
+        DoctorAvailabilityUpdate(
+            is_available=True,
+            start_time=time(10, 0),
+            end_time=time(9, 0),
+        )
 
 
 def test_cancel_status_marks_slot_available(monkeypatch):

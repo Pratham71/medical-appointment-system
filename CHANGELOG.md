@@ -42,6 +42,12 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [DB] [TEAM] [fix/backend-appointment-certificates] - Added doctor availability schema (#14/#28): weekly availability rules, date-level overrides, indexes, seeded Monday-Saturday availability, and Sunday unavailable by default
+[2026-05-16] [API] [TEAM] [fix/backend-appointment-certificates] - Added doctor availability APIs (#14/#28): GET /doctors/availability, PUT weekly rules, PUT date overrides, and DELETE date overrides using authenticated doctor context
+[2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Added doctor Availability page and sidebar tab (#29) for weekly toggles and date-level override management
+[2026-05-16] [DOCS] [TEAM] [fix/backend-appointment-certificates] - Marked forgot password/password reset as future scope and updated README/API/DB/ERD notes for doctor availability
+[2026-05-16] [TEST] [TEAM] [fix/backend-appointment-certificates] - Added regression coverage for doctor availability defaults, available-slot filtering, API route surface, authenticated doctor context, and frontend availability wiring
+
 [2026-05-16] [DOCS] [TEAM] [fix/backend-appointment-certificates] - Added GitHub issue #29 and TODO tracking for a doctor availability tab with Sunday unavailable by default and manual override workflow
 [2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Locked completed/cancelled appointments from further doctor edits across medical notes, prescriptions, and certificates; doctor detail form now renders read-only/disabled for locked appointments
 [2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Filtered available appointment slots by exact selected date and local current time so elapsed same-day slots are not shown or bookable

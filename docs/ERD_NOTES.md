@@ -37,6 +37,25 @@ Staff
 - specialization
 - is_doctor
 
+Doctor_Weekly_Availability
+
+- availability_id (PK)
+- staff_id (FK)
+- weekday
+- is_available
+- start_time
+- end_time
+
+Doctor_Availability_Overrides
+
+- override_id (PK)
+- staff_id (FK)
+- override_date
+- is_available
+- start_time
+- end_time
+- note
+
 Appointment_Statuses
 
 - status_id (PK)
@@ -103,6 +122,8 @@ Relationships
 
 - User -> Student (1:1)
 - User -> Staff (1:1)
+- Staff -> Doctor Weekly Availability (1:M)
+- Staff -> Doctor Availability Overrides (1:M)
 - Staff -> Appointment Slots (1:M)
 - Student -> Appointments (1:M)
 - Slot -> Appointment (1:1)
@@ -118,10 +139,13 @@ Normalization
 - No repeated doctor or student info in appointments.
 - Prescription split into prescription and prescription item tables.
 - Slot separated from appointment to prevent duplicate bookings.
+- Doctor weekly availability and date overrides are separated from appointment slots so recurring rules do not duplicate per slot.
 
 Constraints
 
 - UNIQUE(active_slot_id) in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot.
+- UNIQUE(staff_id, weekday) in doctor_weekly_availability.
+- UNIQUE(staff_id, override_date) in doctor_availability_overrides.
 - Foreign keys across all related tables.
 - UNIQUE(appointment_id) in medical_notes and prescriptions.
 - UNIQUE(appointment_id, certificate_type_id) in medical_certificates.
