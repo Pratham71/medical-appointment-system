@@ -42,6 +42,7 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Fixed doctor cards disappearing on booking page when unavailable — now shows all doctors with 0 slots as greyed-out cards with strikethrough slot count and amber "Unavailable today" badge
 [2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Add emergency quick-dial button — floating pulsing red button in student shell, modal with tel: links for infirmary, hostel warden, campus security; shows 999 as last resort
 [2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Doctor appointment detail and patient history now always show booking reason with "Not provided" fallback instead of hiding when null
 

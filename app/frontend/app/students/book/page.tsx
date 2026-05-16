@@ -52,13 +52,19 @@ export default function BookAppointmentPage() {
       .finally(() => setLoading(false));
   }, [fromDate]);
 
-  // Group slots by doctor — only show slots for the selected date
-  const byDoctor = slots.filter((s) => s.slot_date === fromDate && isFutureSlot(s, fromDate)).reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
+  // Group ALL doctors from all returned slots (so they don't disappear when unavailable on selected date)
+  const byDoctor = slots.reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
     const key = `${s.doctor_id}:${s.doctor_name}`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(s);
     return acc;
   }, {});
+
+  // Slots valid for the selected date (used for per-doctor count and step 2)
+  const slotsForDate = (doctorKey: string) =>
+    (byDoctor[doctorKey] ?? []).filter(
+      (s) => s.slot_date === fromDate && isFutureSlot(s, fromDate)
+    );
 
   const handleBook = async () => {
     if (!selectedSlot) return;
@@ -169,28 +175,44 @@ export default function BookAppointmentPage() {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(byDoctor).map(([key, doctorSlots]) => {
+              {Object.entries(byDoctor).map(([key]) => {
                 const [, name] = key.split(":");
+                const todaySlots = slotsForDate(key);
+                const hasSlots = todaySlots.length > 0;
                 return (
-                  <div key={key} className="border border-brand-border rounded-card p-4 hover:border-teal-300 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold mb-3">
+                  <div
+                    key={key}
+                    className={`border rounded-card p-4 transition-colors ${
+                      hasSlots
+                        ? "border-brand-border hover:border-teal-300"
+                        : "border-brand-border bg-brand-raised opacity-60"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold mb-3 ${hasSlots ? "bg-teal-600" : "bg-slate-400"}`}>
                       {doctorName(name).split(" ").slice(0, 2).map((w) => w[0]).join("")}
                     </div>
                     <p className="text-sm font-semibold text-brand-text">Dr. {doctorName(name)}</p>
-                    <p className="text-xs text-brand-muted mt-0.5 mb-3">
-                      {doctorSlots.length} slot{doctorSlots.length !== 1 ? "s" : ""} available
+                    <p className={`text-xs mt-0.5 mb-3 ${hasSlots ? "text-brand-muted" : "text-brand-muted line-through"}`}>
+                      {hasSlots
+                        ? `${todaySlots.length} slot${todaySlots.length !== 1 ? "s" : ""} available`
+                        : "0 slots available"}
                     </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-teal-50 text-teal-700 ring-1 ring-teal-200 mb-3">
-                      Available
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ring-1 mb-3 ${
+                      hasSlots
+                        ? "bg-teal-50 text-teal-700 ring-teal-200"
+                        : "bg-amber-50 text-amber-700 ring-amber-200"
+                    }`}>
+                      {hasSlots ? "Available" : "Unavailable today"}
                     </span>
                     <button
+                      disabled={!hasSlots}
                       onClick={() => {
-                        setSelectedSlot(doctorSlots[0]);
+                        setSelectedSlot(todaySlots[0]);
                         setStep(2);
                       }}
-                      className="w-full border border-teal-600 text-teal-600 hover:bg-teal-50 text-xs font-medium py-1.5 rounded-btn transition-colors"
+                      className="w-full border border-teal-600 text-teal-600 hover:bg-teal-50 text-xs font-medium py-1.5 rounded-btn transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
-                      Select
+                      {hasSlots ? "Select" : "No slots today"}
                     </button>
                   </div>
                 );
@@ -214,7 +236,7 @@ export default function BookAppointmentPage() {
             <p className="text-sm text-brand-muted mb-5">Choose an available time slot</p>
 
             <div className="flex flex-wrap gap-2">
-              {byDoctor[`${selectedSlot.doctor_id}:${selectedSlot.doctor_name}`]?.map((s) => (
+              {slotsForDate(`${selectedSlot.doctor_id}:${selectedSlot.doctor_name}`).map((s) => (
                 <button
                   key={s.slot_id}
                   onClick={() => { setSelectedSlot(s); setStep(3); }}
