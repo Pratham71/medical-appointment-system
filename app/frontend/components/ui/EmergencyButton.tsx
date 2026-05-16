@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { sendEmergencyAlert } from "@/lib/api";
 
 const EMERGENCY_CONTACTS = [
   { label: "College Infirmary", number: "+971-4-XXX-XXXX", description: "Medical emergencies" },
@@ -10,6 +11,21 @@ const EMERGENCY_CONTACTS = [
 
 export default function EmergencyButton() {
   const [open, setOpen] = useState(false);
+  const [alertSent, setAlertSent] = useState(false);
+  const [alertSending, setAlertSending] = useState(false);
+
+  const handleSendAlert = async () => {
+    setAlertSending(true);
+    try {
+      await sendEmergencyAlert("Student triggered emergency alert from app");
+      setAlertSent(true);
+      window.setTimeout(() => setAlertSent(false), 5000);
+    } catch {
+      // Phone links remain available if the backend alert cannot be sent.
+    } finally {
+      setAlertSending(false);
+    }
+  };
 
   return (
     <>
@@ -89,6 +105,20 @@ export default function EmergencyButton() {
                     </div>
                   </a>
                 ))}
+              </div>
+
+              <div className="px-4 pb-3">
+                <button
+                  onClick={handleSendAlert}
+                  disabled={alertSending || alertSent}
+                  className="w-full rounded-lg bg-red-500 py-2.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors"
+                >
+                  {alertSent
+                    ? "Alert sent to infirmary"
+                    : alertSending
+                      ? "Sending..."
+                      : "Send Alert to Infirmary"}
+                </button>
               </div>
 
               <div className="px-5 pb-4">

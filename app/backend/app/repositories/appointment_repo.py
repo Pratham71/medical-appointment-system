@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Any
 
 from mysql.connector import IntegrityError, errorcode
@@ -14,6 +14,37 @@ class _BookingConflict(Exception):
 _ALLOWED_STATUS_TRANSITIONS = {
     "booked": {"cancelled", "completed"},
 }
+_SLOT_INTERVAL = timedelta(minutes=30)
+_DEFAULT_START_TIME = time(9, 0)
+_DEFAULT_END_TIME = time(17, 0)
+
+
+def ensure_slots_for_date(slot_date: date) -> None:
+    with session.transaction_scope() as connection:
+        available_status_id = appointment_queries.get_slot_status_id(
+            connection,
+            "available",
+        )
+        if available_status_id is None:
+            return
+
+        windows = appointment_queries.list_doctor_slot_generation_windows(
+            connection,
+            slot_date,
+        )
+        for window in windows:
+            for start_time, end_time in _iter_half_hour_slots(
+                _coerce_time(window.get("start_time"), _DEFAULT_START_TIME),
+                _coerce_time(window.get("end_time"), _DEFAULT_END_TIME),
+            ):
+                appointment_queries.insert_slot_if_missing(
+                    connection,
+                    staff_id=int(window["staff_id"]),
+                    slot_status_id=available_status_id,
+                    slot_date=slot_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
 
 
 def list_available_slots(
@@ -25,6 +56,14 @@ def list_available_slots(
             connection,
             from_date,
             current_time,
+        )
+
+
+def list_doctors_with_availability(for_date: date) -> list[dict[str, Any]]:
+    with session.connection_scope() as connection:
+        return appointment_queries.list_doctors_with_availability(
+            connection,
+            for_date,
         )
 
 
@@ -73,7 +112,11 @@ def book_appointment(
         return {"conflict": True, "slot_id": slot_id, "status": "booked"}
 
 
-def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | None:
+def update_status(
+    appointment_id: int,
+    status_name: str,
+    cancellation_reason: str | None = None,
+) -> dict[str, Any] | None:
     with session.transaction_scope() as connection:
         appointment = appointment_queries.get_appointment_for_update(
             connection,
@@ -110,13 +153,23 @@ def update_status(appointment_id: int, status_name: str) -> dict[str, Any] | Non
             if available_slot_status_id is None:
                 return None
 
-        appointment_queries.update_appointment_status(
-            connection,
-            appointment_id=appointment_id,
-            status_id=status_id,
-        )
+        if status_name == "cancelled" and cancellation_reason:
+            appointment_queries.cancel_appointment_with_reason(
+                connection,
+                appointment_id=appointment_id,
+                cancelled_status_id=status_id,
+                available_slot_status_id=available_slot_status_id,
+                slot_id=appointment["slot_id"],
+                cancellation_reason=cancellation_reason,
+            )
+        else:
+            appointment_queries.update_appointment_status(
+                connection,
+                appointment_id=appointment_id,
+                status_id=status_id,
+            )
 
-        if available_slot_status_id is not None:
+        if available_slot_status_id is not None and not cancellation_reason:
             appointment_queries.update_slot_status(
                 connection,
                 slot_id=appointment["slot_id"],
@@ -137,6 +190,29 @@ def get_access_context(appointment_id: int) -> dict[str, Any] | None:
 def _slot_has_elapsed(slot: dict[str, Any]) -> bool:
     slot_start = datetime.combine(slot["slot_date"], slot["start_time"])
     return slot_start <= _get_local_now()
+
+
+def _iter_half_hour_slots(
+    start_time: time,
+    end_time: time,
+) -> list[tuple[time, time]]:
+    slot_date = date(2000, 1, 1)
+    current = datetime.combine(slot_date, start_time)
+    end = datetime.combine(slot_date, end_time)
+    slots = []
+    while current + _SLOT_INTERVAL <= end:
+        next_time = current + _SLOT_INTERVAL
+        slots.append((current.time(), next_time.time()))
+        current = next_time
+    return slots
+
+
+def _coerce_time(value: Any, fallback: time) -> time:
+    if isinstance(value, time):
+        return value
+    if isinstance(value, str):
+        return time.fromisoformat(value)
+    return fallback
 
 
 def _get_local_now() -> datetime:

@@ -12,13 +12,26 @@ from app.backend.app.api.errors import service_error_to_http
 from app.backend.app.schemas.appointment import (
     AppointmentBookRequest,
     AppointmentBookResponse,
+    AppointmentCancelRequest,
     AppointmentSlot,
     AppointmentStatusResponse,
+    DoctorAvailabilityStatus,
 )
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.services import appointment_service
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
+
+
+@router.get("/doctors", response_model=list[DoctorAvailabilityStatus])
+def get_doctors(
+    for_date: date | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> list[DoctorAvailabilityStatus]:
+    try:
+        return appointment_service.list_doctors_with_availability(for_date)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
 
 
 @router.get("/slots", response_model=list[AppointmentSlot])
@@ -46,6 +59,7 @@ def book_appointment(
 @router.patch("/{appointment_id}/cancel", response_model=AppointmentStatusResponse)
 def cancel_appointment(
     appointment_id: int = Path(..., gt=0),
+    payload: AppointmentCancelRequest | None = None,
     current_user: AuthenticatedUser = Depends(
         require_roles("student", "doctor", "admin"),
     ),
@@ -58,7 +72,11 @@ def cancel_appointment(
             allow_doctor=True,
             allow_admin=True,
         )
-        return appointment_service.cancel_appointment(appointment_id)
+        return appointment_service.cancel_appointment(
+            appointment_id,
+            payload,
+            actor_role=current_user.role_name,
+        )
     except Exception as exc:
         raise service_error_to_http(exc) from exc
 

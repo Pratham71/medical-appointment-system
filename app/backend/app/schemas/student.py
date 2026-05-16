@@ -32,6 +32,7 @@ class StudentAppointmentSummary(BaseModel):
     doctor_name: str
     status: str
     reason: str | None = None
+    cancellation_reason: str | None = None
 
 
 class StudentReportSummary(BaseModel):

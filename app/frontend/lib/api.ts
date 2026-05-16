@@ -1,9 +1,11 @@
 import type {
   AppointmentBookResponse,
+  AppointmentCancelReasonCode,
   AppointmentSlot,
   AppointmentStatusResponse,
   AuthenticatedUser,
   CertificateResponse,
+  DoctorAvailabilityStatus,
   DoctorAvailabilityOverride,
   DoctorAvailabilityPayload,
   DoctorAvailabilitySettings,
@@ -125,6 +127,10 @@ export async function getSlots(fromDate: string): Promise<AppointmentSlot[]> {
   return request<AppointmentSlot[]>(`/appointments/slots?from_date=${fromDate}`);
 }
 
+export async function getDoctorsForDate(forDate: string): Promise<DoctorAvailabilityStatus[]> {
+  return request<DoctorAvailabilityStatus[]>(`/appointments/doctors?for_date=${forDate}`);
+}
+
 export async function bookAppointment(
   slotId: number,
   reason?: string
@@ -136,10 +142,21 @@ export async function bookAppointment(
   );
 }
 
-export async function cancelAppointment(id: number): Promise<AppointmentStatusResponse> {
+export async function cancelAppointment(
+  id: number,
+  reasonCode?: AppointmentCancelReasonCode,
+  note?: string
+): Promise<AppointmentStatusResponse> {
+  const body = reasonCode
+    ? JSON.stringify({
+        reason_code: reasonCode,
+        note: note?.trim() || null,
+      })
+    : undefined;
+
   return request<AppointmentStatusResponse>(
     `/appointments/${id}/cancel`,
-    { method: "PATCH" },
+    { method: "PATCH", body },
     true
   );
 }
@@ -214,6 +231,19 @@ export async function searchPatients(query: string): Promise<PatientSearchResult
 
 export async function getReportDetail(appointmentId: number): Promise<ReportDetail> {
   return request<ReportDetail>(`/reports/${appointmentId}`);
+}
+
+export async function sendEmergencyAlert(
+  message?: string
+): Promise<{ alert_id: number; created_at: string }> {
+  return request<{ alert_id: number; created_at: string }>(
+    "/emergency/alert",
+    {
+      method: "POST",
+      body: JSON.stringify({ message: message ?? null }),
+    },
+    true
+  );
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────

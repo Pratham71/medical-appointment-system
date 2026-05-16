@@ -160,6 +160,27 @@ function AppointmentDetailPageInner() {
               </p>
             </div>
           </div>
+          {appointment.cancellation_reason && (
+            <div className="px-5 py-4 bg-amber-50 border-t border-brand-border">
+              <p className="text-xs text-amber-700 font-medium mb-1">
+                Cancelled by infirmary
+              </p>
+              <p className="text-sm text-amber-800">
+                {appointment.cancellation_reason}
+              </p>
+              <div className="flex flex-wrap gap-3 mt-3">
+                <button
+                  onClick={() => router.push("/students/book")}
+                  className="rounded-btn bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700 transition-colors"
+                >
+                  Reschedule
+                </button>
+                <span className="text-xs text-amber-700 self-center">
+                  or visit the infirmary during open hours for a walk-in.
+                </span>
+              </div>
+            </div>
+          )}
           <div className="px-5 py-4">
             <p className="text-xs text-brand-muted mb-1">Doctor</p>
             <p className="text-sm font-medium text-brand-text">

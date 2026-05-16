@@ -18,6 +18,7 @@ Current MVP Notes
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
 - Doctor patient search supports name or roll-number lookup and scopes doctor users to their own patients.
 - Doctor availability endpoints use the authenticated doctor staff context and support weekly rules plus date-level overrides.
+- Emergency alerts use the authenticated student context and store alert confirmations for staff follow-up.
 - Write endpoints use idempotency/replay protection where required.
 - Login includes brute-force protection.
 - Rate limiting is enabled for sensitive and high-traffic routes.
@@ -69,6 +70,13 @@ POST /appointments/book
 PATCH /appointments/{id}/cancel
 PATCH /appointments/{id}/complete
 
+Appointment cancellation notes:
+- Students can cancel their own booked appointments without a request body.
+- Doctors and admins can cancel accessible booked appointments with a request body containing `reason_code` and optional `note`.
+- Supported doctor/admin `reason_code` values: `no_show`, `student_request`, `doctor_unavailable`, `emergency_priority`, `duplicate_booking`, `other`.
+- Notes are optional for every reason, including `other`.
+- Doctor/admin cancellation reasons are stored in `appointments.cancellation_reason`, and cancelling releases the appointment slot.
+
 Reports
 POST /reports/{appointment_id}/notes
 POST /reports/{appointment_id}/prescription
@@ -76,6 +84,15 @@ GET /reports/{appointment_id}
 
 Report write notes:
 - Completed and cancelled appointments are locked; doctors cannot edit notes or prescriptions after the appointment reaches a terminal status.
+
+Emergency
+POST /emergency/alert
+
+Emergency alert notes:
+- Student-only endpoint.
+- Requires `Authorization: Bearer <access_token>` and `Idempotency-Key`.
+- Stores an `emergency_alerts` row with student identity, message, and timestamp.
+- External email/SMS/push delivery is future scope until a notification provider is selected.
 
 Certificates
 POST /certificates/{appointment_id}

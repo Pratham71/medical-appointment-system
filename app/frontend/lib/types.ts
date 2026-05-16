@@ -40,6 +40,7 @@ export interface StudentAppointmentSummary {
   doctor_name: string;
   status: string;
   reason: string | null;
+  cancellation_reason: string | null;
 }
 
 export interface StudentReportSummary {
@@ -79,12 +80,29 @@ export interface AppointmentSlot {
   end_time: string;
 }
 
+export interface DoctorAvailabilityStatus {
+  doctor_id: number;
+  doctor_name: string;
+  specialization: string | null;
+  is_available: boolean;
+  available_slots: number;
+  unavailability_note: string | null;
+}
+
 export interface AppointmentBookResponse {
   appointment_id: number | null;
   slot_id: number;
   status: string;
   message: string;
 }
+
+export type AppointmentCancelReasonCode =
+  | "no_show"
+  | "student_request"
+  | "doctor_unavailable"
+  | "emergency_priority"
+  | "duplicate_booking"
+  | "other";
 
 export interface AppointmentStatusResponse {
   appointment_id: number;

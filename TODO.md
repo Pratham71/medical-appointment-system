@@ -66,22 +66,24 @@ Google OAuth Tasks — Future Scope (GitHub issue #21)
 
 Appointment APIs
 
-[ ] Implement get doctors
+[x] Implement get doctors
 [x] Implement get slots
 [x] Implement book appointment
 [x] Implement cancel appointment
 [x] Implement mark appointment complete
+[x] Add doctor cancellation reasons on appointment cancel, stored in appointment cancellation_reason and reusable for future staff endpoints
 [x] [TOFIX] Prevent doctors from completing cancelled appointments and make sure cancelled appointments free their slots (GitHub issue #13)
 [x] [TOFIX] Prevent editing notes, prescriptions, or certificates after an appointment is completed or cancelled
 [x] [TOFIX] Hide elapsed same-day appointment slots using local time and reject direct booking attempts for elapsed slots
 [x] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
 [x] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
 [x] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
-[ ] [TOFIX] [BACKEND] Auto-cancel bookings when doctor sets unavailability override — on override save, cancel appointments in the blocked time window, free their slots, store cancellation_reason on appointment, trigger student notification (GitHub issue #30)
-[ ] [TOFIX] Show doctor unavailability reason on booking page when selected date is blocked — greyed card with amber "Unavailable — <reason>" badge, disabled Select button (GitHub issue #31)
-[ ] [TOFIX] [BACKEND] Add GET /appointments/doctors?date= endpoint returning all doctors with availability status and override reason for a given date — required for frontend to show unavailable doctors on booking page instead of them disappearing (the v_available_appointment_slots view filters them out at DB level)
-[ ] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, needs exposing in API response and rendering in frontend (GitHub issue #31)
-[ ] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
+[x] [TOFIX] Generate future weekday appointment slots from doctor availability rules so doctors keep showing as bookable after seeded dates, except Sundays by default
+[x] [TOFIX] [BACKEND] Auto-cancel bookings when doctor sets unavailability override — on override save, cancel booked appointments, free their slots, store cancellation_reason, and show reschedule/walk-in options to students (GitHub issue #30)
+[x] [TOFIX] Show doctor unavailability reason on booking page when selected date is blocked — greyed card with amber "Unavailable — <reason>" badge, disabled Select button (GitHub issue #31)
+[x] [TOFIX] [BACKEND] Add GET /appointments/doctors?for_date= endpoint returning all doctors with availability status and override reason for a given date — required for frontend to show unavailable doctors on booking page instead of them disappearing (the v_available_appointment_slots view filters them out at DB level)
+[x] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, now exposed in API response and rendered in frontend (GitHub issue #31)
+[x] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
 
 Student APIs
 
@@ -137,9 +139,17 @@ Frontend To Fix
 [x] [TOFIX] Add View button on booked appointments + student appointment detail page /students/appointments/[id] (GitHub issue #25)
 [x] [TOFIX] Booking reason not showing on doctor appointment detail and patient history pages — now always shown with "Not provided" fallback
 [ ] [FUTURE] User profile + onboarding flow — hosteler status, room number, hostel block, local + international contact numbers, emergency contact; multi-step onboarding on first login, profile page in sidebar; backend needs student_profiles table (GitHub issue #27)
-[ ] [TOFIX] Emergency button — quick-dial infirmary/hostel/security via tel: links (frontend), automated alert POST /emergency/alert with email/SMS notifications to staff (backend needs notification provider) (GitHub issue #26)
+[x] [TOFIX] Emergency button — quick-dial infirmary/hostel/security via tel: links plus automated alert POST /emergency/alert stored in MySQL for staff follow-up (GitHub issue #26)
+[ ] [FUTURE] Add external emergency notification provider for email/SMS/push delivery after provider choice is finalized
 [ ] [TOFIX] Build full admin dashboard and admin workflows — blocked on backend admin routes (GET /admin/dashboard, /admin/appointments, /admin/students, /admin/doctors) (GitHub issue #11)
 [x] [TOFIX] Add staff dashboard or safe staff landing page after staff role decision
+
+Final Project TODOs
+
+[ ] [FINAL] Admin workflow and implementation - define the admin dashboard scope, then build backend admin routes and frontend screens for appointment oversight, student/doctor/staff directory views, availability review, emergency alert review, and high-level infirmary metrics; protect everything with admin RBAC and add API/frontend regression tests.
+[ ] [FINAL] Staff workflow and implementation - finalize front-desk staff responsibilities, then build staff routes and UI for appointment lookup, check-in/help-desk handling, cancelling or rescheduling appointments with reasons, emergency alert follow-up, and normal walk-in checkup support; reuse the shared appointment cancellation reason flow where possible.
+[ ] [FINAL] Email notifications for appointment updates - choose SMTP/provider settings, add environment-driven email configuration, create notification templates, and send emails for booking confirmation, cancellation with reason, doctor unavailability auto-cancel, reschedule-related updates, and important report/certificate availability events; keep credentials out of git and cover the notification service with tests.
+[ ] [FINAL] Code refinement and project hardening - clean up duplicated frontend/backend helpers, review API error messages, tighten route/service/repository boundaries, add live MySQL integration tests where useful, check accessibility/responsive UI issues, update final docs/screenshots, and remove stale TODOs before project submission.
 
 Testing and Documentation Tasks
 

@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getSlots, bookAppointment, getStoredUser } from "@/lib/api";
+import { getSlots, getDoctorsForDate, bookAppointment, getStoredUser } from "@/lib/api";
 import { doctorName } from "@/lib/utils";
-import type { AppointmentSlot } from "@/lib/types";
+import type { AppointmentSlot, DoctorAvailabilityStatus } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 
 type Step = 1 | 2 | 3;
@@ -32,6 +32,7 @@ export default function BookAppointmentPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [slots, setSlots] = useState<AppointmentSlot[]>([]);
+  const [doctors, setDoctors] = useState<DoctorAvailabilityStatus[]>([]);
   const [fromDate, setFromDate] = useState(getLocalDateKey());
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
   const [reason, setReason] = useState("");
@@ -50,9 +51,11 @@ export default function BookAppointmentPage() {
       .then(setSlots)
       .catch(() => setSlots([]))
       .finally(() => setLoading(false));
+    getDoctorsForDate(fromDate)
+      .then(setDoctors)
+      .catch(() => setDoctors([]));
   }, [fromDate]);
 
-  // Group ALL doctors from all returned slots (so they don't disappear when unavailable on selected date)
   const byDoctor = slots.reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
     const key = `${s.doctor_id}:${s.doctor_name}`;
     if (!acc[key]) acc[key] = [];
@@ -60,10 +63,29 @@ export default function BookAppointmentPage() {
     return acc;
   }, {});
 
-  // Slots valid for the selected date (used for per-doctor count and step 2)
-  const slotsForDate = (doctorKey: string) =>
-    (byDoctor[doctorKey] ?? []).filter(
+  const fallbackDoctors = Object.entries(byDoctor).map(([key, doctorSlots]) => {
+    const [idStr, name] = key.split(":");
+    const availableSlots = doctorSlots.filter(
       (s) => s.slot_date === fromDate && isFutureSlot(s, fromDate)
+    );
+    return {
+      doctor_id: Number(idStr),
+      doctor_name: name,
+      specialization: null,
+      is_available: availableSlots.length > 0,
+      available_slots: availableSlots.length,
+      unavailability_note: null,
+    } as DoctorAvailabilityStatus;
+  });
+
+  const doctorsForDate = doctors.length > 0 ? doctors : fallbackDoctors;
+
+  const slotsForDoctor = (doctorId: number) =>
+    slots.filter(
+      (s) =>
+        s.doctor_id === doctorId &&
+        s.slot_date === fromDate &&
+        isFutureSlot(s, fromDate)
     );
 
   const handleBook = async () => {
@@ -170,18 +192,20 @@ export default function BookAppointmentPage() {
 
             {loading && <p className="text-brand-muted text-sm animate-pulse">Loading slots…</p>}
 
-            {!loading && Object.keys(byDoctor).length === 0 && (
-              <p className="text-brand-muted text-sm">No available slots from this date. Try another date.</p>
+            {!loading && doctorsForDate.length === 0 && (
+              <p className="text-brand-muted text-sm">No doctors found for this date. Try another date.</p>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(byDoctor).map(([key]) => {
-                const [, name] = key.split(":");
-                const todaySlots = slotsForDate(key);
-                const hasSlots = todaySlots.length > 0;
+              {doctorsForDate.map((doc) => {
+                const todaySlots = slotsForDoctor(doc.doctor_id);
+                const visibleSlotCount = fromDate === getLocalDateKey()
+                  ? Math.min(doc.available_slots, todaySlots.length)
+                  : doc.available_slots;
+                const hasSlots = Boolean(doc.is_available) && todaySlots.length > 0;
                 return (
                   <div
-                    key={key}
+                    key={doc.doctor_id}
                     className={`border rounded-card p-4 transition-colors ${
                       hasSlots
                         ? "border-brand-border hover:border-teal-300"
@@ -189,12 +213,15 @@ export default function BookAppointmentPage() {
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold mb-3 ${hasSlots ? "bg-teal-600" : "bg-slate-400"}`}>
-                      {doctorName(name).split(" ").slice(0, 2).map((w) => w[0]).join("")}
+                      {doctorName(doc.doctor_name).split(" ").slice(0, 2).map((w) => w[0]).join("")}
                     </div>
-                    <p className="text-sm font-semibold text-brand-text">Dr. {doctorName(name)}</p>
+                    <p className="text-sm font-semibold text-brand-text">Dr. {doctorName(doc.doctor_name)}</p>
+                    {doc.specialization && (
+                      <p className="text-xs text-brand-muted mt-0.5">{doc.specialization}</p>
+                    )}
                     <p className={`text-xs mt-0.5 mb-3 ${hasSlots ? "text-brand-muted" : "text-brand-muted line-through"}`}>
                       {hasSlots
-                        ? `${todaySlots.length} slot${todaySlots.length !== 1 ? "s" : ""} available`
+                        ? `${visibleSlotCount} slot${visibleSlotCount !== 1 ? "s" : ""} available`
                         : "0 slots available"}
                     </p>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ring-1 mb-3 ${
@@ -202,7 +229,7 @@ export default function BookAppointmentPage() {
                         ? "bg-teal-50 text-teal-700 ring-teal-200"
                         : "bg-amber-50 text-amber-700 ring-amber-200"
                     }`}>
-                      {hasSlots ? "Available" : "Unavailable today"}
+                      {hasSlots ? "Available" : doc.unavailability_note ? `Unavailable - ${doc.unavailability_note}` : "Unavailable today"}
                     </span>
                     <button
                       disabled={!hasSlots}
@@ -236,7 +263,11 @@ export default function BookAppointmentPage() {
             <p className="text-sm text-brand-muted mb-5">Choose an available time slot</p>
 
             <div className="flex flex-wrap gap-2">
-              {slotsForDate(`${selectedSlot.doctor_id}:${selectedSlot.doctor_name}`).map((s) => (
+              {slots.filter((s) =>
+                s.doctor_id === selectedSlot.doctor_id &&
+                s.slot_date === fromDate &&
+                isFutureSlot(s, fromDate)
+              ).map((s) => (
                 <button
                   key={s.slot_id}
                   onClick={() => { setSelectedSlot(s); setStep(3); }}

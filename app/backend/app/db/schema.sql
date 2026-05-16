@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS prescriptions;
 DROP TABLE IF EXISTS medical_certificates;
 DROP TABLE IF EXISTS medical_notes;
 DROP TABLE IF EXISTS appointments;
+DROP TABLE IF EXISTS emergency_alerts;
 DROP TABLE IF EXISTS appointment_slots;
 DROP TABLE IF EXISTS doctor_availability_overrides;
 DROP TABLE IF EXISTS doctor_weekly_availability;
@@ -158,6 +159,7 @@ CREATE TABLE appointments (
         CASE WHEN status_id = 2 THEN NULL ELSE slot_id END
     ) STORED,
     reason VARCHAR(500) NULL,
+    cancellation_reason VARCHAR(500) NULL DEFAULT NULL,
     booked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE (active_slot_id),
@@ -179,6 +181,16 @@ CREATE TABLE medical_notes (
     UNIQUE (appointment_id),
     CONSTRAINT fk_medical_notes_appointment
         FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE emergency_alerts (
+    alert_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    message VARCHAR(500) NOT NULL DEFAULT 'Student requested emergency assistance',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_emergency_alerts_student
+        FOREIGN KEY (student_id) REFERENCES students(student_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -242,6 +254,8 @@ CREATE INDEX idx_appointment_slots_staff_date ON appointment_slots(staff_id, slo
 CREATE INDEX idx_appointment_slots_date_status ON appointment_slots(slot_date, slot_status_id);
 CREATE INDEX idx_appointments_student ON appointments(student_id);
 CREATE INDEX idx_appointments_status ON appointments(status_id);
+CREATE INDEX idx_emergency_alerts_student_created
+    ON emergency_alerts(student_id, created_at);
 CREATE INDEX idx_medical_notes_appointment ON medical_notes(appointment_id);
 CREATE INDEX idx_prescriptions_appointment ON prescriptions(appointment_id);
 CREATE INDEX idx_prescription_items_prescription ON prescription_items(prescription_id);
@@ -376,6 +390,7 @@ SELECT
     appointment_slots.end_time,
     appointment_statuses.status_name AS status,
     appointments.reason,
+    appointments.cancellation_reason,
     medical_notes.diagnosis,
     medical_notes.remarks,
     medical_certificates.certificate_id,

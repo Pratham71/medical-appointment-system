@@ -98,6 +98,23 @@ def test_doctor_completed_appointment_detail_locks_editing() -> None:
     assert "disabled={saving || isAppointmentLocked}" in page
 
 
+def test_doctor_appointment_detail_can_cancel_with_reason() -> None:
+    page = read(
+        FRONTEND / "app" / "doctors" / "appointments" / "[id]" / "page.tsx"
+    )
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "AppointmentCancelReasonCode" in types
+    assert "cancelAppointment(id, cancelReasonCode, cancelReasonNote.trim())" in page
+    assert 'value="no_show"' in page
+    assert 'value="other"' in page
+    assert "Cancellation reason" in page
+    assert "handleCancelAppointment" in page
+    assert "reason_code" in api
+    assert 'cancelReasonCode === "other" && !cancelReasonNote.trim()' not in page
+
+
 def test_student_booking_uses_local_date_and_hides_elapsed_slots() -> None:
     page = read(FRONTEND / "app" / "students" / "book" / "page.tsx")
 
@@ -105,3 +122,42 @@ def test_student_booking_uses_local_date_and_hides_elapsed_slots() -> None:
     assert "isFutureSlot" in page
     assert "new Date().toISOString().split" not in page
     assert "s.slot_date === fromDate && isFutureSlot(s, fromDate)" in page
+
+
+def test_student_booking_fetches_all_doctors_for_selected_date() -> None:
+    page = read(FRONTEND / "app" / "students" / "book" / "page.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "DoctorAvailabilityStatus" in types
+    assert "getDoctorsForDate" in api
+    assert "`/appointments/doctors?for_date=${forDate}`" in api
+    assert "getDoctorsForDate(fromDate)" in page
+    assert "const [doctors, setDoctors]" in page
+    assert "doc.available_slots" in page
+    assert "doc.unavailability_note" in page
+
+
+def test_student_cancelled_appointment_shows_reschedule_options() -> None:
+    detail_page = read(
+        FRONTEND / "app" / "students" / "appointments" / "[id]" / "page.tsx"
+    )
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "cancellation_reason" in types
+    assert "appointment.cancellation_reason" in detail_page
+    assert "Cancelled by infirmary" in detail_page
+    assert "Reschedule" in detail_page
+    assert "walk-in" in detail_page
+
+
+def test_emergency_button_sends_backend_alert() -> None:
+    button = read(FRONTEND / "components" / "ui" / "EmergencyButton.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+
+    assert "sendEmergencyAlert" in api
+    assert '"/emergency/alert"' in api
+    assert "sendEmergencyAlert" in button
+    assert "handleSendAlert" in button
+    assert "Send Alert to Infirmary" in button
+    assert "Alert sent to infirmary" in button

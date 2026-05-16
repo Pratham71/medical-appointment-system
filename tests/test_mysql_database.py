@@ -10,6 +10,7 @@ from app.backend.app.api.errors import ConflictError
 from app.backend.app.db import session
 from app.backend.app.db.queries._helpers import fetch_all
 from app.backend.app.repositories import appointment_repo, certificate_repo
+from app.backend.app.repositories import doctor_repo
 from app.backend.app.schemas.certificate import CertificateCreate, CertificateResponse
 from app.backend.app.schemas.report import (
     MedicalNoteCreate,
@@ -17,6 +18,7 @@ from app.backend.app.schemas.report import (
     PrescriptionItemCreate,
 )
 from app.backend.app.schemas.student import StudentCertificateSummary
+from app.backend.app.schemas.student import StudentAppointmentSummary
 from app.backend.app.services import (
     appointment_service,
     certificate_service,
@@ -205,6 +207,19 @@ def test_schema_defines_doctor_availability_rules():
     assert "unique (staff_id, override_date)" in schema
 
 
+def test_schema_and_migration_include_cancellation_reason():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_16_add_cancellation_reason.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "cancellation_reason varchar(500) null default null" in schema
+    assert "appointments.cancellation_reason" in schema
+    assert "alter table appointments" in migration
+    assert "add column cancellation_reason varchar(500) null default null" in migration
+    assert "create or replace view v_appointment_details" in migration
+
+
 def test_live_schema_migration_repairs_availability_and_certificate_views():
     migration = (
         MIGRATION_DIR / "2026_05_16_sync_live_schema.sql"
@@ -301,6 +316,63 @@ def test_seed_inserts_mvp_lookup_and_sample_data():
     assert "insert into appointment_slots" in seed
 
 
+def test_schema_and_migration_define_emergency_alerts():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_16_add_emergency_alerts.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "create table emergency_alerts" in schema
+    assert "student_id int not null" in schema
+    assert "message varchar(500) not null" in schema
+    assert "foreign key (student_id) references students(student_id)" in schema
+    assert "create table if not exists emergency_alerts" in migration
+
+
+def test_emergency_alert_response_schema_accepts_alert_context():
+    from app.backend.app.schemas.emergency import EmergencyAlertResponse
+
+    response = EmergencyAlertResponse(
+        alert_id=1,
+        student_id=1,
+        student_name="Aarav Sharma",
+        roll_number="CSE-2026-001",
+        message="Need urgent medical help",
+        created_at=datetime(2026, 5, 16, 12, 0),
+    )
+
+    assert response.student_name == "Aarav Sharma"
+    assert response.roll_number == "CSE-2026-001"
+
+
+def test_emergency_service_defaults_blank_alert_message(monkeypatch):
+    from app.backend.app.services import emergency_service
+
+    captured = {}
+
+    def fake_create_alert(student_id: int, message: str):
+        captured["student_id"] = student_id
+        captured["message"] = message
+        return {
+            "alert_id": 1,
+            "student_id": student_id,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "message": message,
+            "created_at": datetime(2026, 5, 16, 12, 0),
+        }
+
+    monkeypatch.setattr(emergency_service.emergency_repo, "create_alert", fake_create_alert)
+
+    response = emergency_service.create_alert(1, "   ")
+
+    assert response.message == "Student requested emergency assistance"
+    assert captured == {
+        "student_id": 1,
+        "message": "Student requested emergency assistance",
+    }
+
+
 def test_query_files_keep_sql_parameterized_and_explicit():
     query_files = [
         path
@@ -348,6 +420,12 @@ def test_appointment_service_filters_today_slots_after_local_time(monkeypatch):
     )
     monkeypatch.setattr(
         appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.setdefault("ensured_date", slot_date),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
         "list_available_slots",
         fake_list_available_slots,
     )
@@ -356,6 +434,7 @@ def test_appointment_service_filters_today_slots_after_local_time(monkeypatch):
 
     assert result == []
     assert captured == {
+        "ensured_date": date(2026, 5, 15),
         "from_date": date(2026, 5, 15),
         "current_time": time(9, 30),
     }
@@ -377,6 +456,12 @@ def test_appointment_service_does_not_filter_future_date_by_current_time(monkeyp
     )
     monkeypatch.setattr(
         appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.setdefault("ensured_date", slot_date),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
         "list_available_slots",
         fake_list_available_slots,
     )
@@ -384,9 +469,178 @@ def test_appointment_service_does_not_filter_future_date_by_current_time(monkeyp
     appointment_service.list_available_slots(date(2026, 5, 16))
 
     assert captured == {
+        "ensured_date": date(2026, 5, 16),
         "from_date": date(2026, 5, 16),
         "current_time": None,
     }
+
+
+def test_appointment_service_lists_doctors_with_availability(monkeypatch):
+    captured = []
+
+    def fake_list_doctors(for_date):
+        captured.append(for_date)
+        return [
+            {
+                "doctor_id": 1,
+                "doctor_name": "Dr. Meera Rao",
+                "specialization": "General Medicine",
+                "is_available": True,
+                "available_slots": 4,
+                "unavailability_note": None,
+            },
+            {
+                "doctor_id": 2,
+                "doctor_name": "Dr. Nikhil Sen",
+                "specialization": "Orthopedics",
+                "is_available": False,
+                "available_slots": 0,
+                "unavailability_note": "Campus camp",
+            },
+        ]
+
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.append(("ensure", slot_date)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_doctors_with_availability",
+        lambda for_date: fake_list_doctors(for_date),
+        raising=False,
+    )
+
+    result = appointment_service.list_doctors_with_availability(date(2026, 5, 18))
+
+    assert captured == [("ensure", date(2026, 5, 18)), date(2026, 5, 18)]
+    assert [doctor.doctor_id for doctor in result] == [1, 2]
+    assert result[0].available_slots == 4
+    assert result[1].is_available is False
+    assert result[1].unavailability_note == "Campus camp"
+
+
+def test_appointment_service_generates_future_weekday_slots_before_listing(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(
+        appointment_service,
+        "_get_local_now",
+        lambda: datetime(2026, 5, 16, 9, 0),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: calls.append(("ensure", slot_date)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_available_slots",
+        lambda from_date, current_time=None: calls.append(("list", from_date, current_time)) or [],
+    )
+
+    appointment_service.list_available_slots(date(2026, 5, 18))
+
+    assert calls == [
+        ("ensure", date(2026, 5, 18)),
+        ("list", date(2026, 5, 18), None),
+    ]
+
+
+def test_repository_generates_half_hour_slots_for_available_weekday(monkeypatch):
+    inserted = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_doctor_slot_generation_windows(connection, slot_date):
+            assert slot_date == date(2026, 5, 18)
+            return [
+                {
+                    "staff_id": 1,
+                    "start_time": time(9, 0),
+                    "end_time": time(10, 0),
+                }
+            ]
+
+        @staticmethod
+        def insert_slot_if_missing(
+            connection,
+            staff_id,
+            slot_status_id,
+            slot_date,
+            start_time,
+            end_time,
+        ):
+            inserted.append(
+                (staff_id, slot_status_id, slot_date, start_time, end_time)
+            )
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    appointment_repo.ensure_slots_for_date(date(2026, 5, 18))
+
+    assert inserted == [
+        (1, 1, date(2026, 5, 18), time(9, 0), time(9, 30)),
+        (1, 1, date(2026, 5, 18), time(9, 30), time(10, 0)),
+    ]
+
+
+def test_repository_generates_slots_from_mysql_time_strings(monkeypatch):
+    inserted = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_doctor_slot_generation_windows(connection, slot_date):
+            return [
+                {
+                    "staff_id": 1,
+                    "start_time": "09:00:00",
+                    "end_time": "10:00:00",
+                }
+            ]
+
+        @staticmethod
+        def insert_slot_if_missing(
+            connection,
+            staff_id,
+            slot_status_id,
+            slot_date,
+            start_time,
+            end_time,
+        ):
+            inserted.append((start_time, end_time))
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    appointment_repo.ensure_slots_for_date(date(2026, 5, 18))
+
+    assert inserted == [
+        (time(9, 0), time(9, 30)),
+        (time(9, 30), time(10, 0)),
+    ]
 
 
 def test_book_appointment_rejects_elapsed_slot(monkeypatch):
@@ -453,6 +707,137 @@ def test_available_slot_query_filters_exact_date_and_elapsed_today_slots():
     assert "slot_date = %s" in source
     assert "start_time > %s" in source
     assert "slot_date >= %s" not in source
+
+
+def test_doctor_status_query_lists_all_doctors_with_availability_rules():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def list_doctors_with_availability" in source
+    assert "from staff" in source
+    assert "where staff.is_doctor = true" in source
+    assert "left join doctor_availability_overrides" in source
+    assert "left join doctor_weekly_availability" in source
+    assert "as available_slots" in source
+
+
+def test_auto_cancel_query_functions_exist():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def list_appointments_to_cancel" in source
+    assert "appointment_statuses.status_name = %s" in source
+    assert "appointment_slots.slot_date = %s" in source
+    assert "def cancel_appointment_with_reason" in source
+    assert "cancellation_reason = %s" in source
+    assert "update appointment_slots" in source
+
+
+def test_unavailable_override_cancels_booked_appointments(monkeypatch):
+    calls = []
+
+    class FakeDoctorQueries:
+        @staticmethod
+        def upsert_availability_override(
+            connection,
+            staff_id,
+            override_date,
+            is_available,
+            start_time,
+            end_time,
+            note,
+        ):
+            calls.append(("upsert_override", staff_id, override_date, is_available, note))
+
+        @staticmethod
+        def get_availability_override(connection, staff_id, override_date):
+            return {
+                "override_date": override_date,
+                "is_available": False,
+                "start_time": None,
+                "end_time": None,
+                "note": "Conference duty",
+            }
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "cancelled"
+            return 2
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_appointments_to_cancel(
+            connection,
+            staff_id,
+            override_date,
+            start_time,
+            end_time,
+        ):
+            calls.append(("list_to_cancel", staff_id, override_date, start_time, end_time))
+            return [{"appointment_id": 10, "slot_id": 50}]
+
+        @staticmethod
+        def cancel_appointment_with_reason(
+            connection,
+            appointment_id,
+            cancelled_status_id,
+            available_slot_status_id,
+            slot_id,
+            cancellation_reason,
+        ):
+            calls.append(
+                (
+                    "cancel",
+                    appointment_id,
+                    cancelled_status_id,
+                    available_slot_status_id,
+                    slot_id,
+                    cancellation_reason,
+                )
+            )
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(doctor_repo, "doctor_queries", FakeDoctorQueries)
+    monkeypatch.setattr(doctor_repo, "appointment_queries", FakeAppointmentQueries, raising=False)
+    monkeypatch.setattr(doctor_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = doctor_repo.upsert_availability_override(
+        staff_id=1,
+        override_date=date(2026, 5, 18),
+        is_available=False,
+        start_time=None,
+        end_time=None,
+        note="Conference duty",
+    )
+
+    assert result["is_available"] is False
+    assert calls == [
+        ("upsert_override", 1, date(2026, 5, 18), False, "Conference duty"),
+        ("list_to_cancel", 1, date(2026, 5, 18), None, None),
+        ("cancel", 10, 2, 1, 50, "Doctor unavailable: Conference duty"),
+    ]
+
+
+def test_student_appointment_summary_includes_cancellation_reason():
+    summary = StudentAppointmentSummary(
+        appointment_id=1,
+        slot_date=date(2026, 5, 18),
+        start_time=time(9, 0),
+        end_time=time(9, 30),
+        doctor_id=1,
+        doctor_name="Dr. Meera Singh",
+        status="cancelled",
+        reason="Fever",
+        cancellation_reason="Doctor unavailable: Conference duty",
+    )
+
+    assert summary.cancellation_reason == "Doctor unavailable: Conference duty"
 
 
 def test_doctor_service_returns_default_weekly_availability_when_rows_missing(monkeypatch):
@@ -525,6 +910,101 @@ def test_cancel_status_marks_slot_available(monkeypatch):
     assert slot_updates == [(10, 1)]
 
 
+def test_cancel_status_with_reason_stores_reason_and_marks_slot_available(monkeypatch):
+    calls = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_for_update(connection, appointment_id):
+            return {"appointment_id": appointment_id, "slot_id": 10, "status": "booked"}
+
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "cancelled"
+            return 2
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def cancel_appointment_with_reason(
+            connection,
+            appointment_id,
+            cancelled_status_id,
+            available_slot_status_id,
+            slot_id,
+            cancellation_reason,
+        ):
+            calls.append(
+                (
+                    appointment_id,
+                    cancelled_status_id,
+                    available_slot_status_id,
+                    slot_id,
+                    cancellation_reason,
+                )
+            )
+
+        @staticmethod
+        def get_status_result(connection, appointment_id):
+            return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = appointment_repo.update_status(
+        5,
+        "cancelled",
+        cancellation_reason="No-show: Student did not arrive",
+    )
+
+    assert result == {"appointment_id": 5, "status": "cancelled"}
+    assert calls == [(5, 2, 1, 10, "No-show: Student did not arrive")]
+
+
+def test_appointment_cancel_request_allows_other_without_note():
+    from app.backend.app.schemas.appointment import AppointmentCancelRequest
+
+    request = AppointmentCancelRequest(reason_code="other")
+
+    assert request.reason_code == "other"
+    assert request.note is None
+
+
+def test_doctor_cancel_service_formats_reason_and_note(monkeypatch):
+    from app.backend.app.schemas.appointment import AppointmentCancelRequest
+
+    captured = []
+
+    def fake_update_status(appointment_id, status_name, cancellation_reason=None):
+        captured.append((appointment_id, status_name, cancellation_reason))
+        return {"appointment_id": appointment_id, "status": "cancelled"}
+
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "update_status",
+        fake_update_status,
+    )
+
+    result = appointment_service.cancel_appointment(
+        5,
+        AppointmentCancelRequest(
+            reason_code="no_show",
+            note="Student did not arrive",
+        ),
+        actor_role="doctor",
+    )
+
+    assert result.status == "cancelled"
+    assert captured == [(5, "cancelled", "No-show: Student did not arrive")]
+
+
 def test_repository_rejects_completing_cancelled_appointment(monkeypatch):
     status_updates = []
     slot_updates = []
@@ -573,7 +1053,7 @@ def test_complete_cancelled_appointment_raises_conflict(monkeypatch):
     monkeypatch.setattr(
         appointment_service.appointment_repo,
         "update_status",
-        lambda appointment_id, status_name: {
+        lambda appointment_id, status_name, cancellation_reason=None: {
             "appointment_id": appointment_id,
             "status": "cancelled",
             "invalid_transition": True,

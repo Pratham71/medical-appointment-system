@@ -42,6 +42,22 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-16] [DOCS] [TEAM] [fix/issues-26-30-31] - Added final project TODOs for admin workflow, staff workflow, appointment update email notifications, and final code hardening before submission
+[2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed doctor cancellation reason flow so selecting `Other` does not require an extra note; any selected reason can now submit cancellation
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Extended PATCH /appointments/{id}/cancel so doctors/admins can submit structured cancellation reasons while student cancellation remains body-free
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Added doctor appointment detail cancellation controls with reason options, optional note, and terminal appointment locking after cancellation
+[2026-05-16] [TEST] [TEAM] [fix/issues-26-30-31] - Added regression coverage for doctor cancellation reason validation, API request wiring, repository reason persistence, and frontend cancellation UI
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Added GET /appointments/doctors?for_date= for issue #31, returning every doctor with specialization, availability status, slot count, and override unavailability note for the selected date
+[2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed future booking dates after seeded slots by lazily generating 30-minute appointment slots from doctor weekly availability; future weekdays now stay bookable and Sundays remain unavailable by default
+[2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added cancellation_reason to appointments with a non-destructive MySQL migration and refreshed appointment detail view for issue #30
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Auto-cancel booked appointments when a doctor saves an unavailable date override, releasing affected slots and storing an infirmary cancellation reason
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Student appointment detail now shows doctor-cancelled appointments with the cancellation reason, Reschedule action, and walk-in guidance
+[2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added emergency_alerts table and migration for issue #26 to store student emergency alert requests
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Added POST /emergency/alert using authenticated student context and idempotency protection, returning alert confirmation details
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Wired EmergencyButton Send Alert action to POST /emergency/alert while keeping quick-dial phone links available
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Updated student booking page for issue #31 to fetch all doctors for the selected date and render unavailable doctors as disabled grey cards with amber reason badges instead of hiding them
+[2026-05-16] [TEST] [TEAM] [fix/issues-26-30-31] - Added regression coverage for the doctor availability status API route, service/query contract, OpenAPI surface, and booking-page frontend wiring
+
 [2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Fixed doctor cards disappearing on booking page when unavailable — now shows all doctors with 0 slots as greyed-out cards with strikethrough slot count and amber "Unavailable today" badge
 [2026-05-16] [UI] [TEAM] [fix/backend-appointment-certificates] - Add emergency quick-dial button — floating pulsing red button in student shell, modal with tel: links for infirmary, hostel warden, campus security; shows 999 as last resort
 [2026-05-16] [FIX] [TEAM] [fix/backend-appointment-certificates] - Doctor appointment detail and patient history now always show booking reason with "Not provided" fallback instead of hiding when null

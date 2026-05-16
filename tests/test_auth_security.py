@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -5,7 +7,10 @@ from pydantic import ValidationError
 from app.backend.app.core.config import Settings
 from app.backend.app.core.security_controls import FixedWindowRateLimiter, LoginAttemptTracker
 from app.backend.app.main import app
-from app.backend.app.schemas.appointment import AppointmentBookResponse
+from app.backend.app.schemas.appointment import (
+    AppointmentBookResponse,
+    AppointmentStatusResponse,
+)
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.schemas.student import StudentDashboard
 from app.backend.app.services import (
@@ -255,6 +260,117 @@ def test_student_booking_uses_authenticated_student_and_idempotency(monkeypatch)
     assert captured == [(7, 1, "Headache")]
 
 
+def test_appointment_doctor_status_route_uses_authenticated_context(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+
+    def fake_list_doctors(for_date):
+        captured.append(for_date)
+        return [
+            {
+                "doctor_id": 5,
+                "doctor_name": "Dr. Meera Rao",
+                "specialization": "General Medicine",
+                "is_available": False,
+                "available_slots": 0,
+                "unavailability_note": "Conference duty",
+            }
+        ]
+
+    monkeypatch.setattr(
+        appointment_service,
+        "list_doctors_with_availability",
+        fake_list_doctors,
+        raising=False,
+    )
+
+    client = TestClient(app)
+    response = client.get(
+        "/appointments/doctors?for_date=2026-05-18",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "doctor_id": 5,
+            "doctor_name": "Dr. Meera Rao",
+            "specialization": "General Medicine",
+            "is_available": False,
+            "available_slots": 0,
+            "unavailability_note": "Conference duty",
+        }
+    ]
+    assert captured == [date(2026, 5, 18)]
+
+
+def test_doctor_cancel_appointment_submits_reason(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("doctor", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "can_access_appointment", lambda *args, **kwargs: True)
+
+    def fake_cancel(appointment_id, payload=None, actor_role="student"):
+        captured.append((appointment_id, payload.reason_code, payload.note, actor_role))
+        return AppointmentStatusResponse(
+            appointment_id=appointment_id,
+            status="cancelled",
+            message="Appointment cancelled",
+        )
+
+    monkeypatch.setattr(appointment_service, "cancel_appointment", fake_cancel)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/appointments/55/cancel",
+        headers={**_auth_header(), "Idempotency-Key": "doctor-cancel-55"},
+        json={"reason_code": "no_show", "note": "Student did not arrive"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "cancelled"
+    assert captured == [(55, "no_show", "Student did not arrive", "doctor")]
+
+
+def test_student_cancel_appointment_still_allows_empty_body(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "can_access_appointment", lambda *args, **kwargs: True)
+
+    def fake_cancel(appointment_id, payload=None, actor_role="student"):
+        captured.append((appointment_id, payload, actor_role))
+        return AppointmentStatusResponse(
+            appointment_id=appointment_id,
+            status="cancelled",
+            message="Appointment cancelled",
+        )
+
+    monkeypatch.setattr(appointment_service, "cancel_appointment", fake_cancel)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/appointments/55/cancel",
+        headers={**_auth_header(), "Idempotency-Key": "student-cancel-55"},
+    )
+
+    assert response.status_code == 200
+    assert captured == [(55, None, "student")]
+
+
 def test_state_changing_routes_require_idempotency_key(monkeypatch):
     monkeypatch.setattr(
         auth_service,
@@ -272,6 +388,43 @@ def test_state_changing_routes_require_idempotency_key(monkeypatch):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Idempotency-Key header is required"
+
+
+def test_student_emergency_alert_uses_authenticated_student_context(monkeypatch):
+    from app.backend.app.services import emergency_service
+
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_student_id_for_user", lambda user_id: 7)
+
+    def fake_create_alert(student_id: int, message: str | None):
+        captured.append((student_id, message))
+        return {
+            "alert_id": 99,
+            "student_id": student_id,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "message": message or "Student requested emergency assistance",
+            "created_at": "2026-05-16T12:00:00",
+        }
+
+    monkeypatch.setattr(emergency_service, "create_alert", fake_create_alert)
+
+    client = TestClient(app)
+    response = client.post(
+        "/emergency/alert",
+        headers={**_auth_header(), "Idempotency-Key": "emergency-alert"},
+        json={"message": "Need urgent medical help"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["alert_id"] == 99
+    assert captured == [(7, "Need urgent medical help")]
 
 
 def test_state_changing_routes_check_auth_before_idempotency():
