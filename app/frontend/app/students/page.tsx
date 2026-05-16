@@ -95,30 +95,47 @@ export default function StudentDashboardPage() {
           {todayCancelled.map((a) => (
             <div
               key={a.appointment_id}
-              className="rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border bg-red-50 p-4 flex items-center justify-between"
+              className="rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border bg-red-50 p-4"
             >
-              <div>
-                <p className="text-xs text-red-500 uppercase tracking-wide font-medium mb-1">
-                  Appointment Cancelled Today
-                </p>
-                <p className="text-sm font-semibold text-brand-text">
-                  {fmt(a.slot_date, a.start_time)}
-                </p>
-                <p className="text-sm text-brand-muted mt-0.5">
-                  Dr. {doctorName(a.doctor_name)}
-                </p>
-                {a.reason && (
-                  <p className="text-xs text-brand-muted mt-0.5">Reason: {a.reason}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={a.status} />
-                <button
-                  onClick={() => router.push("/students/book")}
-                  className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
-                >
-                  Rebook →
-                </button>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs text-red-500 uppercase tracking-wide font-medium mb-1">
+                    Appointment Cancelled Today
+                  </p>
+                  <p className="text-sm font-semibold text-brand-text">
+                    {fmt(a.slot_date, a.start_time)}
+                  </p>
+                  <p className="text-sm text-brand-muted mt-0.5">
+                    Dr. {doctorName(a.doctor_name)}
+                  </p>
+                  {a.reason && (
+                    <p className="text-xs text-brand-muted mt-0.5">
+                      <span className="font-medium">Booked for:</span> {a.reason}
+                    </p>
+                  )}
+                  {a.cancellation_reason && (
+                    <p className="text-xs text-red-600 mt-1">
+                      <span className="font-medium">Cancelled:</span> {a.cancellation_reason}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <StatusBadge status={a.status} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => router.push(`/students/appointments/${a.appointment_id}?from=cancelled`)}
+                      className="text-xs text-brand-muted hover:text-brand-text border border-brand-border px-2.5 py-1 rounded-btn transition-colors"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => router.push("/students/book")}
+                      className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn font-medium transition-colors"
+                    >
+                      Rebook →
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
