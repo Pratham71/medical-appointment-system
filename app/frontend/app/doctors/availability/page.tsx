@@ -60,6 +60,7 @@ export default function DoctorAvailabilityPage() {
   const [settings, setSettings] = useState<DoctorAvailabilitySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState("");
+  const [weeklySaved, setWeeklySaved] = useState(false);
   const [error, setError] = useState("");
   const [overrideDate, setOverrideDate] = useState(getLocalDateKey());
   const [overrideAvailable, setOverrideAvailable] = useState(false);
@@ -91,16 +92,22 @@ export default function DoctorAvailabilityPage() {
     });
   }
 
-  async function saveWeekly(rule: DoctorWeeklyAvailability) {
+  async function saveAllWeekly() {
+    if (!settings) return;
     setError("");
-    setSavingKey(`weekly-${rule.weekday}`);
+    setWeeklySaved(false);
+    setSavingKey("weekly-all");
     try {
-      const saved = await updateDoctorWeeklyAvailability(rule.weekday, {
-        is_available: rule.is_available,
-        start_time: rule.is_available ? rule.start_time : null,
-        end_time: rule.is_available ? rule.end_time : null,
-      });
-      setSettings((current) => (current ? updateWeeklyRows(current, saved) : current));
+      for (const rule of settings.weekly_availability) {
+        const saved = await updateDoctorWeeklyAvailability(rule.weekday, {
+          is_available: rule.is_available,
+          start_time: rule.is_available ? rule.start_time : null,
+          end_time: rule.is_available ? rule.end_time : null,
+        });
+        setSettings((current) => (current ? updateWeeklyRows(current, saved) : current));
+      }
+      setWeeklySaved(true);
+      setTimeout(() => setWeeklySaved(false), 3000);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to save");
     } finally {
@@ -174,7 +181,6 @@ export default function DoctorAvailabilityPage() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Available</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Start</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">End</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-border">
@@ -224,19 +230,22 @@ export default function DoctorAvailabilityPage() {
                           className="h-9 rounded-md border border-brand-border px-2 text-sm text-brand-text disabled:bg-brand-raised disabled:text-brand-muted"
                         />
                       </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => saveWeekly(rule)}
-                          disabled={savingKey === `weekly-${rule.weekday}`}
-                          className="px-3 py-2 rounded-md bg-teal-600 text-white text-xs font-medium hover:bg-teal-700 disabled:opacity-60"
-                        >
-                          {savingKey === `weekly-${rule.weekday}` ? "Saving" : "Save"}
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="px-5 py-4 border-t border-brand-border flex items-center gap-3">
+              <button
+                onClick={saveAllWeekly}
+                disabled={savingKey === "weekly-all"}
+                className="px-4 py-2 rounded-md bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-60 transition-colors"
+              >
+                {savingKey === "weekly-all" ? "Saving…" : "Save weekly schedule"}
+              </button>
+              {weeklySaved && (
+                <span className="text-sm text-emerald-600">Saved.</span>
+              )}
             </div>
           </div>
 
