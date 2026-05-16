@@ -86,6 +86,7 @@ Appointment APIs
 [x] [TOFIX] [BACKEND] Add GET /appointments/doctors?for_date= endpoint returning all doctors with availability status and override reason for a given date — required for frontend to show unavailable doctors on booking page instead of them disappearing (the v_available_appointment_slots view filters them out at DB level)
 [x] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, now exposed in API response and rendered in frontend (GitHub issue #31)
 [x] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
+[ ] [TOFIX] [BACKEND] Cancelled appointment slots not freed for rebooking — slot_status not returning to 'available' after cancellation; investigate active_slot_id uniqueness constraint and v_available_appointment_slots view (GitHub issue #34)
 [ ] [TOFIX] Booked appointment slots appear selectable if fetched before another student books them — re-fetch slots on step 2 entry, show "Taken" greyed-out state, refresh on booking conflict error (GitHub issue #32)
 
 Student APIs
