@@ -158,6 +158,7 @@ CREATE TABLE appointments (
         CASE WHEN status_id = 2 THEN NULL ELSE slot_id END
     ) STORED,
     reason VARCHAR(500) NULL,
+    cancellation_reason VARCHAR(500) NULL DEFAULT NULL,
     booked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE (active_slot_id),
@@ -376,6 +377,7 @@ SELECT
     appointment_slots.end_time,
     appointment_statuses.status_name AS status,
     appointments.reason,
+    appointments.cancellation_reason,
     medical_notes.diagnosis,
     medical_notes.remarks,
     medical_certificates.certificate_id,

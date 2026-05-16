@@ -40,6 +40,7 @@ export interface StudentAppointmentSummary {
   doctor_name: string;
   status: string;
   reason: string | null;
+  cancellation_reason: string | null;
 }
 
 export interface StudentReportSummary {

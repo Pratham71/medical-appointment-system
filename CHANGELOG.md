@@ -44,6 +44,9 @@ Current Entries
 
 [2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Added GET /appointments/doctors?for_date= for issue #31, returning every doctor with specialization, availability status, slot count, and override unavailability note for the selected date
 [2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed future booking dates after seeded slots by lazily generating 30-minute appointment slots from doctor weekly availability; future weekdays now stay bookable and Sundays remain unavailable by default
+[2026-05-16] [DB] [TEAM] [fix/issues-26-30-31] - Added cancellation_reason to appointments with a non-destructive MySQL migration and refreshed appointment detail view for issue #30
+[2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Auto-cancel booked appointments when a doctor saves an unavailable date override, releasing affected slots and storing an infirmary cancellation reason
+[2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Student appointment detail now shows doctor-cancelled appointments with the cancellation reason, Reschedule action, and walk-in guidance
 [2026-05-16] [UI] [TEAM] [fix/issues-26-30-31] - Updated student booking page for issue #31 to fetch all doctors for the selected date and render unavailable doctors as disabled grey cards with amber reason badges instead of hiding them
 [2026-05-16] [TEST] [TEAM] [fix/issues-26-30-31] - Added regression coverage for the doctor availability status API route, service/query contract, OpenAPI surface, and booking-page frontend wiring
 

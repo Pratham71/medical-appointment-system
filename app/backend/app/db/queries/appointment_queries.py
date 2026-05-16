@@ -273,6 +273,67 @@ def update_appointment_status(
     execute(connection, sql, (status_id, appointment_id))
 
 
+def list_appointments_to_cancel(
+    connection: Any,
+    staff_id: int,
+    override_date: date,
+    start_time: time | None,
+    end_time: time | None,
+) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            appointments.appointment_id,
+            appointments.student_id,
+            appointment_slots.slot_id
+        FROM appointments
+        INNER JOIN appointment_slots
+            ON appointment_slots.slot_id = appointments.slot_id
+        INNER JOIN appointment_statuses
+            ON appointment_statuses.status_id = appointments.status_id
+        WHERE appointment_slots.staff_id = %s
+            AND appointment_slots.slot_date = %s
+            AND appointment_statuses.status_name = %s
+    """
+    params: tuple[Any, ...] = (staff_id, override_date, "booked")
+    if start_time is not None and end_time is not None:
+        sql += """
+            AND appointment_slots.start_time >= %s
+            AND appointment_slots.end_time <= %s
+        """
+        params = (staff_id, override_date, "booked", start_time, end_time)
+    sql += """
+        ORDER BY appointment_slots.start_time
+    """
+    return fetch_all(connection, sql, params)
+
+
+def cancel_appointment_with_reason(
+    connection: Any,
+    appointment_id: int,
+    cancelled_status_id: int,
+    available_slot_status_id: int,
+    slot_id: int,
+    cancellation_reason: str,
+) -> None:
+    sql = """
+        UPDATE appointments
+        SET
+            status_id = %s,
+            cancellation_reason = %s
+        WHERE appointment_id = %s
+    """
+    execute(
+        connection,
+        sql,
+        (cancelled_status_id, cancellation_reason, appointment_id),
+    )
+    update_slot_status(
+        connection,
+        slot_id=slot_id,
+        slot_status_id=available_slot_status_id,
+    )
+
+
 def get_booking_result(
     connection: Any,
     appointment_id: int,

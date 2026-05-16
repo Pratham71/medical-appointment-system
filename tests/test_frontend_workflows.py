@@ -119,3 +119,16 @@ def test_student_booking_fetches_all_doctors_for_selected_date() -> None:
     assert "const [doctors, setDoctors]" in page
     assert "doc.available_slots" in page
     assert "doc.unavailability_note" in page
+
+
+def test_student_cancelled_appointment_shows_reschedule_options() -> None:
+    detail_page = read(
+        FRONTEND / "app" / "students" / "appointments" / "[id]" / "page.tsx"
+    )
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "cancellation_reason" in types
+    assert "appointment.cancellation_reason" in detail_page
+    assert "Cancelled by infirmary" in detail_page
+    assert "Reschedule" in detail_page
+    assert "walk-in" in detail_page

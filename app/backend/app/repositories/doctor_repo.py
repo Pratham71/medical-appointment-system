@@ -2,7 +2,7 @@ from datetime import date, time
 from typing import Any
 
 from app.backend.app.db import session
-from app.backend.app.db.queries import doctor_queries
+from app.backend.app.db.queries import appointment_queries, doctor_queries
 
 
 def get_dashboard_counts(staff_id: int) -> dict[str, Any] | None:
@@ -70,6 +70,35 @@ def upsert_availability_override(
             end_time=end_time,
             note=note,
         )
+        if not is_available:
+            cancelled_status_id = appointment_queries.get_appointment_status_id(
+                connection,
+                "cancelled",
+            )
+            available_slot_status_id = appointment_queries.get_slot_status_id(
+                connection,
+                "available",
+            )
+            if cancelled_status_id is not None and available_slot_status_id is not None:
+                cancellation_reason = "Doctor unavailable"
+                if note:
+                    cancellation_reason = f"{cancellation_reason}: {note}"
+                appointments = appointment_queries.list_appointments_to_cancel(
+                    connection,
+                    staff_id=staff_id,
+                    override_date=override_date,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+                for appointment in appointments:
+                    appointment_queries.cancel_appointment_with_reason(
+                        connection,
+                        appointment_id=appointment["appointment_id"],
+                        cancelled_status_id=cancelled_status_id,
+                        available_slot_status_id=available_slot_status_id,
+                        slot_id=appointment["slot_id"],
+                        cancellation_reason=cancellation_reason,
+                    )
         return doctor_queries.get_availability_override(
             connection,
             staff_id=staff_id,

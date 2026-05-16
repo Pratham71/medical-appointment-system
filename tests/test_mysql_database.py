@@ -10,6 +10,7 @@ from app.backend.app.api.errors import ConflictError
 from app.backend.app.db import session
 from app.backend.app.db.queries._helpers import fetch_all
 from app.backend.app.repositories import appointment_repo, certificate_repo
+from app.backend.app.repositories import doctor_repo
 from app.backend.app.schemas.certificate import CertificateCreate, CertificateResponse
 from app.backend.app.schemas.report import (
     MedicalNoteCreate,
@@ -17,6 +18,7 @@ from app.backend.app.schemas.report import (
     PrescriptionItemCreate,
 )
 from app.backend.app.schemas.student import StudentCertificateSummary
+from app.backend.app.schemas.student import StudentAppointmentSummary
 from app.backend.app.services import (
     appointment_service,
     certificate_service,
@@ -203,6 +205,19 @@ def test_schema_defines_doctor_availability_rules():
     assert "create table doctor_availability_overrides" in schema
     assert "override_date date not null" in schema
     assert "unique (staff_id, override_date)" in schema
+
+
+def test_schema_and_migration_include_cancellation_reason():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_16_add_cancellation_reason.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "cancellation_reason varchar(500) null default null" in schema
+    assert "appointments.cancellation_reason" in schema
+    assert "alter table appointments" in migration
+    assert "add column cancellation_reason varchar(500) null default null" in migration
+    assert "create or replace view v_appointment_details" in migration
 
 
 def test_live_schema_migration_repairs_availability_and_certificate_views():
@@ -646,6 +661,126 @@ def test_doctor_status_query_lists_all_doctors_with_availability_rules():
     assert "left join doctor_availability_overrides" in source
     assert "left join doctor_weekly_availability" in source
     assert "as available_slots" in source
+
+
+def test_auto_cancel_query_functions_exist():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def list_appointments_to_cancel" in source
+    assert "appointment_statuses.status_name = %s" in source
+    assert "appointment_slots.slot_date = %s" in source
+    assert "def cancel_appointment_with_reason" in source
+    assert "cancellation_reason = %s" in source
+    assert "update appointment_slots" in source
+
+
+def test_unavailable_override_cancels_booked_appointments(monkeypatch):
+    calls = []
+
+    class FakeDoctorQueries:
+        @staticmethod
+        def upsert_availability_override(
+            connection,
+            staff_id,
+            override_date,
+            is_available,
+            start_time,
+            end_time,
+            note,
+        ):
+            calls.append(("upsert_override", staff_id, override_date, is_available, note))
+
+        @staticmethod
+        def get_availability_override(connection, staff_id, override_date):
+            return {
+                "override_date": override_date,
+                "is_available": False,
+                "start_time": None,
+                "end_time": None,
+                "note": "Conference duty",
+            }
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_appointment_status_id(connection, status_name):
+            assert status_name == "cancelled"
+            return 2
+
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_appointments_to_cancel(
+            connection,
+            staff_id,
+            override_date,
+            start_time,
+            end_time,
+        ):
+            calls.append(("list_to_cancel", staff_id, override_date, start_time, end_time))
+            return [{"appointment_id": 10, "slot_id": 50}]
+
+        @staticmethod
+        def cancel_appointment_with_reason(
+            connection,
+            appointment_id,
+            cancelled_status_id,
+            available_slot_status_id,
+            slot_id,
+            cancellation_reason,
+        ):
+            calls.append(
+                (
+                    "cancel",
+                    appointment_id,
+                    cancelled_status_id,
+                    available_slot_status_id,
+                    slot_id,
+                    cancellation_reason,
+                )
+            )
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(doctor_repo, "doctor_queries", FakeDoctorQueries)
+    monkeypatch.setattr(doctor_repo, "appointment_queries", FakeAppointmentQueries, raising=False)
+    monkeypatch.setattr(doctor_repo.session, "transaction_scope", fake_transaction_scope)
+
+    result = doctor_repo.upsert_availability_override(
+        staff_id=1,
+        override_date=date(2026, 5, 18),
+        is_available=False,
+        start_time=None,
+        end_time=None,
+        note="Conference duty",
+    )
+
+    assert result["is_available"] is False
+    assert calls == [
+        ("upsert_override", 1, date(2026, 5, 18), False, "Conference duty"),
+        ("list_to_cancel", 1, date(2026, 5, 18), None, None),
+        ("cancel", 10, 2, 1, 50, "Doctor unavailable: Conference duty"),
+    ]
+
+
+def test_student_appointment_summary_includes_cancellation_reason():
+    summary = StudentAppointmentSummary(
+        appointment_id=1,
+        slot_date=date(2026, 5, 18),
+        start_time=time(9, 0),
+        end_time=time(9, 30),
+        doctor_id=1,
+        doctor_name="Dr. Meera Singh",
+        status="cancelled",
+        reason="Fever",
+        cancellation_reason="Doctor unavailable: Conference duty",
+    )
+
+    assert summary.cancellation_reason == "Doctor unavailable: Conference duty"
 
 
 def test_doctor_service_returns_default_weekly_availability_when_rows_missing(monkeypatch):
