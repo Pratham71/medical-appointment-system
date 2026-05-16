@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -253,6 +255,55 @@ def test_student_booking_uses_authenticated_student_and_idempotency(monkeypatch)
     assert response.status_code == 201
     assert response.json()["appointment_id"] == 99
     assert captured == [(7, 1, "Headache")]
+
+
+def test_appointment_doctor_status_route_uses_authenticated_context(monkeypatch):
+    captured = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+
+    def fake_list_doctors(for_date):
+        captured.append(for_date)
+        return [
+            {
+                "doctor_id": 5,
+                "doctor_name": "Dr. Meera Rao",
+                "specialization": "General Medicine",
+                "is_available": False,
+                "available_slots": 0,
+                "unavailability_note": "Conference duty",
+            }
+        ]
+
+    monkeypatch.setattr(
+        appointment_service,
+        "list_doctors_with_availability",
+        fake_list_doctors,
+        raising=False,
+    )
+
+    client = TestClient(app)
+    response = client.get(
+        "/appointments/doctors?for_date=2026-05-18",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "doctor_id": 5,
+            "doctor_name": "Dr. Meera Rao",
+            "specialization": "General Medicine",
+            "is_available": False,
+            "available_slots": 0,
+            "unavailability_note": "Conference duty",
+        }
+    ]
+    assert captured == [date(2026, 5, 18)]
 
 
 def test_state_changing_routes_require_idempotency_key(monkeypatch):

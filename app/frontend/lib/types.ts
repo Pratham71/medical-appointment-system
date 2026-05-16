@@ -79,6 +79,15 @@ export interface AppointmentSlot {
   end_time: string;
 }
 
+export interface DoctorAvailabilityStatus {
+  doctor_id: number;
+  doctor_name: string;
+  specialization: string | null;
+  is_available: boolean;
+  available_slots: number;
+  unavailability_note: string | null;
+}
+
 export interface AppointmentBookResponse {
   appointment_id: number | null;
   slot_id: number;

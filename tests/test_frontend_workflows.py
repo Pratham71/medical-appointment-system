@@ -105,3 +105,17 @@ def test_student_booking_uses_local_date_and_hides_elapsed_slots() -> None:
     assert "isFutureSlot" in page
     assert "new Date().toISOString().split" not in page
     assert "s.slot_date === fromDate && isFutureSlot(s, fromDate)" in page
+
+
+def test_student_booking_fetches_all_doctors_for_selected_date() -> None:
+    page = read(FRONTEND / "app" / "students" / "book" / "page.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "DoctorAvailabilityStatus" in types
+    assert "getDoctorsForDate" in api
+    assert "`/appointments/doctors?for_date=${forDate}`" in api
+    assert "getDoctorsForDate(fromDate)" in page
+    assert "const [doctors, setDoctors]" in page
+    assert "doc.available_slots" in page
+    assert "doc.unavailability_note" in page

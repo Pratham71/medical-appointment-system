@@ -63,6 +63,7 @@ def test_openapi_includes_mvp_routes():
         "/doctors/appointment/{appointment_id}",
         "/doctors/patient-history/{student_id}",
         "/appointments/slots",
+        "/appointments/doctors",
         "/appointments/book",
         "/appointments/{appointment_id}/cancel",
         "/appointments/{appointment_id}/complete",

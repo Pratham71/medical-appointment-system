@@ -4,6 +4,7 @@ import type {
   AppointmentStatusResponse,
   AuthenticatedUser,
   CertificateResponse,
+  DoctorAvailabilityStatus,
   DoctorAvailabilityOverride,
   DoctorAvailabilityPayload,
   DoctorAvailabilitySettings,
@@ -123,6 +124,10 @@ export async function getStudentCertificates(): Promise<StudentCertificateSummar
 
 export async function getSlots(fromDate: string): Promise<AppointmentSlot[]> {
   return request<AppointmentSlot[]>(`/appointments/slots?from_date=${fromDate}`);
+}
+
+export async function getDoctorsForDate(forDate: string): Promise<DoctorAvailabilityStatus[]> {
+  return request<DoctorAvailabilityStatus[]>(`/appointments/doctors?for_date=${forDate}`);
 }
 
 export async function bookAppointment(

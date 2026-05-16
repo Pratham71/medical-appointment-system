@@ -348,6 +348,12 @@ def test_appointment_service_filters_today_slots_after_local_time(monkeypatch):
     )
     monkeypatch.setattr(
         appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.setdefault("ensured_date", slot_date),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
         "list_available_slots",
         fake_list_available_slots,
     )
@@ -356,6 +362,7 @@ def test_appointment_service_filters_today_slots_after_local_time(monkeypatch):
 
     assert result == []
     assert captured == {
+        "ensured_date": date(2026, 5, 15),
         "from_date": date(2026, 5, 15),
         "current_time": time(9, 30),
     }
@@ -377,6 +384,12 @@ def test_appointment_service_does_not_filter_future_date_by_current_time(monkeyp
     )
     monkeypatch.setattr(
         appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.setdefault("ensured_date", slot_date),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
         "list_available_slots",
         fake_list_available_slots,
     )
@@ -384,9 +397,178 @@ def test_appointment_service_does_not_filter_future_date_by_current_time(monkeyp
     appointment_service.list_available_slots(date(2026, 5, 16))
 
     assert captured == {
+        "ensured_date": date(2026, 5, 16),
         "from_date": date(2026, 5, 16),
         "current_time": None,
     }
+
+
+def test_appointment_service_lists_doctors_with_availability(monkeypatch):
+    captured = []
+
+    def fake_list_doctors(for_date):
+        captured.append(for_date)
+        return [
+            {
+                "doctor_id": 1,
+                "doctor_name": "Dr. Meera Rao",
+                "specialization": "General Medicine",
+                "is_available": True,
+                "available_slots": 4,
+                "unavailability_note": None,
+            },
+            {
+                "doctor_id": 2,
+                "doctor_name": "Dr. Nikhil Sen",
+                "specialization": "Orthopedics",
+                "is_available": False,
+                "available_slots": 0,
+                "unavailability_note": "Campus camp",
+            },
+        ]
+
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: captured.append(("ensure", slot_date)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_doctors_with_availability",
+        lambda for_date: fake_list_doctors(for_date),
+        raising=False,
+    )
+
+    result = appointment_service.list_doctors_with_availability(date(2026, 5, 18))
+
+    assert captured == [("ensure", date(2026, 5, 18)), date(2026, 5, 18)]
+    assert [doctor.doctor_id for doctor in result] == [1, 2]
+    assert result[0].available_slots == 4
+    assert result[1].is_available is False
+    assert result[1].unavailability_note == "Campus camp"
+
+
+def test_appointment_service_generates_future_weekday_slots_before_listing(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(
+        appointment_service,
+        "_get_local_now",
+        lambda: datetime(2026, 5, 16, 9, 0),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "ensure_slots_for_date",
+        lambda slot_date: calls.append(("ensure", slot_date)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        appointment_service.appointment_repo,
+        "list_available_slots",
+        lambda from_date, current_time=None: calls.append(("list", from_date, current_time)) or [],
+    )
+
+    appointment_service.list_available_slots(date(2026, 5, 18))
+
+    assert calls == [
+        ("ensure", date(2026, 5, 18)),
+        ("list", date(2026, 5, 18), None),
+    ]
+
+
+def test_repository_generates_half_hour_slots_for_available_weekday(monkeypatch):
+    inserted = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_doctor_slot_generation_windows(connection, slot_date):
+            assert slot_date == date(2026, 5, 18)
+            return [
+                {
+                    "staff_id": 1,
+                    "start_time": time(9, 0),
+                    "end_time": time(10, 0),
+                }
+            ]
+
+        @staticmethod
+        def insert_slot_if_missing(
+            connection,
+            staff_id,
+            slot_status_id,
+            slot_date,
+            start_time,
+            end_time,
+        ):
+            inserted.append(
+                (staff_id, slot_status_id, slot_date, start_time, end_time)
+            )
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    appointment_repo.ensure_slots_for_date(date(2026, 5, 18))
+
+    assert inserted == [
+        (1, 1, date(2026, 5, 18), time(9, 0), time(9, 30)),
+        (1, 1, date(2026, 5, 18), time(9, 30), time(10, 0)),
+    ]
+
+
+def test_repository_generates_slots_from_mysql_time_strings(monkeypatch):
+    inserted = []
+
+    class FakeAppointmentQueries:
+        @staticmethod
+        def get_slot_status_id(connection, status_name):
+            assert status_name == "available"
+            return 1
+
+        @staticmethod
+        def list_doctor_slot_generation_windows(connection, slot_date):
+            return [
+                {
+                    "staff_id": 1,
+                    "start_time": "09:00:00",
+                    "end_time": "10:00:00",
+                }
+            ]
+
+        @staticmethod
+        def insert_slot_if_missing(
+            connection,
+            staff_id,
+            slot_status_id,
+            slot_date,
+            start_time,
+            end_time,
+        ):
+            inserted.append((start_time, end_time))
+
+    @contextmanager
+    def fake_transaction_scope():
+        yield {}
+
+    monkeypatch.setattr(appointment_repo, "appointment_queries", FakeAppointmentQueries)
+    monkeypatch.setattr(appointment_repo.session, "transaction_scope", fake_transaction_scope)
+
+    appointment_repo.ensure_slots_for_date(date(2026, 5, 18))
+
+    assert inserted == [
+        (time(9, 0), time(9, 30)),
+        (time(9, 30), time(10, 0)),
+    ]
 
 
 def test_book_appointment_rejects_elapsed_slot(monkeypatch):
@@ -453,6 +635,17 @@ def test_available_slot_query_filters_exact_date_and_elapsed_today_slots():
     assert "slot_date = %s" in source
     assert "start_time > %s" in source
     assert "slot_date >= %s" not in source
+
+
+def test_doctor_status_query_lists_all_doctors_with_availability_rules():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def list_doctors_with_availability" in source
+    assert "from staff" in source
+    assert "where staff.is_doctor = true" in source
+    assert "left join doctor_availability_overrides" in source
+    assert "left join doctor_weekly_availability" in source
+    assert "as available_slots" in source
 
 
 def test_doctor_service_returns_default_weekly_availability_when_rows_missing(monkeypatch):

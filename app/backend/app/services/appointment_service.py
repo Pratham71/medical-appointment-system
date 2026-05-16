@@ -7,6 +7,7 @@ from app.backend.app.schemas.appointment import (
     AppointmentBookResponse,
     AppointmentSlot,
     AppointmentStatusResponse,
+    DoctorAvailabilityStatus,
 )
 
 
@@ -14,8 +15,21 @@ def list_available_slots(from_date: date | None = None) -> list[AppointmentSlot]
     local_now = _get_local_now()
     start_date = from_date or local_now.date()
     current_time = local_now.time().replace(microsecond=0) if start_date == local_now.date() else None
+    if start_date >= local_now.date():
+        appointment_repo.ensure_slots_for_date(start_date)
     rows = appointment_repo.list_available_slots(start_date, current_time)
     return [AppointmentSlot(**row) for row in rows]
+
+
+def list_doctors_with_availability(
+    for_date: date | None = None,
+) -> list[DoctorAvailabilityStatus]:
+    local_now = _get_local_now()
+    target_date = for_date or local_now.date()
+    if target_date >= local_now.date():
+        appointment_repo.ensure_slots_for_date(target_date)
+    rows = appointment_repo.list_doctors_with_availability(target_date)
+    return [DoctorAvailabilityStatus(**row) for row in rows]
 
 
 def book_appointment(
