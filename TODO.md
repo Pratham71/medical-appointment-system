@@ -77,6 +77,9 @@ Appointment APIs
 [x] [TOFIX] Add doctor availability management with default Monday-Saturday availability and Sunday unavailable by default (GitHub issue #14)
 [x] [TOFIX] Doctor unavailable on Sundays by default with manual override — weekly day toggles + date-level override table, doctor settings page; slot generation respects availability rules (GitHub issue #28)
 [x] [TOFIX] Add a separate doctor availability tab/page where doctors can manage weekly availability and date-level overrides (GitHub issue #29)
+[ ] [TOFIX] Auto-cancel bookings when doctor sets unavailability override — cancel appointments in the blocked window, free slots, notify student with walk-in and reschedule options (GitHub issue #30)
+[ ] [TOFIX] Show doctor unavailability reason on booking page when selected date is blocked — greyed card with amber "Unavailable — <reason>" badge, disabled Select button (GitHub issue #31)
+[ ] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, needs exposing in API response and rendering in frontend (GitHub issue #31)
 [ ] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
 
 Student APIs
