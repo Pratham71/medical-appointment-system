@@ -63,6 +63,7 @@ Google OAuth Tasks — Future Scope (GitHub issue #21)
 [ ] [FUTURE] [FRONTEND] Replace login form with Sign in with Google button
 [ ] [FUTURE] [FRONTEND] Handle OAuth redirect and callback route, store JWT same as current login
 [ ] [FUTURE] [FRONTEND] Show error for non-college Google accounts
+[ ] [FUTURE] Dark mode — CSS variable theming with darkMode: 'class' in Tailwind, animated sun/moon toggle in header, persisted in localStorage
 
 Appointment APIs
 
