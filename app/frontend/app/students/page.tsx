@@ -55,7 +55,7 @@ export default function StudentDashboardPage() {
     ])
       .then(([dashboard, appointments, alerts]) => {
         setData(dashboard);
-        setEmergencyAlerts(alerts.slice(0, 3));
+        setEmergencyAlerts(alerts.filter((a) => a.status !== "resolved").slice(0, 3));
         const cancelled = appointments.filter(
           (a) => a.slot_date === today && a.status.toLowerCase() === "cancelled"
         );

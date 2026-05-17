@@ -157,9 +157,10 @@ export default function EmergencyButton() {
                   <label className="block text-xs font-medium text-brand-muted">
                     Contact number
                     <input
+                      type="tel"
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
-                      placeholder="+971..."
+                      placeholder="+971 50 123 4567"
                       className="mt-1 w-full rounded-btn border border-brand-border bg-white px-3 py-2 text-sm text-brand-text outline-none focus:border-red-300"
                     />
                   </label>
