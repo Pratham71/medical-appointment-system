@@ -183,5 +183,14 @@ Current Entries
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Preserved existing prescription context on doctor appointment details and fixed local-date schedule filtering
 [2026-05-15] [TEST] [TEAM] [feat/backend/api] - Added frontend workflow and patient-search regression tests
 [2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Updated README, setup, API notes, project context, report notes, and TODO for staff login and UI integration fixes
+[2026-05-18] [UI] [TEAM] [feat/issues-12-37-39-44-admin-users] - Custom Select component replaces all native dropdowns — appearance-none, teal chevron, hover highlight, consistent teal focus ring
+[2026-05-18] [UI] [TEAM] [feat/issues-12-37-39-44-admin-users] - Collapsible cancelled-today and next-appointment cards on student dashboard; collapsible Today's Schedule on doctor dashboard with compact summary when folded
+[2026-05-18] [UI] [TEAM] [feat/issues-12-37-39-44-admin-users] - Month-wise collapsible grouping on all four emergency alert pages (student, admin, doctor, staff)
+[2026-05-18] [ADD] [TEAM] [feat/issues-12-37-39-44-admin-users] - Signup page at /signup — student self-registration (GitHub issue #49)
+[2026-05-18] [ADD] [TEAM] [feat/issues-12-37-39-44-admin-users] - Doctor and staff can view, acknowledge, and resolve emergency alerts — dedicated pages + dashboard panels
+[2026-05-18] [FIX] [TEAM] [feat/issues-12-37-39-44-admin-users] - Resolved alerts hidden from student and admin dashboard panels; contact number field is type=tel
+[2026-05-18] [ADD] [TEAM] [feat/issues-12-37-39-44-admin-users] - Role badge in sidebar, isPatientRole guards on student sub-pages, admin Protected chip with confirm modal
+[2026-05-18] [ADD] [TEAM] [feat/issues-12-37-39-44-admin-users] - College Staff and Hostel Staff tabs in admin students page; /students/emergency-alerts patient alerts page
+[2026-05-18] [DB] [TEAM] [feat/issues-12-37-39-44-admin-users] - Seed data and migration for professor/college-staff/hostel-staff appointments and emergency alerts
 [2026-05-17] [UI] [TEAM] [main] - Month-wise appointment breakdown — student My Appointments (past/cancelled), doctor All Appointments, and admin Appointments now group rows by month with collapsible chevron headers showing appointment count; closes #33
 [2026-05-17] [DOCS] [TEAM] [main] - Linked final project TODOs to GitHub issues and documented the TODO-plus-issue tracking rule

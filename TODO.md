@@ -92,6 +92,10 @@ Appointment APIs
 [x] [TOFIX] Professor, college-staff, hostel-staff frontend — role badge in sidebar footer, isPatientRole guards on all student sub-pages so direct URL visits work correctly
 [x] [TOFIX] Signup page at /signup for new students — name, email, password, roll number, department, year; redirects to /students on success; login page links to it
 [x] [TOFIX] Admin dashboard emergency alerts panel now filters out resolved alerts, shows only unread + acknowledged with active count badge
+[x] [TOFIX] Doctors and clinic staff can view, acknowledge, and resolve emergency alerts — backend RBAC updated, dedicated pages at /doctors/emergency-alerts and /staff/emergency-alerts, active alert panel on both dashboards
+[x] [TOFIX] Month-wise collapsible grouping on all emergency alert pages — student, admin, doctor, staff pages group alerts by month with chevron toggles
+[x] [UI] Custom Select component replacing all native dropdowns — appearance-none, teal chevron, hover highlight, consistent focus ring
+[x] [UI] Collapsible cancelled-today and next-appointment sections on student dashboard; collapsible Today's Schedule on doctor dashboard — folded state shows compact one-liner summary
 [ ] [FUTURE] Active users indicator — show count of currently logged-in users across admin/doctor pages; needs backend session-presence tracking (Redis TTL keys on each authenticated request, or last_seen timestamp on users table) and a GET /admin/active-users endpoint; frontend polls every 30s and renders a small badge in the header or sidebar footer
 [x] [TOFIX] Add college-staff and hostel-staff roles - same privilege level as student/professor; backend migration + seed accounts, admin role assignment fields, role badge/filter support, and patient workflow routing implemented (GitHub issue #44)
 [ ] [FUTURE] Slot reservation hold with 5-min auto-expiry — POST /appointments/reserve creates a TTL reservation on slot select; booking-in-progress status broadcast via WebSocket to other students; countdown timer shown to holder; expired reservations swept by background task and slot freed; confirmed booking requires active reservation (GitHub issue #45)
