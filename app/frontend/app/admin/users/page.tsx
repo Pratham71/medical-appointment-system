@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Select from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -138,15 +139,14 @@ function RoleAssignModal({
         <div className="mt-4 space-y-3">
           <div>
             <label className="block text-xs font-medium text-brand-muted mb-1">Role</label>
-            <select
+            <Select
               value={form.role_name}
               onChange={(e) => setForm({ ...form, role_name: e.target.value as AssignableRole })}
-              className="w-full border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {needsAcademic && (
@@ -155,16 +155,15 @@ function RoleAssignModal({
               {field("Department", "department", "e.g. Computer Science")}
               <div>
                 <label className="block text-xs font-medium text-brand-muted mb-1">Year Level</label>
-                <select
+                <Select
                   value={form.year_level}
                   onChange={(e) => setForm({ ...form, year_level: e.target.value })}
-                  className="w-full border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Select year</option>
                   {[1, 2, 3, 4, 5, 6].map((y) => (
                     <option key={y} value={y}>Year {y}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </>
           )}
@@ -329,16 +328,12 @@ export default function AdminUsersPage() {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="flex-1 min-w-[200px] border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
+          <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="">All roles</option>
             {ROLES.map((r) => (
               <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
             ))}
-          </select>
+          </Select>
           <button
             onClick={handleSearch}
             className="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-700 text-white rounded-btn font-medium transition"

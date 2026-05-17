@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signup, setSession } from "@/lib/api";
+import Select from "@/components/ui/Select";
 
 const DEPARTMENTS = [
   "Computer Science",
@@ -139,29 +140,21 @@ export default function SignupPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-brand-text mb-1.5">Year</label>
-                <select
-                  value={yearLevel}
-                  onChange={(e) => setYearLevel(Number(e.target.value))}
-                  className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text bg-white focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none transition"
-                >
+                <Select value={yearLevel} onChange={(e) => setYearLevel(Number(e.target.value))}>
                   {[1, 2, 3, 4, 5, 6].map((y) => (
                     <option key={y} value={y}>Year {y}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-brand-text mb-1.5">Department</label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text bg-white focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none transition"
-              >
+              <Select value={department} onChange={(e) => setDepartment(e.target.value)}>
                 {DEPARTMENTS.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <button

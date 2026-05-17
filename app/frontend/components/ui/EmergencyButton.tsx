@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendEmergencyAlert } from "@/lib/api";
+import Select from "@/components/ui/Select";
 import ToastContainer, { useToast } from "@/components/ui/Toast";
 
 const EMERGENCY_CONTACTS = [
@@ -132,10 +133,11 @@ export default function EmergencyButton() {
                 <div className="mb-3 space-y-2 rounded-lg border border-brand-border bg-brand-bg p-3">
                   <label className="block text-xs font-medium text-brand-muted">
                     Reason
-                    <select
+                    <Select
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      className="mt-1 w-full rounded-btn border border-brand-border bg-white px-3 py-2 text-sm text-brand-text outline-none focus:border-red-300"
+                      wrapperClassName="mt-1"
+                      className="focus:ring-red-400 hover:border-red-300"
                     >
                       <option value="Injury">Injury</option>
                       <option value="Chest pain">Chest pain</option>
@@ -143,7 +145,7 @@ export default function EmergencyButton() {
                       <option value="Fainted">Fainted</option>
                       <option value="Breathing issue">Breathing issue</option>
                       <option value="Other">Other</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="block text-xs font-medium text-brand-muted">
                     Location

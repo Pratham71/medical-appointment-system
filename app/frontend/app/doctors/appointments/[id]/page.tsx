@@ -12,6 +12,7 @@ import {
   getStoredUser,
 } from "@/lib/api";
 import type { AppointmentCancelReasonCode, DoctorAppointmentDetail } from "@/lib/types";
+import Select from "@/components/ui/Select";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -431,16 +432,15 @@ export default function AppointmentDetailPage() {
                         <label className="block text-sm font-medium text-brand-text mb-1.5">
                           Certificate Type
                         </label>
-                        <select
+                        <Select
                           value={certTypeId}
                           onChange={(e) => setCertTypeId(e.target.value)}
                           disabled={isAppointmentLocked}
-                          className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none"
                         >
                           <option value="1">Medical Leave Certificate</option>
                           <option value="2">Fitness Certificate</option>
                           <option value="3">Consultation Proof</option>
-                        </select>
+                        </Select>
                       </div>
                       {certTypeId === "1" && (
                         <div className="grid grid-cols-2 gap-3">
@@ -540,11 +540,11 @@ export default function AppointmentDetailPage() {
                         <label className="block text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
                           Cancellation reason
                         </label>
-                        <select
+                        <Select
                           value={cancelReasonCode}
                           onChange={(e) => setCancelReasonCode(e.target.value as AppointmentCancelReasonCode)}
                           disabled={saving}
-                          className="w-full border border-red-200 bg-white rounded-btn px-3 py-2.5 text-sm text-brand-text focus:ring-2 focus:ring-red-400 focus:ring-offset-1 focus:outline-none"
+                          className="border-red-200 focus:ring-red-400"
                         >
                           <option value="no_show">No-show</option>
                           <option value="student_request">Student request</option>
@@ -552,7 +552,7 @@ export default function AppointmentDetailPage() {
                           <option value="emergency_priority">Emergency case priority</option>
                           <option value="duplicate_booking">Duplicate booking</option>
                           <option value="other">Other</option>
-                        </select>
+                        </Select>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
