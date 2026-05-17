@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getDoctorDashboard, getDoctorAppointments, getStoredUser } from "@/lib/api";
-import type { DoctorDashboard, DoctorAppointmentSummary } from "@/lib/types";
+import { getDoctorDashboard, getDoctorAppointments, getAdminEmergencyAlerts, getStoredUser } from "@/lib/api";
+import type { DoctorDashboard, DoctorAppointmentSummary, AdminEmergencyAlertSummary } from "@/lib/types";
+import StatusBadge from "@/components/ui/StatusBadge";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatsCard from "@/components/ui/StatsCard";
-import StatusBadge from "@/components/ui/StatusBadge";
 
 function fmtTime(t: string) {
   return t.slice(0, 5);
@@ -22,6 +22,7 @@ export default function DoctorDashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<DoctorDashboard | null>(null);
   const [appointments, setAppointments] = useState<DoctorAppointmentSummary[]>([]);
+  const [alerts, setAlerts] = useState<AdminEmergencyAlertSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -33,8 +34,12 @@ export default function DoctorDashboardPage() {
     if (user.role_name === "staff") { router.replace("/staff"); setLoading(false); return; }
     if (user.role_name !== "doctor") { router.replace("/login"); setLoading(false); return; }
 
-    Promise.all([getDoctorDashboard(), getDoctorAppointments()])
-      .then(([d, a]) => { setDashboard(d); setAppointments(a); })
+    Promise.all([getDoctorDashboard(), getDoctorAppointments(), getAdminEmergencyAlerts(10)])
+      .then(([d, a, al]) => {
+        setDashboard(d);
+        setAppointments(a);
+        setAlerts(al.filter((x) => x.status !== "resolved").slice(0, 3));
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [router]);
@@ -86,6 +91,37 @@ export default function DoctorDashboardPage() {
               }
             />
           </div>
+
+          {/* Active emergency alerts */}
+          {alerts.length > 0 && (
+            <div className="bg-white rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border shadow-card">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-brand-border">
+                <h2 className="text-sm font-semibold text-brand-text">Emergency Alerts</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-red-500 text-white rounded-full px-2 py-0.5 font-medium">{alerts.length} active</span>
+                  <button onClick={() => router.push("/doctors/emergency-alerts")} className="text-xs text-teal-600 hover:text-teal-700 transition-colors">View all →</button>
+                </div>
+              </div>
+              <div className="divide-y divide-brand-border">
+                {alerts.map((a) => (
+                  <div key={a.alert_id} className="px-5 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                          <p className="text-sm font-medium text-brand-text">{a.student_name}</p>
+                          <span className="text-xs text-brand-muted font-mono">{a.roll_number}</span>
+                        </div>
+                        <p className="text-xs text-brand-muted mt-1">{a.reason} · {a.location}</p>
+                        {a.message && <p className="text-xs text-brand-text mt-0.5 line-clamp-1">{a.message}</p>}
+                      </div>
+                      <StatusBadge status={a.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Today's Schedule */}
           <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
