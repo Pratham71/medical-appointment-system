@@ -95,9 +95,9 @@ Appointment APIs
 [ ] [FUTURE] Real-time emergency alert push to admin and staff — WebSocket/SSE endpoint auth-gated to admin/staff, broadcast on every POST /emergency/alert, DashboardShell opens persistent connection and shows a toast + increments sidebar badge on receive; Emergency Alerts page prepends new card without reload (GitHub issue #42)
 [ ] [FUTURE] Emergency alert context fields — add reason (enum dropdown), location (free text), and contact number (optional, pre-filled from profile) to POST /emergency/alert; backend migration + schema update; EmergencyButton form redesign; admin alert cards show all three fields prominently (GitHub issue #46)
 [ ] [FUTURE] Emergency alert acknowledgement and resolution flow — Acknowledge and Resolve actions on alert cards, backend PATCH endpoints + migration for acknowledged_by/resolved_at columns, three-state badge (Unread / Acknowledged / Resolved), student-facing alert status view (GitHub issue #43) — backend needs DELETE or PATCH /admin/users/:id/deactivate endpoint; frontend Change Role button row should gain a Remove button with a confirmation modal
-[ ] [TOFIX] Doctor weekly availability schedule fails to save — likely time format mismatch (HH:MM vs HH:MM:SS) or backend rejecting null times; investigate frontend payload and backend upsert (GitHub issue #35)
-[ ] [TOFIX] [BACKEND] Cancelled appointment slots not freed for rebooking — slot_status not returning to 'available' after cancellation; investigate active_slot_id uniqueness constraint and v_available_appointment_slots view (GitHub issue #34)
-[ ] [TOFIX] Booked appointment slots appear selectable if fetched before another student books them — re-fetch slots on step 2 entry, show "Taken" greyed-out state, refresh on booking conflict error (GitHub issue #32)
+[x] [TOFIX] Doctor weekly availability schedule fails to save — fixed HH:MM → HH:MM:SS normalisation before sending to backend (GitHub issue #35)
+[x] [TOFIX] [BACKEND] Cancelled appointment slots not freed for rebooking — fixed active_slot_id generated column uniqueness constraint (GitHub issue #34)
+[x] [TOFIX] Booked appointment slots appear selectable if fetched before another student books them — slots re-fetched on step 2 entry (GitHub issue #32)
 
 Student APIs
 
@@ -160,7 +160,7 @@ Frontend To Fix
 
 Final Project TODOs
 
-[ ] [FINAL] Admin workflow and implementation - backend admin APIs are implemented for signup defaults, professor role support, user role assignment, dashboard metrics, appointment oversight, student/professor/doctor/staff directories, and emergency alert review; frontend admin screens remain pending for Claude/Stitch. (GitHub issue #11)
+[x] [FINAL] Admin workflow and implementation - backend admin APIs and full frontend implemented: dashboard metrics, user role assignment, appointment oversight, student/professor tabs, doctor/staff directories, emergency alert review (GitHub issue #11)
 [ ] [FINAL] Staff workflow and implementation - finalize front-desk staff responsibilities, then build staff routes and UI for appointment lookup, check-in/help-desk handling, cancelling or rescheduling appointments with reasons, emergency alert follow-up, and normal walk-in checkup support; reuse the shared appointment cancellation reason flow where possible. (GitHub issue #12)
 [ ] [FINAL] Email notifications for appointment updates - choose SMTP/provider settings, add environment-driven email configuration, create notification templates, and send emails for booking confirmation, cancellation with reason, doctor unavailability auto-cancel, reschedule-related updates, and important report/certificate availability events; keep credentials out of git and cover the notification service with tests. (GitHub issue #37)
 [ ] [FINAL] Code refinement and project hardening - clean up duplicated frontend/backend helpers, review API error messages, tighten route/service/repository boundaries, add live MySQL integration tests where useful, check accessibility/responsive UI issues, update final docs/screenshots, and remove stale TODOs before project submission. (GitHub issue #38)
