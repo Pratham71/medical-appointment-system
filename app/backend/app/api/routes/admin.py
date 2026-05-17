@@ -170,7 +170,7 @@ def staff(
 @router.get("/emergency-alerts", response_model=list[AdminEmergencyAlertSummary])
 def emergency_alerts(
     limit: int = Query(default=50, ge=1, le=250),
-    current_user: AuthenticatedUser = Depends(require_roles("admin")),
+    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff", "doctor")),
 ) -> list[AdminEmergencyAlertSummary]:
     try:
         return admin_service.list_emergency_alerts(limit)
@@ -184,7 +184,7 @@ def emergency_alerts(
 )
 def acknowledge_emergency_alert(
     alert_id: int = Path(..., gt=0),
-    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff")),
+    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff", "doctor")),
 ) -> AdminEmergencyAlertSummary:
     try:
         return admin_service.acknowledge_emergency_alert(
@@ -202,7 +202,7 @@ def acknowledge_emergency_alert(
 def resolve_emergency_alert(
     payload: EmergencyAlertResolveRequest,
     alert_id: int = Path(..., gt=0),
-    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff")),
+    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff", "doctor")),
 ) -> AdminEmergencyAlertSummary:
     try:
         return admin_service.resolve_emergency_alert(
