@@ -1,5 +1,5 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, Fragment } from "react";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,23 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function groupByMonth<T extends { slot_date: string }>(items: T[]) {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const [year, month] = item.slot_date.split("-");
+    const key = `${year}-${month}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([key, rows]) => ({
+      key,
+      label: new Date(`${key}-01`).toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+      rows,
+    }));
 }
 
 function initials(name: string): string {
@@ -35,6 +52,7 @@ function PatientHistoryPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const user = getStoredUser();
@@ -51,6 +69,14 @@ function PatientHistoryPageInner() {
 
   function toggle(id: number) {
     setExpanded((prev) => (prev === id ? null : id));
+  }
+
+  function toggleMonth(key: string) {
+    setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
   }
 
   return (
@@ -95,104 +121,132 @@ function PatientHistoryPageInner() {
         <p className="text-brand-muted text-sm">No visit history found for this patient.</p>
       )}
 
-      <div className="space-y-3">
-        {history.map((item, i) => (
-          <motion.div
-            key={item.appointment_id}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2, delay: Math.min(i * 0.06, 0.4) }}
-            className="relative flex gap-4"
-          >
-            {/* Timeline line */}
-            <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-teal-600 mt-5 flex-shrink-0 z-10" />
-              {i < history.length - 1 && (
-                <div className="w-px flex-1 bg-brand-border mt-1" />
-              )}
-            </div>
-
-            {/* Card */}
-            <div className="flex-1 bg-white rounded-card border border-brand-border shadow-card mb-2 overflow-hidden">
+      <div className="space-y-1">
+        {groupByMonth(history).map((group) => {
+          const collapsed = collapsedMonths.has(group.key);
+          return (
+            <Fragment key={group.key}>
+              {/* Month header */}
               <button
-                onClick={() => toggle(item.appointment_id)}
-                className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-brand-raised transition-colors"
+                onClick={() => toggleMonth(group.key)}
+                className="flex items-center gap-2 w-full text-left py-2 px-1 rounded hover:bg-brand-raised transition-colors select-none mb-1"
               >
-                <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-sm font-medium text-brand-text">{fmtDate(item.slot_date)}</span>
-                  <span className="text-sm text-brand-muted">Dr. {doctorName(item.doctor_name)}</span>
-                  <StatusBadge status={item.status} />
-                  {item.certificate_id && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 ring-1 ring-purple-200">
-                      Certificate
-                    </span>
-                  )}
-                </div>
                 <svg
-                  className={`w-4 h-4 text-brand-muted transition-transform flex-shrink-0 ml-2 ${expanded === item.appointment_id ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
+                <span className="text-xs font-semibold text-brand-text">{group.label}</span>
+                <span className="text-xs text-brand-muted">·</span>
+                <span className="text-xs text-brand-muted">
+                  {group.rows.length} visit{group.rows.length !== 1 ? "s" : ""}
+                </span>
               </button>
 
-              <AnimatePresence initial={false}>
-              {expanded === item.appointment_id && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                <div className="px-4 pb-4 border-t border-brand-border text-sm space-y-2 pt-3">
-                  <div className="flex gap-2">
-                    <span className="text-brand-muted w-24 flex-shrink-0">Time</span>
-                    <span className="text-brand-text font-mono text-xs">
-                      {item.start_time.slice(0, 5)} – {item.end_time.slice(0, 5)}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-brand-muted w-24 flex-shrink-0">Reason</span>
-                    <span className={item.reason ? "text-brand-text" : "text-brand-muted italic"}>
-                      {item.reason ?? "Not provided"}
-                    </span>
-                  </div>
-                  {item.diagnosis && (
-                    <div className="flex gap-2">
-                      <span className="text-brand-muted w-24 flex-shrink-0">Diagnosis</span>
-                      <span className="text-brand-text">{item.diagnosis}</span>
-                    </div>
-                  )}
-                  {item.remarks && (
-                    <div className="flex gap-2">
-                      <span className="text-brand-muted w-24 flex-shrink-0">Remarks</span>
-                      <span className="text-brand-text">{item.remarks}</span>
-                    </div>
-                  )}
-                  {item.certificate_type && (
-                    <div className="flex gap-2">
-                      <span className="text-brand-muted w-24 flex-shrink-0">Certificate</span>
-                      <span className="text-brand-text">{item.certificate_type}</span>
-                    </div>
-                  )}
-                  <div className="pt-1">
-                    <button
-                      onClick={() => router.push(`/doctors/appointments/${item.appointment_id}`)}
-                      className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
+              {/* Timeline items for this month */}
+              {!collapsed && (
+                <div className="space-y-3 mb-4 ml-1">
+                  {group.rows.map((item, i) => (
+                    <motion.div
+                      key={item.appointment_id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.18, delay: Math.min(i * 0.05, 0.3) }}
+                      className="relative flex gap-4"
                     >
-                      View Appointment →
-                    </button>
-                  </div>
+                      {/* Timeline dot + line */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-3 h-3 rounded-full bg-teal-600 mt-5 flex-shrink-0 z-10" />
+                        {i < group.rows.length - 1 && (
+                          <div className="w-px flex-1 bg-brand-border mt-1" />
+                        )}
+                      </div>
+
+                      {/* Card */}
+                      <div className="flex-1 bg-white rounded-card border border-brand-border shadow-card mb-2 overflow-hidden">
+                        <button
+                          onClick={() => toggle(item.appointment_id)}
+                          className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-brand-raised transition-colors"
+                        >
+                          <div className="flex items-center gap-4 flex-wrap">
+                            <span className="text-sm font-medium text-brand-text">{fmtDate(item.slot_date)}</span>
+                            <span className="text-sm text-brand-muted">Dr. {doctorName(item.doctor_name)}</span>
+                            <StatusBadge status={item.status} />
+                            {item.certificate_id && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 ring-1 ring-purple-200">
+                                Certificate
+                              </span>
+                            )}
+                          </div>
+                          <svg
+                            className={`w-4 h-4 text-brand-muted transition-transform flex-shrink-0 ml-2 ${expanded === item.appointment_id ? "rotate-180" : ""}`}
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                          {expanded === item.appointment_id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.22, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 pb-4 border-t border-brand-border text-sm space-y-2 pt-3">
+                                <div className="flex gap-2">
+                                  <span className="text-brand-muted w-24 flex-shrink-0">Time</span>
+                                  <span className="text-brand-text font-mono text-xs">
+                                    {item.start_time.slice(0, 5)} – {item.end_time.slice(0, 5)}
+                                  </span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <span className="text-brand-muted w-24 flex-shrink-0">Reason</span>
+                                  <span className={item.reason ? "text-brand-text" : "text-brand-muted italic"}>
+                                    {item.reason ?? "Not provided"}
+                                  </span>
+                                </div>
+                                {item.diagnosis && (
+                                  <div className="flex gap-2">
+                                    <span className="text-brand-muted w-24 flex-shrink-0">Diagnosis</span>
+                                    <span className="text-brand-text">{item.diagnosis}</span>
+                                  </div>
+                                )}
+                                {item.remarks && (
+                                  <div className="flex gap-2">
+                                    <span className="text-brand-muted w-24 flex-shrink-0">Remarks</span>
+                                    <span className="text-brand-text">{item.remarks}</span>
+                                  </div>
+                                )}
+                                {item.certificate_type && (
+                                  <div className="flex gap-2">
+                                    <span className="text-brand-muted w-24 flex-shrink-0">Certificate</span>
+                                    <span className="text-brand-text">{item.certificate_type}</span>
+                                  </div>
+                                )}
+                                <div className="pt-1">
+                                  <button
+                                    onClick={() => router.push(`/doctors/appointments/${item.appointment_id}`)}
+                                    className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                                  >
+                                    View Appointment →
+                                  </button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-                </motion.div>
               )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        ))}
+            </Fragment>
+          );
+        })}
       </div>
     </DashboardShell>
   );
