@@ -114,6 +114,20 @@ export async function login(email: string, password: string): Promise<TokenRespo
   });
 }
 
+export async function signup(payload: {
+  name: string;
+  email: string;
+  password: string;
+  roll_number: string;
+  department: string;
+  year_level: number;
+}): Promise<TokenResponse> {
+  return request<TokenResponse>("/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function logout(): Promise<void> {
   await request("/auth/logout", { method: "POST" }, true).catch(() => {});
   clearSession();

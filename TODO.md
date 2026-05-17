@@ -89,6 +89,9 @@ Appointment APIs
 [x] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, now exposed in API response and rendered in frontend (GitHub issue #31)
 [x] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
 [x] [TOFIX] Admin - add delete/deactivate user action in the Users table using safe soft-deactivation plus reactivation support (GitHub issue #48)
+[x] [TOFIX] Professor, college-staff, hostel-staff frontend — role badge in sidebar footer, isPatientRole guards on all student sub-pages so direct URL visits work correctly
+[x] [TOFIX] Signup page at /signup for new students — name, email, password, roll number, department, year; redirects to /students on success; login page links to it
+[x] [TOFIX] Admin dashboard emergency alerts panel now filters out resolved alerts, shows only unread + acknowledged with active count badge
 [ ] [FUTURE] Active users indicator — show count of currently logged-in users across admin/doctor pages; needs backend session-presence tracking (Redis TTL keys on each authenticated request, or last_seen timestamp on users table) and a GET /admin/active-users endpoint; frontend polls every 30s and renders a small badge in the header or sidebar footer
 [x] [TOFIX] Add college-staff and hostel-staff roles - same privilege level as student/professor; backend migration + seed accounts, admin role assignment fields, role badge/filter support, and patient workflow routing implemented (GitHub issue #44)
 [ ] [FUTURE] Slot reservation hold with 5-min auto-expiry — POST /appointments/reserve creates a TTL reservation on slot select; booking-in-progress status broadcast via WebSocket to other students; countdown timer shown to holder; expired reservations swept by background task and slot freed; confirmed booking requires active reservation (GitHub issue #45)

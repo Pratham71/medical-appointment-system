@@ -37,13 +37,12 @@ function ReportsPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
   useEffect(() => {
     const user = getStoredUser();
-    if (!user) {
-      router.replace("/login");
-      setLoading(false);
-      return;
-    }
+    if (!user) { router.replace("/login"); setLoading(false); return; }
+    if (!PATIENT_ROLES.includes(user.role_name)) { router.replace("/login"); setLoading(false); return; }
     Promise.all([getStudentReports(), getStudentCertificates()])
       .then(([reportRows, certificateRows]) => {
         setReports(reportRows);

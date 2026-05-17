@@ -42,9 +42,12 @@ export default function BookAppointmentPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
   useEffect(() => {
     const user = getStoredUser();
     if (!user) { router.replace("/login"); return; }
+    if (!PATIENT_ROLES.includes(user.role_name)) { router.replace("/login"); return; }
   }, [router]);
 
   useEffect(() => {
