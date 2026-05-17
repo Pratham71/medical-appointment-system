@@ -252,6 +252,7 @@ CREATE INDEX idx_appointment_slots_staff_date ON appointment_slots(staff_id, slo
 CREATE INDEX idx_appointment_slots_date_status ON appointment_slots(slot_date, slot_status_id);
 CREATE INDEX idx_appointments_student ON appointments(student_id);
 CREATE INDEX idx_appointments_status ON appointments(status_id);
+CREATE INDEX idx_appointments_slot ON appointments(slot_id);
 CREATE INDEX idx_emergency_alerts_student_created
     ON emergency_alerts(student_id, created_at);
 CREATE INDEX idx_medical_notes_appointment ON medical_notes(appointment_id);

@@ -193,6 +193,7 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
     assert "idx_appointments_student" in schema
     assert "idx_appointment_slots_staff_date" in schema
     assert "idx_appointment_slots_date_status" in schema
+    assert "idx_appointments_slot" in schema
     assert "idx_doctor_weekly_availability_staff_weekday" in schema
     assert "idx_doctor_availability_overrides_staff_date" in schema
 
@@ -203,6 +204,9 @@ def test_cancelled_rebooking_schema_migration_repairs_active_slot_tracking():
     ).read_text(encoding="utf-8").lower()
 
     assert "drop index active_slot_id on appointments" in migration
+    assert "create index idx_appointments_slot on appointments(slot_id)" in migration
+    assert "columns_in_index = 'slot_id'" in migration
+    assert "drop_legacy_slot_unique" in migration
     assert "drop column active_slot_id" in migration
     assert "add column active_slot_id int null" in migration
     assert "appointment_statuses.status_name = 'cancelled'" in migration

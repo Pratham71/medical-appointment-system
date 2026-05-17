@@ -170,3 +170,4 @@ Current Entries
 [2026-05-17] [UI] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Restored the doctor cancellation form label expected by the existing workflow regression test
 [2026-05-17] [FIX] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Fixed Framer Motion skeleton transition typing so the frontend production build can complete
 [2026-05-17] [DOCS] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Updated setup docs with the cancelled-slot rebooking repair migration command
+[2026-05-17] [FIX] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Updated the cancelled-slot repair migration to replace the legacy UNIQUE(slot_id) index with a non-unique slot FK index before rebooking

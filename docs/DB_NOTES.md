@@ -89,6 +89,7 @@ Indexes
 - doctor_availability_overrides(staff_id, override_date)
 - appointments(student_id)
 - appointments(status_id)
+- appointments(slot_id)
 - appointment_slots(staff_id, slot_date)
 - appointment_slots(slot_date, status_id)
 - medical_notes(appointment_id)

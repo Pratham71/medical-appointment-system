@@ -1,6 +1,60 @@
 -- Repair cancelled appointment rebooking for local databases created before
 -- active_slot_id was managed explicitly by appointment writes.
 
+SET @appointments_slot_index_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+        AND table_name = 'appointments'
+        AND index_name = 'idx_appointments_slot'
+);
+
+SET @add_appointments_slot_index_sql = IF(
+    @appointments_slot_index_exists = 0,
+    'CREATE INDEX idx_appointments_slot ON appointments(slot_id)',
+    'SELECT 1'
+);
+
+PREPARE add_appointments_slot_index_stmt
+    FROM @add_appointments_slot_index_sql;
+EXECUTE add_appointments_slot_index_stmt;
+DEALLOCATE PREPARE add_appointments_slot_index_stmt;
+
+SET @legacy_slot_unique_index_name = (
+    SELECT slot_indexes.index_name
+    FROM (
+        SELECT
+            statistics.index_name,
+            statistics.non_unique,
+            GROUP_CONCAT(
+                statistics.column_name
+                ORDER BY statistics.seq_in_index
+            ) AS columns_in_index
+        FROM information_schema.statistics AS statistics
+        WHERE statistics.table_schema = DATABASE()
+            AND statistics.table_name = 'appointments'
+        GROUP BY statistics.index_name, statistics.non_unique
+    ) AS slot_indexes
+    WHERE slot_indexes.non_unique = 0
+        AND slot_indexes.columns_in_index = 'slot_id'
+    LIMIT 1
+);
+
+SET @drop_legacy_slot_unique_sql = IF(
+    @legacy_slot_unique_index_name IS NOT NULL,
+    CONCAT(
+        'DROP INDEX `',
+        REPLACE(@legacy_slot_unique_index_name, '`', '``'),
+        '` ON appointments'
+    ),
+    'SELECT 1'
+);
+
+PREPARE drop_legacy_slot_unique_stmt
+    FROM @drop_legacy_slot_unique_sql;
+EXECUTE drop_legacy_slot_unique_stmt;
+DEALLOCATE PREPARE drop_legacy_slot_unique_stmt;
+
 SET @active_slot_index_exists = (
     SELECT COUNT(*)
     FROM information_schema.statistics
