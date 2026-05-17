@@ -4,6 +4,16 @@ from app.backend.app.db.queries._helpers import fetch_all, fetch_one
 
 
 def get_dashboard_counts(connection: Any, student_id: int) -> dict[str, Any] | None:
+    """Fetch aggregated dashboard statistics for a single student.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        A dict with student_id, student_name, upcoming_appointments,
+        completed_appointments, reports_available, and certificates_available,
+        or None if the student does not exist.
+    """
     sql = """
         SELECT
             students.student_id,
@@ -49,6 +59,15 @@ def get_dashboard_counts(connection: Any, student_id: int) -> dict[str, Any] | N
 
 
 def get_next_appointment(connection: Any, student_id: int) -> dict[str, Any] | None:
+    """Fetch the earliest upcoming booked appointment for a student.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        A dict with appointment_id, slot_date, start_time, end_time, doctor info,
+        and status, or None if no upcoming appointment exists.
+    """
     sql = """
         SELECT
             v_appointment_details.appointment_id,
@@ -69,6 +88,15 @@ def get_next_appointment(connection: Any, student_id: int) -> dict[str, Any] | N
 
 
 def list_appointments(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    """Return all appointments for a student in reverse chronological order.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of dicts with appointment_id, slot_date, start/end times, doctor info,
+        status, reason, and cancellation_reason.
+    """
     sql = """
         SELECT
             v_appointment_details.appointment_id,
@@ -90,6 +118,15 @@ def list_appointments(connection: Any, student_id: int) -> list[dict[str, Any]]:
 
 
 def list_reports(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    """Return all medical report summaries for a student, newest first.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of dicts with appointment_id, appointment_date, doctor info,
+        diagnosis, remarks, and prescription_count.
+    """
     sql = """
         SELECT
             v_student_report_summaries.appointment_id,
@@ -107,6 +144,14 @@ def list_reports(connection: Any, student_id: int) -> list[dict[str, Any]]:
 
 
 def list_certificates(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    """Return all certificate summaries for a student, newest first.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of certificate summary dicts ordered by issue_date descending.
+    """
     sql = """
         SELECT
             v_student_certificate_summaries.certificate_id,
@@ -131,6 +176,15 @@ def list_certificates(connection: Any, student_id: int) -> list[dict[str, Any]]:
 
 
 def list_emergency_alerts(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    """Return all emergency alerts submitted by a student, newest first.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of dicts with alert_id, reason, location, contact_number, message,
+        status, created_at, acknowledged_at, resolved_at, and resolution_note.
+    """
     sql = """
         SELECT
             emergency_alerts.alert_id,

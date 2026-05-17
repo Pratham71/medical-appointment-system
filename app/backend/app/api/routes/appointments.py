@@ -29,6 +29,15 @@ def get_doctors(
     for_date: date | None = Query(default=None),
     current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> list[DoctorAvailabilityStatus]:
+    """Return all doctors with computed availability status for a date.
+
+    Args:
+        for_date: Calendar date to evaluate; defaults to today.
+        current_user: Any authenticated user.
+
+    Returns:
+        List of DoctorAvailabilityStatus objects.
+    """
     try:
         return appointment_service.list_doctors_with_availability(for_date)
     except Exception as exc:
@@ -41,6 +50,16 @@ def get_all_slots_for_doctor(
     slot_date: date = Query(...),
     current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> list[AppointmentSlotWithStatus]:
+    """Return all slots for a doctor on a date, including booked ones.
+
+    Args:
+        doctor_id: Primary key of the doctor's staff record.
+        slot_date: Calendar date to query.
+        current_user: Any authenticated user.
+
+    Returns:
+        List of AppointmentSlotWithStatus objects.
+    """
     try:
         return appointment_service.list_all_slots_for_doctor(doctor_id, slot_date)
     except Exception as exc:
@@ -52,6 +71,15 @@ def get_slots(
     from_date: date | None = Query(default=None),
     current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> list[AppointmentSlot]:
+    """Return available appointment slots for a date.
+
+    Args:
+        from_date: Calendar date to query; defaults to today.
+        current_user: Any authenticated user.
+
+    Returns:
+        List of bookable AppointmentSlot objects.
+    """
     try:
         return appointment_service.list_available_slots(from_date)
     except Exception as exc:
@@ -63,6 +91,18 @@ def book_appointment(
     payload: AppointmentBookRequest,
     student_id: int = Depends(require_student_id),
 ) -> AppointmentBookResponse:
+    """Book an appointment slot for the authenticated student.
+
+    Args:
+        payload: Booking request with slot_id and optional reason.
+        student_id: Resolved student_id of the authenticated user.
+
+    Returns:
+        An AppointmentBookResponse with appointment_id and status.
+
+    Raises:
+        HTTPException: 404 if the slot is not found; 409 if already booked or elapsed.
+    """
     try:
         return appointment_service.book_appointment(payload, student_id)
     except Exception as exc:
@@ -85,6 +125,20 @@ def cancel_appointment(
         ),
     ),
 ) -> AppointmentStatusResponse:
+    """Cancel an appointment; doctor/staff/admin callers must supply a reason.
+
+    Args:
+        appointment_id: Primary key of the appointment to cancel.
+        payload: Cancellation reason; required for doctor, staff, and admin roles.
+        current_user: The authenticated user; any role may cancel their own appointment.
+
+    Returns:
+        An AppointmentStatusResponse confirming cancellation.
+
+    Raises:
+        HTTPException: 403 if access is denied; 404 if not found; 409 if the
+            status transition is not permitted.
+    """
     try:
         ensure_appointment_access(
             current_user,
@@ -108,6 +162,19 @@ def complete_appointment(
     appointment_id: int = Path(..., gt=0),
     current_user: AuthenticatedUser = Depends(require_roles("doctor", "admin")),
 ) -> AppointmentStatusResponse:
+    """Mark an appointment as completed (doctors and admins only).
+
+    Args:
+        appointment_id: Primary key of the appointment to complete.
+        current_user: An authenticated doctor or admin.
+
+    Returns:
+        An AppointmentStatusResponse confirming completion.
+
+    Raises:
+        HTTPException: 403 if access is denied; 404 if not found; 409 if the
+            status transition is not permitted.
+    """
     try:
         ensure_appointment_access(
             current_user,

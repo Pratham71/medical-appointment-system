@@ -30,6 +30,7 @@ class DatabaseNotConfiguredError(ServiceError):
 
 
 def service_error_to_http(exc: Exception) -> HTTPException:
+    """Convert a service-layer exception to an HTTPException with an appropriate status code."""
     if isinstance(exc, ServiceError):
         return HTTPException(status_code=exc.status_code, detail=str(exc))
     if isinstance(exc, RuntimeError):

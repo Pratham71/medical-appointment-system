@@ -17,6 +17,19 @@ def send_alert(
     payload: EmergencyAlertRequest,
     student_id: int = Depends(require_student_id),
 ) -> EmergencyAlertResponse:
+    """Submit an emergency alert on behalf of the authenticated student.
+
+    Args:
+        payload: Alert details including reason, location, optional contact
+            number, and an optional descriptive message.
+        student_id: Resolved student_id of the authenticated user.
+
+    Returns:
+        An EmergencyAlertResponse with the created alert's data.
+
+    Raises:
+        HTTPException: 404 if the alert cannot be retrieved after creation.
+    """
     try:
         return emergency_service.create_alert(
             student_id=student_id,

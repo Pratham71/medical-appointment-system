@@ -9,6 +9,14 @@ _LOCKED_EDIT_STATUSES = {"completed", "cancelled"}
 
 
 def get_appointment_write_context(appointment_id: int) -> dict[str, Any] | None:
+    """Fetch the appointment status needed before writing a medical note or prescription.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id and status, or None if not found.
+    """
     with session.connection_scope() as connection:
         return report_queries.get_appointment_write_context(connection, appointment_id)
 
@@ -16,6 +24,16 @@ def get_appointment_write_context(appointment_id: int) -> dict[str, Any] | None:
 def add_medical_note(
     appointment_id: int, payload: MedicalNoteCreate
 ) -> dict[str, Any] | None:
+    """Upsert the medical note for an appointment and return the saved record.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+        payload: Note fields including diagnosis and optional remarks.
+
+    Returns:
+        The saved note dict, a dict with blocked_status if the appointment is
+        locked, or None if the appointment does not exist.
+    """
     with session.transaction_scope() as connection:
         appointment = report_queries.get_appointment_write_context(
             connection,
@@ -41,6 +59,17 @@ def add_medical_note(
 def add_prescription(
     appointment_id: int, payload: PrescriptionCreate
 ) -> dict[str, Any] | None:
+    """Replace the prescription items for an appointment and return the updated record.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+        payload: Prescription items to replace the existing ones with.
+
+    Returns:
+        A dict with prescription_id, appointment_id, and items on success;
+        a dict with blocked_status if the appointment is locked;
+        or None if the appointment does not exist.
+    """
     with session.transaction_scope() as connection:
         appointment = report_queries.get_appointment_write_context(
             connection,
@@ -86,6 +115,15 @@ def add_prescription(
 
 
 def get_report(appointment_id: int) -> dict[str, Any] | None:
+    """Fetch the full report detail including appointment context, note, and prescription.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with "appointment", "note", and "prescription" keys,
+        or None if the appointment does not exist.
+    """
     with session.connection_scope() as connection:
         appointment = report_queries.get_report_appointment(connection, appointment_id)
         if appointment is None:

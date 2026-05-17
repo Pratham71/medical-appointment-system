@@ -12,6 +12,20 @@ _LOCKED_EDIT_STATUSES = {"completed", "cancelled"}
 def create_certificate(
     appointment_id: int, payload: CertificateCreate
 ) -> CertificateResponse:
+    """Create or update a medical certificate for an appointment.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+        payload: Certificate fields including type, issue date, leave dates, and notes.
+
+    Returns:
+        A CertificateResponse with the saved certificate details.
+
+    Raises:
+        NotFoundError: If the appointment does not exist.
+        ConflictError: If the appointment is locked, the date is in the future,
+            the issue date predates the appointment, or leave dates are inconsistent.
+    """
     payload.issue_date = payload.issue_date or date.today()
     appointment = certificate_repo.get_appointment_certificate_context(appointment_id)
     if appointment is None:
@@ -48,11 +62,27 @@ def create_certificate(
 
 
 def list_student_certificates(student_id: int) -> list[CertificateResponse]:
+    """Return all certificates issued for a student.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of CertificateResponse objects ordered by issue_date descending.
+    """
     rows = certificate_repo.list_by_student(student_id)
     return [CertificateResponse(**row) for row in rows]
 
 
 def _raise_if_locked_status(status: str | None) -> None:
+    """Raise ConflictError if the given status is one that prevents editing.
+
+    Args:
+        status: An appointment or blocked status string, or None to no-op.
+
+    Raises:
+        ConflictError: If the status is "completed" or "cancelled".
+    """
     if status is None:
         return
     normalized_status = status.lower()

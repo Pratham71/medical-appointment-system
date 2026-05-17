@@ -4,6 +4,14 @@ from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 
 
 def get_appointment_exists(connection: Any, appointment_id: int) -> dict[str, Any] | None:
+    """Check whether an appointment row exists by its primary key.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id if found, otherwise None.
+    """
     sql = """
         SELECT appointments.appointment_id
         FROM appointments
@@ -16,6 +24,14 @@ def get_appointment_write_context(
     connection: Any,
     appointment_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch the appointment status needed before writing a medical note or prescription.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id and status, or None if not found.
+    """
     sql = """
         SELECT
             appointments.appointment_id,
@@ -34,6 +50,13 @@ def upsert_medical_note(
     diagnosis: str,
     remarks: str | None,
 ) -> None:
+    """Insert or update the medical note for an appointment.
+
+    Args:
+        appointment_id: Foreign-key ID of the appointment.
+        diagnosis: Doctor's diagnosis text.
+        remarks: Optional additional remarks or instructions.
+    """
     sql = """
         INSERT INTO medical_notes (
             appointment_id,
@@ -49,6 +72,15 @@ def upsert_medical_note(
 
 
 def get_medical_note(connection: Any, appointment_id: int) -> dict[str, Any] | None:
+    """Retrieve the medical note written for an appointment.
+
+    Args:
+        appointment_id: Foreign-key ID of the appointment.
+
+    Returns:
+        A dict with note_id, appointment_id, diagnosis, and remarks,
+        or None if no note has been written.
+    """
     sql = """
         SELECT
             medical_notes.note_id,
@@ -65,6 +97,14 @@ def get_prescription_by_appointment(
     connection: Any,
     appointment_id: int,
 ) -> dict[str, Any] | None:
+    """Retrieve the prescription record for an appointment.
+
+    Args:
+        appointment_id: Foreign-key ID of the appointment.
+
+    Returns:
+        A dict with prescription_id and appointment_id, or None if not found.
+    """
     sql = """
         SELECT
             prescriptions.prescription_id,
@@ -76,6 +116,14 @@ def get_prescription_by_appointment(
 
 
 def insert_prescription(connection: Any, appointment_id: int) -> int:
+    """Create a new prescription header row for an appointment.
+
+    Args:
+        appointment_id: Foreign-key ID of the appointment.
+
+    Returns:
+        The auto-generated prescription_id of the new row.
+    """
     sql = """
         INSERT INTO prescriptions (appointment_id)
         VALUES (%s)
@@ -84,6 +132,11 @@ def insert_prescription(connection: Any, appointment_id: int) -> int:
 
 
 def delete_prescription_items(connection: Any, prescription_id: int) -> None:
+    """Remove all line items from a prescription so they can be replaced.
+
+    Args:
+        prescription_id: Foreign-key ID of the prescription whose items to delete.
+    """
     sql = """
         DELETE FROM prescription_items
         WHERE prescription_id = %s
@@ -97,6 +150,16 @@ def insert_prescription_item(
     medicine_name: str,
     dosage: str,
 ) -> int:
+    """Add a single medicine line item to a prescription.
+
+    Args:
+        prescription_id: Foreign-key ID of the parent prescription.
+        medicine_name: Name of the medicine.
+        dosage: Dosage instructions (e.g. "500 mg twice daily").
+
+    Returns:
+        The auto-generated item_id of the new row.
+    """
     sql = """
         INSERT INTO prescription_items (
             prescription_id,
@@ -112,6 +175,14 @@ def list_prescription_items(
     connection: Any,
     prescription_id: int,
 ) -> list[dict[str, Any]]:
+    """Return all line items for a prescription, ordered by item ID.
+
+    Args:
+        prescription_id: Foreign-key ID of the prescription.
+
+    Returns:
+        List of dicts with item_id, medicine_name, and dosage.
+    """
     sql = """
         SELECT
             prescription_items.item_id,
@@ -128,6 +199,15 @@ def get_report_appointment(
     connection: Any,
     appointment_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch appointment context needed to render a full report detail view.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id, student/doctor identifiers and names,
+        slot_date, start_time, end_time, and status, or None if not found.
+    """
     sql = """
         SELECT
             v_appointment_details.appointment_id,

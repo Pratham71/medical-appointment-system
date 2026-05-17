@@ -19,6 +19,14 @@ router = APIRouter(prefix="/staff", tags=["Staff"])
 def dashboard(
     current_user: AuthenticatedUser = Depends(require_roles("staff", "admin")),
 ) -> StaffDashboard:
+    """Return system-wide appointment statistics for the staff dashboard.
+
+    Args:
+        current_user: An authenticated staff or admin user.
+
+    Returns:
+        A StaffDashboard with today's appointment and emergency alert counts.
+    """
     try:
         return staff_service.get_dashboard()
     except Exception as exc:
@@ -33,6 +41,21 @@ def appointments(
     limit: int = Query(default=100, ge=1, le=250),
     current_user: AuthenticatedUser = Depends(require_roles("staff", "admin")),
 ) -> list[AdminAppointmentSummary]:
+    """Return a filtered list of appointments for staff review.
+
+    Args:
+        status: Optional appointment status to filter by.
+        from_date: Optional start of the date range (inclusive).
+        to_date: Optional end of the date range (inclusive).
+        limit: Maximum number of results (1-250, default 100).
+        current_user: An authenticated staff or admin user.
+
+    Returns:
+        List of AdminAppointmentSummary objects.
+
+    Raises:
+        HTTPException: 422 if to_date is before from_date.
+    """
     if from_date is not None and to_date is not None and to_date < from_date:
         raise HTTPException(status_code=422, detail="to_date cannot be before from_date")
     try:

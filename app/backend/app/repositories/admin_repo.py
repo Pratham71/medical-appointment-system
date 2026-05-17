@@ -9,6 +9,11 @@ _PATIENT_ROLES = {"student", "professor", "college-staff", "hostel-staff"}
 
 
 def get_dashboard_counts() -> dict[str, Any] | None:
+    """Fetch system-wide aggregate statistics for the admin dashboard.
+
+    Returns:
+        A dict with all admin dashboard counters, or None if no rows are returned.
+    """
     with session.connection_scope() as connection:
         return admin_queries.get_dashboard_counts(connection)
 
@@ -18,6 +23,16 @@ def list_users(
     role_name: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of users for admin user management.
+
+    Args:
+        search_text: Optional partial name or email to match.
+        role_name: Optional role to filter by.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of user summary dicts with profile IDs and active status.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_users(
             connection,
@@ -37,6 +52,22 @@ def assign_user_role(
     employee_number: str | None,
     specialization: str | None,
 ) -> dict[str, Any] | None:
+    """Reassign a user to a new role and update or swap the linked profile in one transaction.
+
+    Args:
+        user_id: Primary key of the user account.
+        role_name: Target role name (e.g. "student", "doctor", "admin").
+        roll_number: Required for patient roles; the enrollment number.
+        department: Required for patient roles; the academic department.
+        year_level: Required for patient roles; year of study (1-based).
+        employee_number: Required for staff/doctor roles; the employee number.
+        specialization: Optional for doctor roles; medical specialization.
+
+    Returns:
+        The post-assignment user summary dict, a conflict dict if the user has
+        appointment/slot history that prevents profile removal, or None if the
+        user or target role was not found.
+    """
     with session.transaction_scope() as connection:
         context = admin_queries.get_user_role_context(connection, user_id)
         if context is None:
@@ -99,6 +130,15 @@ def set_user_active_status(
     user_id: int,
     is_active: bool,
 ) -> dict[str, Any] | None:
+    """Set the is_active flag on a user account.
+
+    Args:
+        user_id: Primary key of the user account.
+        is_active: True to activate, False to deactivate.
+
+    Returns:
+        A dict with user_id and is_active, or None if the user does not exist.
+    """
     with session.transaction_scope() as connection:
         context = admin_queries.get_user_status_context(connection, user_id)
         if context is None:
@@ -123,6 +163,19 @@ def list_appointments(
     student_id: int | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of appointments for admin review.
+
+    Args:
+        status: Optional appointment status to filter by.
+        from_date: Optional start of the date range (inclusive).
+        to_date: Optional end of the date range (inclusive).
+        doctor_id: Optional staff_id to scope results to one doctor.
+        student_id: Optional student_id to scope results to one student.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of appointment summary dicts ordered by slot_date descending.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_appointments(
             connection,
@@ -136,6 +189,15 @@ def list_appointments(
 
 
 def list_students(search_text: str | None, limit: int) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of student/patient users.
+
+    Args:
+        search_text: Optional partial name, email, or roll number to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of student summary dicts with appointment counts.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_students(
             connection,
@@ -145,6 +207,15 @@ def list_students(search_text: str | None, limit: int) -> list[dict[str, Any]]:
 
 
 def list_doctors(search_text: str | None, limit: int) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of doctors with today's availability summary.
+
+    Args:
+        search_text: Optional partial name, email, employee number, or specialization to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of doctor summary dicts with appointment counts.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_doctors(
             connection,
@@ -154,6 +225,15 @@ def list_doctors(search_text: str | None, limit: int) -> list[dict[str, Any]]:
 
 
 def list_staff(search_text: str | None, limit: int) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of non-doctor staff members.
+
+    Args:
+        search_text: Optional partial name, email, or employee number to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of staff summary dicts.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_staff(
             connection,
@@ -163,6 +243,14 @@ def list_staff(search_text: str | None, limit: int) -> list[dict[str, Any]]:
 
 
 def list_emergency_alerts(limit: int) -> list[dict[str, Any]]:
+    """Return the most recent emergency alerts across all students.
+
+    Args:
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of emergency alert summary dicts.
+    """
     with session.connection_scope() as connection:
         return admin_queries.list_emergency_alerts(connection, limit=limit)
 
@@ -172,6 +260,15 @@ def acknowledge_emergency_alert(
     alert_id: int,
     actor_user_id: int,
 ) -> dict[str, Any] | None:
+    """Mark an emergency alert as acknowledged in a transaction and return the summary.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+        actor_user_id: user_id of the staff/admin performing the acknowledgement.
+
+    Returns:
+        The updated alert summary dict, or None if the alert does not exist.
+    """
     with session.transaction_scope() as connection:
         context = admin_queries.get_emergency_alert_for_update(connection, alert_id)
         if context is None:
@@ -190,6 +287,16 @@ def resolve_emergency_alert(
     actor_user_id: int,
     resolution_note: str | None,
 ) -> dict[str, Any] | None:
+    """Mark an emergency alert as resolved in a transaction and return the summary.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+        actor_user_id: user_id of the staff/admin performing the resolution.
+        resolution_note: Optional human-readable note about the resolution.
+
+    Returns:
+        The updated alert summary dict, or None if the alert does not exist.
+    """
     with session.transaction_scope() as connection:
         context = admin_queries.get_emergency_alert_for_update(connection, alert_id)
         if context is None:
@@ -211,6 +318,15 @@ def _save_patient_profile(
     department: str,
     year_level: int,
 ) -> None:
+    """Insert or update the student profile for a user within an open transaction.
+
+    Args:
+        connection: Active MySQL connection from the pool.
+        user_id: Foreign-key ID of the user account.
+        roll_number: Enrollment/roll number.
+        department: Academic department.
+        year_level: Year of study (1-based).
+    """
     profile = admin_queries.get_student_profile_by_user_id(connection, user_id)
     if profile is None:
         admin_queries.insert_student_profile(
@@ -238,6 +354,15 @@ def _save_staff_profile(
     specialization: str | None,
     is_doctor: bool,
 ) -> None:
+    """Insert or update the staff profile for a user within an open transaction.
+
+    Args:
+        connection: Active MySQL connection from the pool.
+        user_id: Foreign-key ID of the user account.
+        employee_number: Institutional employee number.
+        specialization: Medical specialization, or None for non-doctors.
+        is_doctor: True if the staff member is a doctor.
+    """
     profile = admin_queries.get_staff_profile_by_user_id(connection, user_id)
     if profile is None:
         admin_queries.insert_staff_profile(

@@ -12,11 +12,13 @@ _connection_pool: MySQLConnectionPool | None = None
 
 
 def reset_connection_pool() -> None:
+    """Tear down the cached connection pool (used in tests to force re-initialisation)."""
     global _connection_pool
     _connection_pool = None
 
 
 def get_connection_pool() -> MySQLConnectionPool:
+    """Return the singleton MySQL connection pool, creating it on first call."""
     global _connection_pool
 
     if _connection_pool is None:
@@ -40,6 +42,7 @@ def get_connection_pool() -> MySQLConnectionPool:
 
 @contextmanager
 def connection_scope() -> Generator[Any]:
+    """Yield a MySQL connection from the pool and close it when the block exits."""
     connection = get_connection_pool().get_connection()
     try:
         yield connection
@@ -49,6 +52,7 @@ def connection_scope() -> Generator[Any]:
 
 @contextmanager
 def transaction_scope() -> Generator[Any]:
+    """Yield a MySQL connection, committing on success or rolling back on any exception."""
     connection = get_connection_pool().get_connection()
     try:
         yield connection

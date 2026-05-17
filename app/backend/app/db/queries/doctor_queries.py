@@ -5,6 +5,16 @@ from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 
 
 def get_dashboard_counts(connection: Any, staff_id: int) -> dict[str, Any] | None:
+    """Fetch aggregated dashboard statistics for a single doctor.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+
+    Returns:
+        A dict with doctor_id, doctor_name, todays_appointments,
+        upcoming_appointments, completed_appointments, and total_patients,
+        or None if the doctor does not exist.
+    """
     sql = """
         SELECT
             staff.staff_id AS doctor_id,
@@ -54,6 +64,15 @@ def get_dashboard_counts(connection: Any, staff_id: int) -> dict[str, Any] | Non
 
 
 def list_appointments(connection: Any, staff_id: int) -> list[dict[str, Any]]:
+    """Return all appointments assigned to a doctor, ordered by date and time.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+
+    Returns:
+        List of dicts with appointment_id, slot_date, start_time, end_time,
+        student_id, student_name, and status.
+    """
     sql = """
         SELECT
             v_doctor_appointment_summaries.appointment_id,
@@ -76,6 +95,15 @@ def list_weekly_availability(
     connection: Any,
     staff_id: int,
 ) -> list[dict[str, Any]]:
+    """Return the recurring weekly availability rules for a doctor.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+
+    Returns:
+        List of dicts with weekday, is_available, start_time, and end_time,
+        ordered by weekday (0 = Monday).
+    """
     sql = """
         SELECT
             doctor_weekly_availability.weekday,
@@ -94,6 +122,16 @@ def get_weekly_availability_rule(
     staff_id: int,
     weekday: int,
 ) -> dict[str, Any] | None:
+    """Fetch a single weekly availability rule for a doctor on a specific weekday.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        weekday: Day of the week as an integer (0 = Monday, 6 = Sunday).
+
+    Returns:
+        A dict with weekday, is_available, start_time, and end_time,
+        or None if no rule has been set for that weekday.
+    """
     sql = """
         SELECT
             doctor_weekly_availability.weekday,
@@ -115,6 +153,15 @@ def upsert_weekly_availability(
     start_time: time | None,
     end_time: time | None,
 ) -> None:
+    """Insert or update the weekly availability rule for a doctor on a given weekday.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        weekday: Day of the week (0 = Monday, 6 = Sunday).
+        is_available: Whether the doctor is available on this weekday.
+        start_time: Working hours start time, or None to use the default.
+        end_time: Working hours end time, or None to use the default.
+    """
     sql = """
         INSERT INTO doctor_weekly_availability (
             staff_id,
@@ -136,6 +183,15 @@ def list_availability_overrides(
     connection: Any,
     staff_id: int,
 ) -> list[dict[str, Any]]:
+    """Return all date-specific availability overrides for a doctor.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+
+    Returns:
+        List of dicts with override_date, is_available, start_time, end_time,
+        and note, ordered by date.
+    """
     sql = """
         SELECT
             doctor_availability_overrides.override_date,
@@ -155,6 +211,16 @@ def get_availability_override(
     staff_id: int,
     override_date: date,
 ) -> dict[str, Any] | None:
+    """Fetch the availability override for a doctor on a specific date.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        override_date: The calendar date of the override.
+
+    Returns:
+        A dict with override_date, is_available, start_time, end_time, and note,
+        or None if no override exists for that date.
+    """
     sql = """
         SELECT
             doctor_availability_overrides.override_date,
@@ -178,6 +244,16 @@ def upsert_availability_override(
     end_time: time | None,
     note: str | None,
 ) -> None:
+    """Insert or update a date-specific availability override for a doctor.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        override_date: The calendar date being overridden.
+        is_available: Whether the doctor is available on this date.
+        start_time: Working hours start time, or None to clear.
+        end_time: Working hours end time, or None to clear.
+        note: Optional human-readable reason for the override.
+    """
     sql = """
         INSERT INTO doctor_availability_overrides (
             staff_id,
@@ -206,6 +282,12 @@ def delete_availability_override(
     staff_id: int,
     override_date: date,
 ) -> None:
+    """Delete the availability override for a doctor on a specific date.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        override_date: The calendar date whose override should be removed.
+    """
     sql = """
         DELETE FROM doctor_availability_overrides
         WHERE doctor_availability_overrides.staff_id = %s
@@ -218,6 +300,16 @@ def get_appointment_detail(
     connection: Any,
     appointment_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch full appointment details including student, doctor, and certificate info.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id, slot_date, start_time, end_time, status,
+        student/doctor identifiers and names, reason, diagnosis, remarks,
+        certificate_id, and certificate_type, or None if not found.
+    """
     sql = """
         SELECT
             v_appointment_details.appointment_id,
@@ -242,6 +334,15 @@ def get_appointment_detail(
 
 
 def list_patient_history(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    """Return a student's full appointment history in reverse chronological order.
+
+    Args:
+        student_id: Primary key of the student profile.
+
+    Returns:
+        List of dicts with appointment_id, slot_date, start/end times, doctor info,
+        status, reason, diagnosis, remarks, and certificate details.
+    """
     sql = """
         SELECT
             v_appointment_details.appointment_id,
@@ -270,6 +371,16 @@ def search_patients_for_doctor(
     search_text: str,
     staff_id: int,
 ) -> list[dict[str, Any]]:
+    """Search for patients that a specific doctor has previously seen.
+
+    Args:
+        search_text: Partial name or roll number to match (LIKE pattern).
+        staff_id: Primary key of the doctor's staff record.
+
+    Returns:
+        Up to 10 dicts each with student_id, student_name, roll_number,
+        department, and year_level.
+    """
     pattern = f"%{search_text}%"
     sql = """
         SELECT DISTINCT
@@ -300,6 +411,15 @@ def search_patients(
     connection: Any,
     search_text: str,
 ) -> list[dict[str, Any]]:
+    """Search for patients across the entire student population.
+
+    Args:
+        search_text: Partial name or roll number to match (LIKE pattern).
+
+    Returns:
+        Up to 10 dicts each with student_id, student_name, roll_number,
+        department, and year_level.
+    """
     pattern = f"%{search_text}%"
     sql = """
         SELECT
@@ -324,6 +444,15 @@ def has_doctor_seen_student(
     staff_id: int,
     student_id: int,
 ) -> bool:
+    """Check whether a doctor has ever had an appointment with a student.
+
+    Args:
+        staff_id: Primary key of the doctor's staff record.
+        student_id: Primary key of the student profile.
+
+    Returns:
+        True if at least one shared appointment exists, False otherwise.
+    """
     sql = """
         SELECT appointments.appointment_id
         FROM appointments

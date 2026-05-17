@@ -5,6 +5,12 @@ from app.backend.app.db.queries._helpers import fetch_all, fetch_one
 
 
 def get_dashboard_counts(connection: Any) -> dict[str, Any] | None:
+    """Fetch system-wide appointment counts for the staff dashboard.
+
+    Returns:
+        A dict with appointments_today, booked_appointments, cancelled_today,
+        and emergency_alerts, or None if the query returns no rows.
+    """
     sql = """
         SELECT
             (
@@ -47,6 +53,17 @@ def list_appointments(
     to_date: date | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of appointments for staff review.
+
+    Args:
+        status: Optional appointment status to filter by.
+        from_date: Optional start of the date range (inclusive).
+        to_date: Optional end of the date range (inclusive).
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of appointment summary dicts ordered by slot_date and time descending.
+    """
     sql = """
         SELECT
             appointments.appointment_id,

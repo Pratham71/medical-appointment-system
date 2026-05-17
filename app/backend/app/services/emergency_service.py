@@ -14,6 +14,21 @@ def create_alert(
     contact_number: str | None,
     message: str | None,
 ) -> EmergencyAlertResponse:
+    """Create a new emergency alert for a student.
+
+    Args:
+        student_id: Primary key of the student raising the alert.
+        reason: Category or short description of the emergency.
+        location: Current location of the student.
+        contact_number: Optional phone number for follow-up contact.
+        message: Optional detailed description; defaults to a standard message if blank.
+
+    Returns:
+        An EmergencyAlertResponse with the created alert's data.
+
+    Raises:
+        NotFoundError: If the alert cannot be retrieved after creation.
+    """
     alert_message = message.strip() if message and message.strip() else _DEFAULT_MESSAGE
     row = emergency_repo.create_alert(
         student_id=student_id,

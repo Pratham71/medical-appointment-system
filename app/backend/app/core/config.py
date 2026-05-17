@@ -37,6 +37,15 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_security(self) -> "Settings":
+        """Enforce strong JWT secret when the environment is set to production.
+
+        Returns:
+            The validated Settings instance.
+
+        Raises:
+            ValueError: If the JWT secret key is the default placeholder or
+                shorter than 32 characters in production.
+        """
         if self.environment.lower() == "production":
             if (
                 self.jwt_secret_key == "change-this-dev-secret"
@@ -48,4 +57,10 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    """Return the cached application settings singleton.
+
+    Returns:
+        The global Settings instance, loaded once from environment variables
+        and cached for the lifetime of the process.
+    """
     return Settings()

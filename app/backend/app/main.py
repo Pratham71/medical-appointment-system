@@ -23,4 +23,5 @@ app.include_router(api_router)
 
 @app.get("/health", tags=["Health"])
 def health_check() -> dict[str, str]:
+    """Return a simple liveness probe confirming the API is running."""
     return {"status": "ok"}

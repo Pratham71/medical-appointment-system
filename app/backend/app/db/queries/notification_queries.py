@@ -7,6 +7,16 @@ def get_appointment_notification_context(
     connection: Any,
     appointment_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch the data needed to compose an appointment email notification.
+
+    Args:
+        appointment_id: Primary key of the appointment.
+
+    Returns:
+        A dict with appointment_id, student_name, student_email, doctor_name,
+        slot_date, start_time, end_time, reason, and cancellation_reason,
+        or None if the appointment does not exist.
+    """
     sql = """
         SELECT
             appointments.appointment_id,

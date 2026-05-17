@@ -19,6 +19,20 @@ def create_certificate(
     appointment_id: int = Path(..., gt=0),
     current_user: AuthenticatedUser = Depends(require_roles("doctor", "admin")),
 ) -> CertificateResponse:
+    """Issue or update a medical certificate for an appointment.
+
+    Args:
+        payload: Certificate fields including type, dates, and notes.
+        appointment_id: Primary key of the appointment.
+        current_user: An authenticated doctor (own appointments only) or admin.
+
+    Returns:
+        A CertificateResponse with the saved certificate details.
+
+    Raises:
+        HTTPException: 403 if access is denied; 404 if not found; 409 if locked
+            or date constraints are violated.
+    """
     try:
         ensure_appointment_access(
             current_user,
@@ -46,6 +60,18 @@ def student_certificates(
         ),
     ),
 ) -> list[CertificateResponse]:
+    """Return all certificates for a student.
+
+    Args:
+        student_id: Primary key of the student profile.
+        current_user: The student themselves, a treating doctor, or an admin.
+
+    Returns:
+        List of CertificateResponse objects ordered by issue_date descending.
+
+    Raises:
+        HTTPException: 403 if the user has no access to this student's records.
+    """
     try:
         ensure_student_record_access(current_user, student_id)
         return certificate_service.list_student_certificates(student_id)

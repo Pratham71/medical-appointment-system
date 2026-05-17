@@ -12,6 +12,18 @@ def insert_alert(
     contact_number: str | None,
     message: str,
 ) -> int:
+    """Insert a new emergency alert and return the generated alert ID.
+
+    Args:
+        student_id: Foreign-key ID of the student raising the alert.
+        reason: Category or short description of the emergency.
+        location: Current location of the student.
+        contact_number: Optional phone number for follow-up contact.
+        message: Detailed description of the emergency situation.
+
+    Returns:
+        The auto-generated alert_id of the new row.
+    """
     sql = """
         INSERT INTO emergency_alerts (
             student_id,
@@ -26,6 +38,16 @@ def insert_alert(
 
 
 def get_alert(connection: Any, alert_id: int) -> dict[str, Any] | None:
+    """Fetch an emergency alert with basic student info and computed status.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+
+    Returns:
+        A dict with alert_id, student_id, student_name, roll_number, reason,
+        location, contact_number, message, status, and created_at,
+        or None if not found.
+    """
     sql = """
         SELECT
             emergency_alerts.alert_id,

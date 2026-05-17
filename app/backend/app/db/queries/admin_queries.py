@@ -5,6 +5,14 @@ from app.backend.app.db.queries._helpers import execute, fetch_all, fetch_one
 
 
 def get_dashboard_counts(connection: Any) -> dict[str, Any] | None:
+    """Fetch system-wide aggregate statistics for the admin dashboard.
+
+    Returns:
+        A dict with total_students, total_professors, total_doctors, total_staff,
+        appointments_today, booked_appointments, completed_appointments,
+        cancelled_appointments, reports_available, certificates_issued,
+        and emergency_alerts, or None if no rows are returned.
+    """
     sql = """
         SELECT
             (
@@ -84,6 +92,17 @@ def list_users(
     role_name: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of users for admin user management.
+
+    Args:
+        search_text: Optional partial name or email to match (LIKE pattern).
+        role_name: Optional role to filter by.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of dicts with user_id, name, email, role_name, is_active,
+        student_id, and staff_id, ordered by name and email.
+    """
     pattern = f"%{search_text}%" if search_text else None
     sql = """
         SELECT
@@ -115,6 +134,14 @@ def list_users(
 
 
 def get_role_id(connection: Any, role_name: str) -> dict[str, Any] | None:
+    """Look up the numeric role ID for the given role name.
+
+    Args:
+        role_name: The textual role name (e.g. "admin", "doctor").
+
+    Returns:
+        A dict with role_id, or None if the role does not exist.
+    """
     sql = """
         SELECT roles.role_id
         FROM roles
@@ -124,6 +151,15 @@ def get_role_id(connection: Any, role_name: str) -> dict[str, Any] | None:
 
 
 def get_user_role_context(connection: Any, user_id: int) -> dict[str, Any] | None:
+    """Fetch a user's current role, linked profile IDs, and activity counters needed for role reassignment.
+
+    Args:
+        user_id: Primary key of the user account.
+
+    Returns:
+        A dict with user_id, name, email, role_name, student_id, staff_id,
+        student_appointment_count, and staff_slot_count, or None if not found.
+    """
     sql = """
         SELECT
             users.user_id,
@@ -156,6 +192,12 @@ def get_user_role_context(connection: Any, user_id: int) -> dict[str, Any] | Non
 
 
 def update_user_role(connection: Any, user_id: int, role_id: int) -> None:
+    """Update the role assigned to a user account.
+
+    Args:
+        user_id: Primary key of the user account to update.
+        role_id: Foreign-key ID of the new role.
+    """
     sql = """
         UPDATE users
         SET users.role_id = %s
@@ -168,6 +210,14 @@ def get_student_profile_by_user_id(
     connection: Any,
     user_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch the student profile linked to a user account.
+
+    Args:
+        user_id: Primary key of the user account.
+
+    Returns:
+        A dict with student_id, or None if no student profile exists.
+    """
     sql = """
         SELECT students.student_id
         FROM students
@@ -184,6 +234,14 @@ def insert_student_profile(
     department: str,
     year_level: int,
 ) -> None:
+    """Create a new student profile row for an existing user account.
+
+    Args:
+        user_id: Foreign-key ID of the user account.
+        roll_number: Unique institutional roll/enrollment number.
+        department: Academic department of the student.
+        year_level: Current year of study (1-based).
+    """
     sql = """
         INSERT INTO students (
             user_id,
@@ -204,6 +262,14 @@ def upsert_student_profile(
     department: str,
     year_level: int,
 ) -> None:
+    """Update the student profile fields for an existing student user.
+
+    Args:
+        user_id: Foreign-key ID of the user account.
+        roll_number: New roll/enrollment number.
+        department: Updated academic department.
+        year_level: Updated year of study (1-based).
+    """
     sql = """
         UPDATE students
         SET
@@ -219,6 +285,14 @@ def get_staff_profile_by_user_id(
     connection: Any,
     user_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch the staff profile linked to a user account.
+
+    Args:
+        user_id: Primary key of the user account.
+
+    Returns:
+        A dict with staff_id, or None if no staff profile exists.
+    """
     sql = """
         SELECT staff.staff_id
         FROM staff
@@ -235,6 +309,14 @@ def insert_staff_profile(
     specialization: str | None,
     is_doctor: bool,
 ) -> None:
+    """Create a new staff profile row for an existing user account.
+
+    Args:
+        user_id: Foreign-key ID of the user account.
+        employee_number: Unique institutional employee number.
+        specialization: Medical specialization, or None for non-doctor staff.
+        is_doctor: True if the staff member is a doctor, False otherwise.
+    """
     sql = """
         INSERT INTO staff (
             user_id,
@@ -255,6 +337,14 @@ def upsert_staff_profile(
     specialization: str | None,
     is_doctor: bool,
 ) -> None:
+    """Update the staff profile fields for an existing staff user.
+
+    Args:
+        user_id: Foreign-key ID of the user account.
+        employee_number: New employee number.
+        specialization: Updated medical specialization, or None to clear.
+        is_doctor: Whether the staff member should be flagged as a doctor.
+    """
     sql = """
         UPDATE staff
         SET
@@ -267,6 +357,11 @@ def upsert_staff_profile(
 
 
 def delete_student_profile(connection: Any, user_id: int) -> None:
+    """Remove the student profile row linked to a user account.
+
+    Args:
+        user_id: Foreign-key ID of the user account whose student profile to delete.
+    """
     sql = """
         DELETE FROM students
         WHERE students.user_id = %s
@@ -275,6 +370,11 @@ def delete_student_profile(connection: Any, user_id: int) -> None:
 
 
 def delete_staff_profile(connection: Any, user_id: int) -> None:
+    """Remove the staff profile row linked to a user account.
+
+    Args:
+        user_id: Foreign-key ID of the user account whose staff profile to delete.
+    """
     sql = """
         DELETE FROM staff
         WHERE staff.user_id = %s
@@ -283,6 +383,15 @@ def delete_staff_profile(connection: Any, user_id: int) -> None:
 
 
 def get_role_assignment_result(connection: Any, user_id: int) -> dict[str, Any] | None:
+    """Fetch the post-assignment snapshot of a user for the role-assignment response.
+
+    Args:
+        user_id: Primary key of the user account.
+
+    Returns:
+        A dict with user_id, name, email, role_name, student_id, and staff_id,
+        or None if the user does not exist.
+    """
     sql = """
         SELECT
             users.user_id,
@@ -304,6 +413,14 @@ def get_role_assignment_result(connection: Any, user_id: int) -> dict[str, Any] 
 
 
 def get_user_status_context(connection: Any, user_id: int) -> dict[str, Any] | None:
+    """Fetch the current active/inactive status for a user account.
+
+    Args:
+        user_id: Primary key of the user account.
+
+    Returns:
+        A dict with user_id and is_active, or None if not found.
+    """
     sql = """
         SELECT
             users.user_id,
@@ -320,6 +437,12 @@ def update_user_active_status(
     user_id: int,
     is_active: bool,
 ) -> None:
+    """Set the is_active flag on a user account to activate or deactivate it.
+
+    Args:
+        user_id: Primary key of the user account to update.
+        is_active: True to activate the account, False to deactivate.
+    """
     sql = """
         UPDATE users
         SET users.is_active = %s
@@ -338,6 +461,19 @@ def list_appointments(
     student_id: int | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of appointments for admin review.
+
+    Args:
+        status: Optional appointment status to filter by.
+        from_date: Optional start of the date range (inclusive).
+        to_date: Optional end of the date range (inclusive).
+        doctor_id: Optional staff_id to restrict results to a single doctor.
+        student_id: Optional student_id to restrict results to a single student.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of appointment summary dicts ordered by slot_date and time descending.
+    """
     sql = """
         SELECT
             appointments.appointment_id,
@@ -398,6 +534,17 @@ def list_students(
     search_text: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of student/patient users for admin review.
+
+    Args:
+        search_text: Optional partial name, email, or roll number to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of dicts with student_id, student_name, email, role_name,
+        roll_number, department, year_level, total_appointments,
+        and completed_appointments.
+    """
     pattern = f"%{search_text}%" if search_text else None
     sql = """
         SELECT
@@ -458,6 +605,17 @@ def list_doctors(
     search_text: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of doctors for admin review.
+
+    Args:
+        search_text: Optional partial name, email, employee number, or specialization to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of dicts with doctor_id, doctor_name, email, employee_number,
+        specialization, is_available_today, appointments_today,
+        and upcoming_appointments.
+    """
     pattern = f"%{search_text}%" if search_text else None
     sql = """
         SELECT
@@ -534,6 +692,16 @@ def list_staff(
     search_text: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return a filtered, paginated list of non-doctor staff for admin review.
+
+    Args:
+        search_text: Optional partial name, email, or employee number to match.
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of dicts with staff_id, staff_name, email, employee_number,
+        specialization, and is_doctor.
+    """
     pattern = f"%{search_text}%" if search_text else None
     sql = """
         SELECT
@@ -565,6 +733,15 @@ def list_emergency_alerts(
     *,
     limit: int,
 ) -> list[dict[str, Any]]:
+    """Return the most recent emergency alerts across all students.
+
+    Args:
+        limit: Maximum number of rows to return.
+
+    Returns:
+        List of dicts with alert_id, student info, reason, location,
+        contact_number, message, status, timestamps, and resolution details.
+    """
     sql = """
         SELECT
             emergency_alerts.alert_id,
@@ -602,6 +779,15 @@ def get_emergency_alert_for_update(
     connection: Any,
     alert_id: int,
 ) -> dict[str, Any] | None:
+    """Lock an emergency alert row for the duration of an acknowledge/resolve transaction.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+
+    Returns:
+        A dict with alert_id, acknowledged_at, and resolved_at,
+        or None if the alert does not exist.
+    """
     sql = """
         SELECT
             emergency_alerts.alert_id,
@@ -620,6 +806,12 @@ def acknowledge_emergency_alert(
     alert_id: int,
     actor_user_id: int,
 ) -> None:
+    """Mark an emergency alert as acknowledged by a staff or admin user.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+        actor_user_id: user_id of the staff/admin performing the acknowledgement.
+    """
     sql = """
         UPDATE emergency_alerts
         SET
@@ -643,6 +835,13 @@ def resolve_emergency_alert(
     actor_user_id: int,
     resolution_note: str | None,
 ) -> None:
+    """Mark an emergency alert as resolved, also setting acknowledgement if not already set.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+        actor_user_id: user_id of the staff/admin performing the resolution.
+        resolution_note: Optional human-readable note describing the resolution.
+    """
     sql = """
         UPDATE emergency_alerts
         SET
@@ -673,6 +872,15 @@ def get_emergency_alert_summary(
     connection: Any,
     alert_id: int,
 ) -> dict[str, Any] | None:
+    """Fetch the full alert summary with student info after an acknowledge/resolve action.
+
+    Args:
+        alert_id: Primary key of the emergency alert.
+
+    Returns:
+        A dict with alert_id, student info, reason, location, contact_number,
+        message, status, timestamps, and resolution details, or None if not found.
+    """
     sql = """
         SELECT
             emergency_alerts.alert_id,

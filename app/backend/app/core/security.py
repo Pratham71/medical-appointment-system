@@ -8,6 +8,7 @@ from app.backend.app.core.config import get_settings
 
 
 def verify_password(password: str, password_hash: str) -> bool:
+    """Return True if plaintext password matches the stored bcrypt hash."""
     try:
         return bcrypt.checkpw(
             password.encode("utf-8"),
@@ -18,6 +19,7 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def hash_password(password: str) -> str:
+    """Generate and return a bcrypt hash of the given plaintext password."""
     return bcrypt.hashpw(
         password.encode("utf-8"),
         bcrypt.gensalt(),
@@ -25,6 +27,7 @@ def hash_password(password: str) -> str:
 
 
 def create_access_token(user_id: int, role_name: str) -> str:
+    """Create a signed JWT containing the user ID and role, expiring per settings."""
     settings = get_settings()
     expires_at = datetime.now(UTC) + timedelta(
         minutes=settings.access_token_expire_minutes
@@ -42,6 +45,7 @@ def create_access_token(user_id: int, role_name: str) -> str:
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
+    """Decode and verify a JWT, returning its payload dict. Raises on invalid/expired tokens."""
     settings = get_settings()
     return jwt.decode(
         token,
