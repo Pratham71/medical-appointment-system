@@ -124,6 +124,7 @@ Workflow
 
 - Check TODO.md before coding.
 - Update TODO.md after completing tasks.
+- Every new TODO item must also have a matching GitHub issue, and the TODO line must reference the issue number.
 - Add an entry to CHANGELOG.md after changes.
 - Update docs if structure, setup, database design, or APIs change.
 - Keep README.md aligned with the current project status.
