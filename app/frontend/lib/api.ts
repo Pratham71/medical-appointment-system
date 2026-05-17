@@ -1,4 +1,13 @@
 import type {
+  AdminAppointmentSummary,
+  AdminDashboard,
+  AdminDoctorSummary,
+  AdminEmergencyAlertSummary,
+  AdminRoleAssignmentRequest,
+  AdminRoleAssignmentResponse,
+  AdminStaffSummary,
+  AdminStudentSummary,
+  AdminUserSummary,
   AppointmentBookResponse,
   AppointmentCancelReasonCode,
   AppointmentSlot,
@@ -80,7 +89,14 @@ async function request<T>(
       return new Promise<never>(() => {}) as unknown as T;
     }
     const body = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(body.detail ?? `HTTP ${res.status}`);
+    const detail = body.detail;
+    const message =
+      typeof detail === "string"
+        ? detail
+        : Array.isArray(detail)
+        ? detail.map((e: { msg?: string }) => e.msg ?? JSON.stringify(e)).join("; ")
+        : `HTTP ${res.status}`;
+    throw new Error(message);
   }
 
   const text = await res.text();
@@ -299,4 +315,76 @@ export async function issueCertificate(
     },
     true
   );
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export async function getAdminDashboard(): Promise<AdminDashboard> {
+  return request<AdminDashboard>("/admin/dashboard");
+}
+
+export async function getAdminUsers(
+  q?: string,
+  roleName?: string,
+  limit = 100
+): Promise<AdminUserSummary[]> {
+  const p = new URLSearchParams();
+  if (q && q.length >= 2) p.set("q", q);
+  if (roleName) p.set("role_name", roleName);
+  p.set("limit", String(limit));
+  return request<AdminUserSummary[]>(`/admin/users?${p}`);
+}
+
+export async function assignUserRole(
+  userId: number,
+  payload: AdminRoleAssignmentRequest
+): Promise<AdminRoleAssignmentResponse> {
+  return request<AdminRoleAssignmentResponse>(
+    `/admin/users/${userId}/role`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+    true
+  );
+}
+
+export async function getAdminAppointments(params?: {
+  status?: string;
+  from_date?: string;
+  to_date?: string;
+  doctor_id?: number;
+  student_id?: number;
+  limit?: number;
+}): Promise<AdminAppointmentSummary[]> {
+  const p = new URLSearchParams();
+  if (params?.status) p.set("status", params.status);
+  if (params?.from_date) p.set("from_date", params.from_date);
+  if (params?.to_date) p.set("to_date", params.to_date);
+  if (params?.doctor_id) p.set("doctor_id", String(params.doctor_id));
+  if (params?.student_id) p.set("student_id", String(params.student_id));
+  if (params?.limit) p.set("limit", String(params.limit));
+  return request<AdminAppointmentSummary[]>(`/admin/appointments?${p}`);
+}
+
+export async function getAdminStudents(q?: string, limit = 100): Promise<AdminStudentSummary[]> {
+  const p = new URLSearchParams();
+  if (q && q.length >= 2) p.set("q", q);
+  p.set("limit", String(limit));
+  return request<AdminStudentSummary[]>(`/admin/students?${p}`);
+}
+
+export async function getAdminDoctors(q?: string, limit = 100): Promise<AdminDoctorSummary[]> {
+  const p = new URLSearchParams();
+  if (q && q.length >= 2) p.set("q", q);
+  p.set("limit", String(limit));
+  return request<AdminDoctorSummary[]>(`/admin/doctors?${p}`);
+}
+
+export async function getAdminStaff(q?: string, limit = 100): Promise<AdminStaffSummary[]> {
+  const p = new URLSearchParams();
+  if (q && q.length >= 2) p.set("q", q);
+  p.set("limit", String(limit));
+  return request<AdminStaffSummary[]>(`/admin/staff?${p}`);
+}
+
+export async function getAdminEmergencyAlerts(limit = 50): Promise<AdminEmergencyAlertSummary[]> {
+  return request<AdminEmergencyAlertSummary[]>(`/admin/emergency-alerts?limit=${limit}`);
 }

@@ -207,6 +207,35 @@ def test_schema_defines_doctor_availability_rules():
     assert "unique (staff_id, override_date)" in schema
 
 
+def test_admin_queries_keep_sql_in_query_module():
+    source = (QUERY_DIR / "admin_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def get_dashboard_counts" in source
+    assert "def list_users" in source
+    assert "def get_role_id" in source
+    assert "def update_user_role" in source
+    assert "def upsert_student_profile" in source
+    assert "def upsert_staff_profile" in source
+    assert "def list_appointments" in source
+    assert "def list_students" in source
+    assert "def list_doctors" in source
+    assert "def list_staff" in source
+    assert "def list_emergency_alerts" in source
+    assert "fetch_all(connection, sql, tuple(params))" in source
+
+
+def test_seed_and_migration_include_professor_role():
+    seed = (DB_DIR / "seed.sql").read_text(encoding="utf-8").lower()
+    migration = (MIGRATION_DIR / "2026_05_17_add_professor_role.sql").read_text(
+        encoding="utf-8"
+    ).lower()
+
+    assert "'professor'" in seed
+    assert "insert into roles" in migration
+    assert "'professor'" in migration
+
+
 def test_schema_and_migration_include_cancellation_reason():
     schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
     migration = (

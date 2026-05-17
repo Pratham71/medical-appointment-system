@@ -259,3 +259,106 @@ export interface CertificateResponse {
   diagnosis?: string | null;
   remarks?: string | null;
 }
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export type AssignableRole = "student" | "professor" | "doctor" | "staff" | "admin";
+
+export interface AdminDashboard {
+  total_students: number;
+  total_professors: number;
+  total_doctors: number;
+  total_staff: number;
+  appointments_today: number;
+  booked_appointments: number;
+  completed_appointments: number;
+  cancelled_appointments: number;
+  reports_available: number;
+  certificates_issued: number;
+  emergency_alerts: number;
+}
+
+export interface AdminUserSummary {
+  user_id: number;
+  name: string;
+  email: string;
+  role_name: string;
+  is_active: boolean;
+  student_id: number | null;
+  staff_id: number | null;
+}
+
+export interface AdminRoleAssignmentRequest {
+  role_name: AssignableRole;
+  roll_number?: string | null;
+  department?: string | null;
+  year_level?: number | null;
+  employee_number?: string | null;
+  specialization?: string | null;
+}
+
+export interface AdminRoleAssignmentResponse {
+  user_id: number;
+  name: string;
+  email: string;
+  role_name: string;
+  student_id: number | null;
+  staff_id: number | null;
+  message: string;
+}
+
+export interface AdminAppointmentSummary {
+  appointment_id: number;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  doctor_id: number;
+  doctor_name: string;
+  status: string;
+  reason: string | null;
+  cancellation_reason: string | null;
+}
+
+export interface AdminStudentSummary {
+  student_id: number;
+  student_name: string;
+  email: string;
+  roll_number: string;
+  department: string;
+  year_level: number;
+  role_name: string;
+  total_appointments: number;
+  completed_appointments: number;
+}
+
+export interface AdminDoctorSummary {
+  doctor_id: number;
+  doctor_name: string;
+  email: string;
+  employee_number: string;
+  specialization: string | null;
+  is_available_today: boolean;
+  appointments_today: number;
+  upcoming_appointments: number;
+}
+
+export interface AdminStaffSummary {
+  staff_id: number;
+  staff_name: string;
+  email: string;
+  employee_number: string;
+  specialization: string | null;
+  is_doctor: boolean;
+}
+
+export interface AdminEmergencyAlertSummary {
+  alert_id: number;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  message: string;
+  created_at: string;
+}

@@ -39,7 +39,7 @@ def require_roles(*allowed_roles: str) -> Callable[[AuthenticatedUser], Authenti
 
 
 def require_student_id(
-    user: Annotated[AuthenticatedUser, Depends(require_roles("student"))],
+    user: Annotated[AuthenticatedUser, Depends(require_roles("student", "professor"))],
 ) -> int:
     try:
         return auth_service.get_student_id_for_user(user.user_id)

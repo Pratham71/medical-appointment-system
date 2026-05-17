@@ -2,7 +2,8 @@ INSERT INTO roles (role_id, role_name) VALUES
     (1, 'student'),
     (2, 'doctor'),
     (3, 'admin'),
-    (4, 'staff');
+    (4, 'staff'),
+    (5, 'professor');
 
 INSERT INTO appointment_statuses (status_id, status_name) VALUES
     (1, 'booked'),
@@ -51,10 +52,19 @@ INSERT INTO users (user_id, role_id, name, email, password_hash, is_active) VALU
         'staff@college.edu',
         '$2b$12$udxQAJyAC4wZKM6UjEkor.Gne2d86EwvkPMrRx8BjKFtIVUzgsAsm',
         TRUE
+    ),
+    (
+        5,
+        5,
+        'Prof. Arjun Rao',
+        'professor@college.edu',
+        '$2b$12$udxQAJyAC4wZKM6UjEkor.Gne2d86EwvkPMrRx8BjKFtIVUzgsAsm',
+        TRUE
     );
 
 INSERT INTO students (student_id, user_id, roll_number, department, year_level) VALUES
-    (1, 1, 'CSE-2026-001', 'Computer Science', 2);
+    (1, 1, 'CSE-2026-001', 'Computer Science', 2),
+    (2, 5, 'PROF-001', 'Computer Science', 1);
 
 INSERT INTO staff (staff_id, user_id, employee_number, specialization, is_doctor) VALUES
     (1, 2, 'DOC-001', 'General Medicine', TRUE),

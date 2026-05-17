@@ -37,7 +37,7 @@ def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _normalize_value(value: Any) -> Any:
-    if isinstance(value, timedelta):
+    if isinstance(value, timedelta): 
         total_seconds = int(value.total_seconds())
         if 0 <= total_seconds < 24 * 60 * 60:
             hours, remainder = divmod(total_seconds, 60 * 60)

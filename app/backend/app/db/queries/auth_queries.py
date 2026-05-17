@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.backend.app.db.queries._helpers import fetch_one
+from app.backend.app.db.queries._helpers import execute, fetch_one
 
 
 def get_user_by_email(connection: Any, email: str) -> dict[str, Any] | None:
@@ -17,6 +17,55 @@ def get_user_by_email(connection: Any, email: str) -> dict[str, Any] | None:
             AND users.is_active = TRUE
     """
     return fetch_one(connection, sql, (email,))
+
+
+def get_role_id_by_name(connection: Any, role_name: str) -> dict[str, Any] | None:
+    sql = """
+        SELECT roles.role_id
+        FROM roles
+        WHERE roles.role_name = %s
+    """
+    return fetch_one(connection, sql, (role_name,))
+
+
+def insert_user(
+    connection: Any,
+    *,
+    role_id: int,
+    name: str,
+    email: str,
+    password_hash: str,
+) -> int:
+    sql = """
+        INSERT INTO users (
+            role_id,
+            name,
+            email,
+            password_hash
+        )
+        VALUES (%s, %s, %s, %s)
+    """
+    return execute(connection, sql, (role_id, name, email, password_hash))
+
+
+def insert_student_profile(
+    connection: Any,
+    *,
+    user_id: int,
+    roll_number: str,
+    department: str,
+    year_level: int,
+) -> int:
+    sql = """
+        INSERT INTO students (
+            user_id,
+            roll_number,
+            department,
+            year_level
+        )
+        VALUES (%s, %s, %s, %s)
+    """
+    return execute(connection, sql, (user_id, roll_number, department, year_level))
 
 
 def get_user_by_id(connection: Any, user_id: int) -> dict[str, Any] | None:

@@ -47,9 +47,18 @@ def test_openapi_includes_mvp_routes():
     paths = client.get("/openapi.json").json()["paths"]
 
     expected_paths = {
+        "/auth/signup",
         "/auth/login",
         "/auth/logout",
         "/auth/me",
+        "/admin/dashboard",
+        "/admin/users",
+        "/admin/users/{user_id}/role",
+        "/admin/appointments",
+        "/admin/students",
+        "/admin/doctors",
+        "/admin/staff",
+        "/admin/emergency-alerts",
         "/students/dashboard",
         "/students/appointments",
         "/students/reports",

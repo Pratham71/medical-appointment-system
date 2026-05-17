@@ -12,7 +12,10 @@ Current MVP Notes
 - MySQL is selected as the database provider.
 - Backend repositories call MySQL query functions.
 - Protected API routes require JWT Bearer authentication.
-- Role-based access is enforced for student, doctor, staff, and admin-supported routes.
+- Role-based access is enforced for student, professor, doctor, staff, and admin-supported routes.
+- Professors use the same appointment/report/certificate workflow as students; the API exposes `role_name = professor` so the frontend can label the user differently.
+- New signup accounts are created as student/patient accounts by default; admin-only role assignment can later change them to professor, doctor, staff, or admin.
+- Admin backend routes are available for dashboard metrics, user role assignment, appointment oversight, directories, and emergency alert review.
 - Staff login and a safe staff landing page are implemented; full staff workflows are still tracked in GitHub issue #12.
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
@@ -25,8 +28,8 @@ Current MVP Notes
 
 Auth Requirements
 - Use `Authorization: Bearer <access_token>` for protected routes.
-- Public routes: `POST /auth/login` and `GET /health`.
-- Protected routes: student, doctor, appointment, report, certificate, logout, and `/auth/me`.
+- Public routes: `POST /auth/signup`, `POST /auth/login`, and `GET /health`.
+- Protected routes: student/professor, doctor, admin, appointment, report, certificate, logout, and `/auth/me`.
 - Return `401` for missing/invalid tokens.
 - Return `403` for valid users without the required role.
 
@@ -36,15 +39,45 @@ Security Headers/Request Rules
 - Repeated failed login attempts are locked according to backend policy.
 
 Auth
+POST /auth/signup
 POST /auth/login
 POST /auth/logout
 GET /auth/me
+
+Signup notes:
+- `POST /auth/signup` accepts name, email, password, roll_number, department, and year_level.
+- Signup does not accept a role field.
+- Signup always returns an authenticated user with `role_name = student`.
+- Professors must be changed from student to professor by an admin after signup.
+
+Admin
+GET /admin/dashboard
+GET /admin/users
+PATCH /admin/users/{user_id}/role
+GET /admin/appointments
+GET /admin/students
+GET /admin/doctors
+GET /admin/staff
+GET /admin/emergency-alerts
+
+Admin notes:
+- All admin endpoints require a user with `role_name = admin`.
+- `GET /admin/dashboard` returns high-level counts for students, professors, doctors, staff, appointment statuses, reports, certificates, and emergency alerts.
+- `GET /admin/users` supports `q`, `role_name`, and `limit` query parameters for role management screens.
+- `PATCH /admin/users/{user_id}/role` requires `Idempotency-Key` and can assign `student`, `professor`, `doctor`, `staff`, or `admin`.
+- Student and professor role assignment uses the existing patient/student profile fields: `roll_number`, `department`, and `year_level`.
+- Doctor and staff role assignment uses `employee_number` and optional `specialization`.
+- Role changes return `409` when the change would remove a patient/staff profile that already has appointment or slot history.
 
 Students
 GET /students/dashboard
 GET /students/appointments
 GET /students/reports
 GET /students/certificates
+
+Student/professor notes:
+- Both `student` and `professor` roles can use these endpoints.
+- The role name is different for frontend labeling, but backend permissions and patient records are the same.
 
 Doctors
 GET /doctors/dashboard

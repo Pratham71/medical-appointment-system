@@ -42,6 +42,12 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-17] [API] [Codex] [feat/issue-11-admin-backend] - Implemented backend admin APIs for dashboard metrics, user listing, user role assignment, appointment oversight, student/professor directory, doctor/staff directories, and emergency alert review with admin-only RBAC
+[2026-05-17] [API] [Codex] [feat/issue-11-admin-backend] - Added POST /auth/signup defaulting new accounts to the student/patient role and allowed professor users to reuse student appointment/report/certificate permissions
+[2026-05-17] [DB] [Codex] [feat/issue-11-admin-backend] - Added professor role seed data, a professor role migration for existing MySQL databases, and a seeded professor login account
+[2026-05-17] [TEST] [Codex] [feat/issue-11-admin-backend] - Added backend regression coverage for admin route RBAC, role assignment, professor-as-student access, admin query boundaries, OpenAPI routes, and professor role migration coverage
+[2026-05-17] [DOCS] [Codex] [main] - Added backend-only implementation plan for GitHub issue #11 admin APIs, covering default student/patient signup, admin role assignment, dashboard metrics, appointment oversight, student/doctor/staff directories, emergency alert review, admin RBAC, tests, and docs
+
 [2026-05-16] [DOCS] [TEAM] [fix/issues-26-30-31] - Added final project TODOs for admin workflow, staff workflow, appointment update email notifications, and final code hardening before submission
 [2026-05-16] [FIX] [TEAM] [fix/issues-26-30-31] - Fixed doctor cancellation reason flow so selecting `Other` does not require an extra note; any selected reason can now submit cancellation
 [2026-05-16] [API] [TEAM] [fix/issues-26-30-31] - Extended PATCH /appointments/{id}/cancel so doctors/admins can submit structured cancellation reasons while student cancellation remains body-free

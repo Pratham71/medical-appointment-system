@@ -74,7 +74,7 @@ def cancel_appointment(
     appointment_id: int = Path(..., gt=0),
     payload: AppointmentCancelRequest | None = None,
     current_user: AuthenticatedUser = Depends(
-        require_roles("student", "doctor", "admin"),
+        require_roles("student", "professor", "doctor", "admin"),
     ),
 ) -> AppointmentStatusResponse:
     try:

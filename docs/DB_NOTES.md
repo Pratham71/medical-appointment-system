@@ -13,6 +13,8 @@ Current Focus
 - MySQL triggers for certificate date integrity
 - Authenticated user context for student and staff access
 - Staff login seed account and non-doctor staff row
+- Professor role support using the same patient/profile structure as students
+- Admin role assignment across student, professor, doctor, staff, and admin roles
 - Doctor weekly availability and date-level override tables
 - Emergency alert storage for student-triggered infirmary alerts
 - Login brute-force protection
@@ -73,6 +75,8 @@ Route → Service → Repository → Query → DB
 
 Constraints
 - Unique email in users
+- Unique roll number in students; professors use the same profile table as students
+- Unique employee number in staff
 - Unique generated active_slot_id in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot
 - Doctor weekly availability is unique per doctor and weekday.
 - Doctor date overrides are unique per doctor and date.
@@ -107,6 +111,7 @@ Migrations
 - `app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql` repairs older local MySQL databases by adding doctor weekly availability tables, copying legacy `doctor_availability` rows when present, and replacing availability/certificate summary views without dropping appointment data.
 - `app/backend/app/db/migrations/2026_05_16_add_cancellation_reason.sql` adds appointment cancellation context and refreshes the appointment detail view without dropping appointment data.
 - `app/backend/app/db/migrations/2026_05_16_add_emergency_alerts.sql` adds the emergency alert table and supporting index.
+- `app/backend/app/db/migrations/2026_05_17_add_professor_role.sql` adds the `professor` role to older local databases without changing existing users.
 
 Triggers
 - Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.
@@ -134,6 +139,8 @@ DBMS Concepts to Demonstrate
 - MySQL triggers for cross-table integrity rules
 - Doctor availability rules and date overrides
 - Emergency alert writes with authenticated student ownership
+- Professor role support through the same patient/student relationship
+- Admin role assignment with transaction-backed profile updates
 - Auth-backed access control
 - Idempotent transaction handling
 

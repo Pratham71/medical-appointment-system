@@ -15,6 +15,14 @@ Core Rules
 
 Project Structure
 
+Current backend additions for issue #11:
+- app/backend/app/api/routes/admin.py
+- app/backend/app/db/queries/admin_queries.py
+- app/backend/app/repositories/admin_repo.py
+- app/backend/app/schemas/admin.py
+- app/backend/app/services/admin_service.py
+- app/backend/app/db/migrations/2026_05_17_add_professor_role.sql
+
 medical-appointment-system/
 ├── app/
 │   ├── backend/
@@ -111,9 +119,10 @@ Database Rules
 - Maintain 3NF normalization.
 - Use foreign keys properly.
 - Add indexes where needed.
-- Prevent double booking using UNIQUE(slot_id).
+- Prevent double booking using active appointment slot uniqueness.
 - Use transactions for appointment booking.
 - MySQL is the selected database provider for the MVP.
+- Professor users share the same patient workflow and profile table as student users; the role name remains distinct for frontend labeling.
 
 ERD Rule
 

@@ -116,6 +116,18 @@ macOS/Linux:
 mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql
 ```
 
+If your local database was created before professor role support, apply:
+
+Windows PowerShell:
+```powershell
+Get-Content app\backend\app\db\migrations\2026_05_17_add_professor_role.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_add_professor_role.sql
+```
+
 Frontend Setup
 
 If frontend dependencies are missing on a clean checkout, install from the frontend lockfile:
@@ -138,7 +150,7 @@ Notes
 - Keep `.env` values correct.
 - Run `npm run dev` from the project root to start backend and frontend together.
 - Frontend API calls use the local `/api` proxy to avoid browser CORS issues.
-- Seed login accounts use `password123`: `student@college.edu`, `doctor@college.edu`, `admin@college.edu`, and `staff@college.edu`.
+- Seed login accounts use `password123`: `student@college.edu`, `professor@college.edu`, `doctor@college.edu`, `admin@college.edu`, and `staff@college.edu`.
 
 Security Configuration Notes
 - `JWT_SECRET_KEY` must be changed for production.

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.backend.app.api.routes import (
+    admin,
     appointments,
     auth,
     certificates,
@@ -18,3 +19,4 @@ api_router.include_router(appointments.router)
 api_router.include_router(emergencies.router)
 api_router.include_router(reports.router)
 api_router.include_router(certificates.router)
+api_router.include_router(admin.router)

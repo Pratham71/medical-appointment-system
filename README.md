@@ -1,6 +1,6 @@
 # Medical Appointment System
 
-A web-based medical appointment system for a college infirmary. It helps students book appointments, doctors manage consultations, and infirmary staff maintain medical records, prescriptions, and certificates.
+A web-based medical appointment system for a college infirmary. It helps students and professors book appointments, doctors manage consultations, and infirmary staff maintain medical records, prescriptions, and certificates.
 
 ## Overview
 
@@ -9,8 +9,10 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 ## Features
 
 - Student appointment booking
+- Professor appointment access using the same patient workflow as students
 - Appointment slot listing and booking
 - Student appointment history
+- Admin backend APIs for dashboard metrics, user role assignment, directories, appointments, and emergency alerts
 - Doctor appointment dashboard
 - Doctor weekly availability and date override management
 - Medical consultation notes
@@ -19,7 +21,7 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 - Student report and certificate view/download actions
 - Staff login landing page
 - JWT-based login flow
-- Role-based access for student, doctor, staff, and admin users
+- Role-based access for student, professor, doctor, staff, and admin users
 - Rate limiting and login brute-force protection
 - Idempotent write requests
 - REST API backend
@@ -41,6 +43,7 @@ medical-appointment-system/
 |   |   `-- app/
 |   |       |-- api/
 |   |       |   |-- routes/
+|   |       |   |   |-- admin.py
 |   |       |   |   |-- appointments.py
 |   |       |   |   |-- auth.py
 |   |       |   |   |-- certificates.py
@@ -120,9 +123,21 @@ The selected database engine is MySQL.
 
 ### Auth
 
+- `POST /auth/signup`
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
+
+### Admin
+
+- `GET /admin/dashboard`
+- `GET /admin/users`
+- `PATCH /admin/users/{user_id}/role`
+- `GET /admin/appointments`
+- `GET /admin/students`
+- `GET /admin/doctors`
+- `GET /admin/staff`
+- `GET /admin/emergency-alerts`
 
 ### Students
 
@@ -280,6 +295,7 @@ All seeded accounts use `password123`.
 
 ```text
 student@college.edu
+professor@college.edu
 doctor@college.edu
 admin@college.edu
 staff@college.edu
@@ -287,8 +303,8 @@ staff@college.edu
 
 ## Current Status
 
-The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor role support, admin role assignment, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
 
 The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin safe landing, and staff safe landing.
 
-Current known gaps include the full admin workflow, full staff workflow, forgot password/password reset as future scope, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
+Current known gaps include the frontend admin workflow, full staff workflow, forgot password/password reset as future scope, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
