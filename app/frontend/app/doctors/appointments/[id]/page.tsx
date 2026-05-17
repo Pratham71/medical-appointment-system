@@ -538,7 +538,7 @@ export default function AppointmentDetailPage() {
                     <div className="border-t border-red-200 px-5 py-4 space-y-4">
                       <div>
                         <label className="block text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
-                          Reason
+                          Cancellation reason
                         </label>
                         <select
                           value={cancelReasonCode}

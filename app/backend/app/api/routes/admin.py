@@ -14,6 +14,7 @@ from app.backend.app.schemas.admin import (
     AdminRoleAssignmentResponse,
     AdminStaffSummary,
     AdminStudentSummary,
+    AdminUserStatusResponse,
     AdminUserSummary,
 )
 from app.backend.app.schemas.auth import AuthenticatedUser
@@ -55,6 +56,48 @@ def assign_user_role(
         return admin_service.assign_user_role(
             user_id,
             payload,
+            actor_user_id=current_user.user_id,
+        )
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.patch("/users/{user_id}/deactivate", response_model=AdminUserStatusResponse)
+def deactivate_user(
+    user_id: int = Path(..., gt=0),
+    current_user: AuthenticatedUser = Depends(require_roles("admin")),
+) -> AdminUserStatusResponse:
+    try:
+        return admin_service.deactivate_user(
+            user_id,
+            actor_user_id=current_user.user_id,
+        )
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.patch("/users/{user_id}/activate", response_model=AdminUserStatusResponse)
+def activate_user(
+    user_id: int = Path(..., gt=0),
+    current_user: AuthenticatedUser = Depends(require_roles("admin")),
+) -> AdminUserStatusResponse:
+    try:
+        return admin_service.activate_user(
+            user_id,
+            actor_user_id=current_user.user_id,
+        )
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.delete("/users/{user_id}", response_model=AdminUserStatusResponse)
+def delete_user(
+    user_id: int = Path(..., gt=0),
+    current_user: AuthenticatedUser = Depends(require_roles("admin")),
+) -> AdminUserStatusResponse:
+    try:
+        return admin_service.deactivate_user(
+            user_id,
             actor_user_id=current_user.user_id,
         )
     except Exception as exc:

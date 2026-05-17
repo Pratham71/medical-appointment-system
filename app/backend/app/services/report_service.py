@@ -7,6 +7,7 @@ from app.backend.app.schemas.report import (
     PrescriptionResponse,
     ReportDetail,
 )
+from app.backend.app.services import notification_service
 
 
 _LOCKED_EDIT_STATUSES = {"completed", "cancelled"}
@@ -20,7 +21,9 @@ def add_medical_note(
     if row is None:
         raise NotFoundError("Appointment was not found")
     _raise_if_locked_edit(row)
-    return MedicalNoteResponse(**row)
+    response = MedicalNoteResponse(**row)
+    notification_service.send_report_available(appointment_id)
+    return response
 
 
 def add_prescription(
@@ -31,7 +34,9 @@ def add_prescription(
     if row is None:
         raise NotFoundError("Appointment was not found")
     _raise_if_locked_edit(row)
-    return PrescriptionResponse(**row)
+    response = PrescriptionResponse(**row)
+    notification_service.send_report_available(appointment_id)
+    return response
 
 
 def get_report(appointment_id: int) -> ReportDetail:

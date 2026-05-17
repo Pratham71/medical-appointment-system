@@ -11,6 +11,7 @@ from app.backend.app.schemas.appointment import (
     AppointmentStatusResponse,
     DoctorAvailabilityStatus,
 )
+from app.backend.app.services import notification_service
 
 
 _CANCELLATION_REASON_LABELS = {
@@ -21,7 +22,7 @@ _CANCELLATION_REASON_LABELS = {
     "duplicate_booking": "Duplicate booking",
     "other": "Other",
 }
-_REASON_REQUIRED_ROLES = {"doctor", "admin"}
+_REASON_REQUIRED_ROLES = {"doctor", "staff", "admin"}
 
 
 def list_available_slots(from_date: date | None = None) -> list[AppointmentSlot]:
@@ -69,6 +70,10 @@ def book_appointment(
     if result.get("expired"):
         raise ConflictError("Appointment slot is no longer available")
 
+    appointment_id = result.get("appointment_id")
+    if appointment_id is not None:
+        notification_service.send_appointment_booked(int(appointment_id))
+
     return AppointmentBookResponse(
         appointment_id=result.get("appointment_id"),
         slot_id=result["slot_id"],
@@ -88,12 +93,14 @@ def cancel_appointment(
             raise ServiceError("Cancellation reason is required")
         cancellation_reason = _format_cancellation_reason(payload)
 
-    return _update_appointment_status(
+    response = _update_appointment_status(
         appointment_id,
         "cancelled",
         "Appointment cancelled",
         cancellation_reason=cancellation_reason,
     )
+    notification_service.send_appointment_cancelled(appointment_id)
+    return response
 
 
 def complete_appointment(appointment_id: int) -> AppointmentStatusResponse:

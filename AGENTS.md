@@ -23,6 +23,17 @@ Current backend additions for issue #11:
 - app/backend/app/services/admin_service.py
 - app/backend/app/db/migrations/2026_05_17_add_professor_role.sql
 
+Current backend additions for issues #12, #37, #39, #44, and #48:
+- app/backend/app/api/routes/staff.py
+- app/backend/app/db/queries/staff_queries.py
+- app/backend/app/db/queries/notification_queries.py
+- app/backend/app/repositories/staff_repo.py
+- app/backend/app/repositories/notification_repo.py
+- app/backend/app/schemas/staff.py
+- app/backend/app/services/staff_service.py
+- app/backend/app/services/notification_service.py
+- app/backend/app/db/migrations/2026_05_17_add_staff_patient_roles.sql
+
 medical-appointment-system/
 ├── app/
 │   ├── backend/
@@ -123,6 +134,9 @@ Database Rules
 - Use transactions for appointment booking.
 - MySQL is the selected database provider for the MVP.
 - Professor users share the same patient workflow and profile table as student users; the role name remains distinct for frontend labeling.
+- College-staff and hostel-staff users also share the same patient workflow and profile table as student users; keep their role names distinct for frontend labeling.
+- Admin delete/remove actions must be soft-deactivation through `users.is_active`; do not hard-delete users with medical history.
+- Email notification delivery is best-effort and environment-driven; do not commit provider credentials.
 
 ERD Rule
 

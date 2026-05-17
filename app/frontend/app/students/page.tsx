@@ -8,6 +8,12 @@ import DashboardShell from "@/components/layout/DashboardShell";
 import StatsCard from "@/components/ui/StatsCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
+const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
+function isPatientRole(roleName: string) {
+  return PATIENT_ROLES.includes(roleName);
+}
+
 function fmt(date: string, time: string) {
   return `${new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${time.slice(0, 5)}`;
 }
@@ -29,7 +35,7 @@ export default function StudentDashboardPage() {
     if (user.role_name === "doctor") { router.replace("/doctors"); return; }
     if (user.role_name === "admin") { router.replace("/admin"); return; }
     if (user.role_name === "staff") { router.replace("/staff"); return; }
-    if (user.role_name !== "student") { router.replace("/login"); return; }
+    if (!isPatientRole(user.role_name)) { router.replace("/login"); return; }
 
     const today = todayKey();
     Promise.all([getStudentDashboard(), getStudentAppointments()])

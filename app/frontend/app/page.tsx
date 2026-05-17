@@ -3,6 +3,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/api";
 
+const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
+function isPatientRole(roleName: string) {
+  return PATIENT_ROLES.includes(roleName);
+}
+
 export default function RootPage() {
   const router = useRouter();
 
@@ -16,8 +22,10 @@ export default function RootPage() {
       router.replace("/admin");
     } else if (user.role_name === "staff") {
       router.replace("/staff");
-    } else {
+    } else if (isPatientRole(user.role_name)) {
       router.replace("/students");
+    } else {
+      router.replace("/login");
     }
   }, [router]);
 

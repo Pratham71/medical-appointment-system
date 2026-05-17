@@ -3,7 +3,9 @@ INSERT INTO roles (role_id, role_name) VALUES
     (2, 'doctor'),
     (3, 'admin'),
     (4, 'staff'),
-    (5, 'professor');
+    (5, 'professor'),
+    (6, 'college-staff'),
+    (7, 'hostel-staff');
 
 INSERT INTO appointment_statuses (status_id, status_name) VALUES
     (1, 'booked'),
@@ -60,11 +62,29 @@ INSERT INTO users (user_id, role_id, name, email, password_hash, is_active) VALU
         'professor@college.edu',
         '$2b$12$udxQAJyAC4wZKM6UjEkor.Gne2d86EwvkPMrRx8BjKFtIVUzgsAsm',
         TRUE
+    ),
+    (
+        6,
+        6,
+        'College Staff Patient',
+        'college.staff@college.edu',
+        '$2b$12$udxQAJyAC4wZKM6UjEkor.Gne2d86EwvkPMrRx8BjKFtIVUzgsAsm',
+        TRUE
+    ),
+    (
+        7,
+        7,
+        'Hostel Staff Patient',
+        'hostel.staff@college.edu',
+        '$2b$12$udxQAJyAC4wZKM6UjEkor.Gne2d86EwvkPMrRx8BjKFtIVUzgsAsm',
+        TRUE
     );
 
 INSERT INTO students (student_id, user_id, roll_number, department, year_level) VALUES
     (1, 1, 'CSE-2026-001', 'Computer Science', 2),
-    (2, 5, 'PROF-001', 'Computer Science', 1);
+    (2, 5, 'PROF-001', 'Computer Science', 1),
+    (3, 6, 'CSTAFF-001', 'College Administration', 1),
+    (4, 7, 'HSTAFF-001', 'Hostel Administration', 1);
 
 INSERT INTO staff (staff_id, user_id, employee_number, specialization, is_doctor) VALUES
     (1, 2, 'DOC-001', 'General Medicine', TRUE),

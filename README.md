@@ -12,16 +12,18 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 - Professor appointment access using the same patient workflow as students
 - Appointment slot listing and booking
 - Student appointment history
-- Admin backend APIs for dashboard metrics, user role assignment, directories, appointments, and emergency alerts
+- Admin backend APIs for dashboard metrics, user role assignment, user activation/deactivation, directories, appointments, and emergency alerts
 - Doctor appointment dashboard
 - Doctor weekly availability and date override management
 - Medical consultation notes
 - Prescription records
 - Medical certificate records
 - Student report and certificate view/download actions
-- Staff login landing page
+- Staff login landing page and backend staff appointment oversight APIs
+- College-staff and hostel-staff patient access using the student workflow
+- Best-effort SMTP email notifications for appointment and document updates
 - JWT-based login flow
-- Role-based access for student, professor, doctor, staff, and admin users
+- Role-based access for student, professor, college-staff, hostel-staff, doctor, staff, and admin users
 - Rate limiting and login brute-force protection
 - Idempotent write requests
 - REST API backend
@@ -49,6 +51,7 @@ medical-appointment-system/
 |   |       |   |   |-- certificates.py
 |   |       |   |   |-- doctors.py
 |   |       |   |   |-- reports.py
+|   |       |   |   |-- staff.py
 |   |       |   |   `-- students.py
 |   |       |   |-- api_router.py
 |   |       |   |-- dependencies.py
@@ -133,11 +136,19 @@ The selected database engine is MySQL.
 - `GET /admin/dashboard`
 - `GET /admin/users`
 - `PATCH /admin/users/{user_id}/role`
+- `PATCH /admin/users/{user_id}/deactivate`
+- `PATCH /admin/users/{user_id}/activate`
+- `DELETE /admin/users/{user_id}`
 - `GET /admin/appointments`
 - `GET /admin/students`
 - `GET /admin/doctors`
 - `GET /admin/staff`
 - `GET /admin/emergency-alerts`
+
+### Staff
+
+- `GET /staff/dashboard`
+- `GET /staff/appointments`
 
 ### Students
 
@@ -227,6 +238,10 @@ MYSQL_PASSWORD=your_mysql_password
 MYSQL_DATABASE=medical_appointment_system
 JWT_SECRET_KEY=change-this-dev-secret
 RATE_LIMIT_ENABLED=true
+EMAIL_NOTIFICATIONS_ENABLED=false
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_FROM_EMAIL=
 ```
 
 Create and seed the database:
@@ -296,6 +311,8 @@ All seeded accounts use `password123`.
 ```text
 student@college.edu
 professor@college.edu
+college.staff@college.edu
+hostel.staff@college.edu
 doctor@college.edu
 admin@college.edu
 staff@college.edu
@@ -303,8 +320,8 @@ staff@college.edu
 
 ## Current Status
 
-The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor role support, admin role assignment, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor/college-staff/hostel-staff patient-equivalent role support, admin role assignment and user status management, staff appointment oversight, best-effort email notifications, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
 
-The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin safe landing, and staff safe landing.
+The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin user role/status actions, admin safe landing, and staff safe landing.
 
-Current known gaps include the frontend admin workflow, full staff workflow, forgot password/password reset as future scope, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
+Current known gaps include forgot password/password reset as future scope, active user presence tracking, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.

@@ -61,7 +61,14 @@ def add_prescription(
 def report_detail(
     appointment_id: int = Path(..., gt=0),
     current_user: AuthenticatedUser = Depends(
-        require_roles("student", "professor", "doctor", "admin"),
+        require_roles(
+            "student",
+            "professor",
+            "college-staff",
+            "hostel-staff",
+            "doctor",
+            "admin",
+        ),
     ),
 ) -> ReportDetail:
     try:

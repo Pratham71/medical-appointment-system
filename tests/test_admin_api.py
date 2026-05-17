@@ -253,6 +253,48 @@ def test_admin_can_assign_student_to_professor_role(monkeypatch):
     assert captured == [(88, "professor", 30)]
 
 
+@pytest.mark.parametrize("role_name", ["college-staff", "hostel-staff"])
+def test_admin_can_assign_patient_equivalent_staff_roles(monkeypatch, role_name):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_assign_user_role(user_id, payload, actor_user_id):
+        captured.append((user_id, payload.role_name, payload.roll_number, actor_user_id))
+        return {
+            "user_id": user_id,
+            "name": "Hostel Staff",
+            "email": f"{role_name}@college.edu",
+            "role_name": role_name,
+            "student_id": 18,
+            "staff_id": None,
+            "message": "User role updated",
+        }
+
+    monkeypatch.setattr(admin_service, "assign_user_role", fake_assign_user_role)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/users/88/role",
+        headers={**_auth_header(), "Idempotency-Key": f"assign-role-{role_name}-88"},
+        json={
+            "role_name": role_name,
+            "roll_number": "NST-088",
+            "department": "Administration",
+            "year_level": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["role_name"] == role_name
+    assert response.json()["student_id"] == 18
+    assert captured == [(88, role_name, "NST-088", 30)]
+
+
 def test_non_admin_cannot_assign_roles(monkeypatch):
     monkeypatch.setattr(
         auth_service,
@@ -271,6 +313,118 @@ def test_non_admin_cannot_assign_roles(monkeypatch):
     )
 
     assert response.status_code == 403
+
+
+def test_admin_can_deactivate_user(monkeypatch):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_deactivate_user(user_id, actor_user_id):
+        captured.append((user_id, actor_user_id))
+        return {
+            "user_id": user_id,
+            "is_active": False,
+            "message": "User deactivated",
+        }
+
+    monkeypatch.setattr(admin_service, "deactivate_user", fake_deactivate_user)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/users/88/deactivate",
+        headers={**_auth_header(), "Idempotency-Key": "deactivate-user-88"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "user_id": 88,
+        "is_active": False,
+        "message": "User deactivated",
+    }
+    assert captured == [(88, 30)]
+
+
+def test_admin_can_reactivate_user(monkeypatch):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_activate_user(user_id, actor_user_id):
+        captured.append((user_id, actor_user_id))
+        return {
+            "user_id": user_id,
+            "is_active": True,
+            "message": "User activated",
+        }
+
+    monkeypatch.setattr(admin_service, "activate_user", fake_activate_user)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/users/88/activate",
+        headers={**_auth_header(), "Idempotency-Key": "activate-user-88"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+    assert captured == [(88, 30)]
+
+
+def test_admin_delete_user_soft_deactivates_user(monkeypatch):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_deactivate_user(user_id, actor_user_id):
+        captured.append((user_id, actor_user_id))
+        return {
+            "user_id": user_id,
+            "is_active": False,
+            "message": "User deactivated",
+        }
+
+    monkeypatch.setattr(admin_service, "deactivate_user", fake_deactivate_user)
+
+    client = TestClient(app)
+    response = client.delete(
+        "/admin/users/88",
+        headers={**_auth_header(), "Idempotency-Key": "delete-user-88"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "User deactivated"
+    assert captured == [(88, 30)]
+
+
+def test_admin_cannot_deactivate_self(monkeypatch):
+    admin_service = _admin_service()
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/users/30/deactivate",
+        headers={**_auth_header(), "Idempotency-Key": "deactivate-self"},
+    )
+
+    assert response.status_code == 409
+    assert hasattr(admin_service, "deactivate_user")
 
 
 def test_admin_appointments_support_filters(monkeypatch):

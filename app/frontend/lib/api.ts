@@ -7,6 +7,7 @@ import type {
   AdminRoleAssignmentResponse,
   AdminStaffSummary,
   AdminStudentSummary,
+  AdminUserStatusResponse,
   AdminUserSummary,
   AppointmentBookResponse,
   AppointmentCancelReasonCode,
@@ -342,6 +343,22 @@ export async function assignUserRole(
   return request<AdminRoleAssignmentResponse>(
     `/admin/users/${userId}/role`,
     { method: "PATCH", body: JSON.stringify(payload) },
+    true
+  );
+}
+
+export async function deactivateUser(userId: number): Promise<AdminUserStatusResponse> {
+  return request<AdminUserStatusResponse>(
+    `/admin/users/${userId}/deactivate`,
+    { method: "PATCH" },
+    true
+  );
+}
+
+export async function activateUser(userId: number): Promise<AdminUserStatusResponse> {
+  return request<AdminUserStatusResponse>(
+    `/admin/users/${userId}/activate`,
+    { method: "PATCH" },
     true
   );
 }

@@ -236,6 +236,47 @@ def test_seed_and_migration_include_professor_role():
     assert "'professor'" in migration
 
 
+def test_seed_and_migration_include_patient_equivalent_staff_roles():
+    seed = (DB_DIR / "seed.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_17_add_staff_patient_roles.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    for role_name in ["college-staff", "hostel-staff"]:
+        assert f"'{role_name}'" in seed
+        assert f"'{role_name}'" in migration
+
+    assert "college.staff@college.edu" in seed
+    assert "hostel.staff@college.edu" in seed
+    assert "college-staff" in seed
+    assert "hostel-staff" in seed
+
+
+def test_admin_queries_support_user_status_updates():
+    source = (QUERY_DIR / "admin_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def get_user_status_context" in source
+    assert "def update_user_active_status" in source
+    assert "set users.is_active = %s" in source
+
+
+def test_staff_queries_keep_sql_in_staff_query_module():
+    source = (QUERY_DIR / "staff_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def get_dashboard_counts" in source
+    assert "def list_appointments" in source
+    assert "appointment_statuses.status_name" in source
+
+
+def test_notification_queries_keep_sql_in_query_module():
+    source = (QUERY_DIR / "notification_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def get_appointment_notification_context" in source
+    assert "student_users.email as student_email" in source
+
+
 def test_schema_and_migration_include_cancellation_reason():
     schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
     migration = (

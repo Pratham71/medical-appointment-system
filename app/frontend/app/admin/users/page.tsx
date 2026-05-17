@@ -2,7 +2,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAdminUsers, assignUserRole, getStoredUser } from "@/lib/api";
+import {
+  activateUser,
+  assignUserRole,
+  deactivateUser,
+  getAdminUsers,
+  getStoredUser,
+} from "@/lib/api";
 import type {
   AdminUserSummary,
   AdminRoleAssignmentRequest,
@@ -15,12 +21,22 @@ import ToastContainer, { useToast } from "@/components/ui/Toast";
 const ROLE_BADGE: Record<string, string> = {
   student: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
   professor: "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
+  "college-staff": "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200",
+  "hostel-staff": "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200",
   doctor: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
   staff: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   admin: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
 };
 
-const ROLES: AssignableRole[] = ["student", "professor", "doctor", "staff", "admin"];
+const ROLES: AssignableRole[] = [
+  "student",
+  "professor",
+  "college-staff",
+  "hostel-staff",
+  "doctor",
+  "staff",
+  "admin",
+];
 
 interface RoleForm {
   role_name: AssignableRole;
@@ -51,7 +67,11 @@ function RoleAssignModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const needsAcademic = form.role_name === "student" || form.role_name === "professor";
+  const needsAcademic =
+    form.role_name === "student" ||
+    form.role_name === "professor" ||
+    form.role_name === "college-staff" ||
+    form.role_name === "hostel-staff";
   const needsEmployee = form.role_name === "doctor" || form.role_name === "staff";
 
   async function handleSubmit() {
@@ -216,6 +236,23 @@ export default function AdminUsersPage() {
     fetchUsers(query, roleFilter);
   }
 
+  async function handleToggleActive(user: AdminUserSummary) {
+    const action = user.is_active ? "Deactivate" : "Activate";
+    if (user.is_active && !window.confirm(`${action} ${user.name}?`)) return;
+    try {
+      const res = user.is_active
+        ? await deactivateUser(user.user_id)
+        : await activateUser(user.user_id);
+      show(res.message, "success");
+      fetchUsers(query, roleFilter);
+    } catch (e: unknown) {
+      show(
+        e instanceof Error ? e.message : `Failed to ${action.toLowerCase()} user`,
+        "warning"
+      );
+    }
+  }
+
   return (
     <DashboardShell role="admin" title="Users">
       <div className="space-y-4">
@@ -291,12 +328,24 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
+                      <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => setSelected(u)}
                         className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors font-medium"
                       >
                         Change Role
                       </button>
+                      <button
+                        onClick={() => handleToggleActive(u)}
+                        className={`text-xs border px-2.5 py-1 rounded-btn transition-colors font-medium ${
+                          u.is_active
+                            ? "text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                            : "text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                        }`}
+                      >
+                        {u.is_active ? "Deactivate / Remove" : "Activate"}
+                      </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

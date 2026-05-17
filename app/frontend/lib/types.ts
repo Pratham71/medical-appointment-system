@@ -262,7 +262,14 @@ export interface CertificateResponse {
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-export type AssignableRole = "student" | "professor" | "doctor" | "staff" | "admin";
+export type AssignableRole =
+  | "student"
+  | "professor"
+  | "college-staff"
+  | "hostel-staff"
+  | "doctor"
+  | "staff"
+  | "admin";
 
 export interface AdminDashboard {
   total_students: number;
@@ -304,6 +311,12 @@ export interface AdminRoleAssignmentResponse {
   role_name: string;
   student_id: number | null;
   staff_id: number | null;
+  message: string;
+}
+
+export interface AdminUserStatusResponse {
+  user_id: number;
+  is_active: boolean;
   message: string;
 }
 

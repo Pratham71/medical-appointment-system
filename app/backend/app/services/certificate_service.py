@@ -3,6 +3,7 @@ from datetime import date
 from app.backend.app.api.errors import ConflictError, NotFoundError
 from app.backend.app.repositories import certificate_repo
 from app.backend.app.schemas.certificate import CertificateCreate, CertificateResponse
+from app.backend.app.services import notification_service
 
 
 _LOCKED_EDIT_STATUSES = {"completed", "cancelled"}
@@ -38,7 +39,12 @@ def create_certificate(
     if row is None:
         raise NotFoundError("Appointment was not found")
     _raise_if_locked_status(row.get("blocked_status"))
-    return CertificateResponse(**row)
+    response = CertificateResponse(**row)
+    notification_service.send_certificate_available(
+        appointment_id,
+        response.certificate_type,
+    )
+    return response
 
 
 def list_student_certificates(student_id: int) -> list[CertificateResponse]:

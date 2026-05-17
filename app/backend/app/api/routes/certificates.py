@@ -36,7 +36,14 @@ def create_certificate(
 def student_certificates(
     student_id: int = Path(..., gt=0),
     current_user: AuthenticatedUser = Depends(
-        require_roles("student", "professor", "doctor", "admin"),
+        require_roles(
+            "student",
+            "professor",
+            "college-staff",
+            "hostel-staff",
+            "doctor",
+            "admin",
+        ),
     ),
 ) -> list[CertificateResponse]:
     try:

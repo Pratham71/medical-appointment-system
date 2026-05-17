@@ -303,6 +303,31 @@ def get_role_assignment_result(connection: Any, user_id: int) -> dict[str, Any] 
     return fetch_one(connection, sql, (user_id,))
 
 
+def get_user_status_context(connection: Any, user_id: int) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            users.user_id,
+            users.is_active
+        FROM users
+        WHERE users.user_id = %s
+    """
+    return fetch_one(connection, sql, (user_id,))
+
+
+def update_user_active_status(
+    connection: Any,
+    *,
+    user_id: int,
+    is_active: bool,
+) -> None:
+    sql = """
+        UPDATE users
+        SET users.is_active = %s
+        WHERE users.user_id = %s
+    """
+    execute(connection, sql, (is_active, user_id))
+
+
 def list_appointments(
     connection: Any,
     *,
@@ -400,7 +425,12 @@ def list_students(
             ON appointments.student_id = students.student_id
         LEFT JOIN appointment_statuses
             ON appointment_statuses.status_id = appointments.status_id
-        WHERE roles.role_name IN ('student', 'professor')
+        WHERE roles.role_name IN (
+            'student',
+            'professor',
+            'college-staff',
+            'hostel-staff'
+        )
             AND (
                 %s IS NULL
                 OR users.name LIKE %s

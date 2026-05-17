@@ -12,6 +12,7 @@ from app.backend.app.schemas.admin import (
     AdminRoleAssignmentResponse,
     AdminStaffSummary,
     AdminStudentSummary,
+    AdminUserStatusResponse,
     AdminUserSummary,
 )
 
@@ -58,6 +59,49 @@ def assign_user_role(
     if result.get("conflict"):
         raise ConflictError(result["message"])
     return AdminRoleAssignmentResponse(**result)
+
+
+def deactivate_user(
+    user_id: int,
+    actor_user_id: int,
+) -> AdminUserStatusResponse:
+    return _set_user_active_status(
+        user_id,
+        actor_user_id=actor_user_id,
+        is_active=False,
+        message="User deactivated",
+    )
+
+
+def activate_user(
+    user_id: int,
+    actor_user_id: int,
+) -> AdminUserStatusResponse:
+    return _set_user_active_status(
+        user_id,
+        actor_user_id=actor_user_id,
+        is_active=True,
+        message="User activated",
+    )
+
+
+def _set_user_active_status(
+    user_id: int,
+    *,
+    actor_user_id: int,
+    is_active: bool,
+    message: str,
+) -> AdminUserStatusResponse:
+    if user_id == actor_user_id and not is_active:
+        raise ConflictError("Admins cannot deactivate their own account")
+
+    result = admin_repo.set_user_active_status(
+        user_id=user_id,
+        is_active=is_active,
+    )
+    if result is None:
+        raise NotFoundError("User was not found")
+    return AdminUserStatusResponse(**result, message=message)
 
 
 def list_appointments(

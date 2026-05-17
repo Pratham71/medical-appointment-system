@@ -47,3 +47,33 @@ def test_staff_role_routes_to_staff_landing_page() -> None:
     assert 'router.replace("/staff")' in login_page
     assert 'role: "student" | "doctor" | "admin" | "staff"' in shell
     assert 'role: "student" | "doctor" | "admin" | "staff"' in sidebar
+
+
+def test_patient_equivalent_roles_route_to_student_workflow() -> None:
+    root_page = read(FRONTEND / "page.tsx")
+    login_page = read(FRONTEND / "login" / "page.tsx")
+    student_page = read(FRONTEND / "students" / "page.tsx")
+
+    for role_name in ["professor", "college-staff", "hostel-staff"]:
+        assert role_name in root_page
+        assert role_name in login_page
+        assert role_name in student_page
+
+    assert "isPatientRole(user.role_name)" in root_page
+    assert "isPatientRole(res.user.role_name)" in login_page
+    assert "isPatientRole(user.role_name)" in student_page
+
+
+def test_admin_users_page_exposes_patient_equivalent_roles_and_deactivate_action() -> None:
+    users_page = read(FRONTEND / "admin" / "users" / "page.tsx")
+    types = read(ROOT / "app" / "frontend" / "lib" / "types.ts")
+    api = read(ROOT / "app" / "frontend" / "lib" / "api.ts")
+
+    for role_name in ["college-staff", "hostel-staff"]:
+        assert role_name in users_page
+        assert role_name in types
+
+    assert "deactivateUser" in api
+    assert "activateUser" in api
+    assert "Remove" in users_page
+    assert "Deactivate" in users_page

@@ -78,6 +78,34 @@ def test_student_dashboard_uses_authenticated_student_context(monkeypatch):
     assert captured_student_ids == [7]
 
 
+@pytest.mark.parametrize("role_name", ["professor", "college-staff", "hostel-staff"])
+def test_patient_equivalent_roles_use_student_dashboard_context(monkeypatch, role_name):
+    captured_student_ids = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user(role_name, user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_student_id_for_user", lambda user_id: 7)
+
+    def fake_dashboard(student_id: int) -> StudentDashboard:
+        captured_student_ids.append(student_id)
+        return StudentDashboard(
+            student_id=student_id,
+            student_name="Patient User",
+        )
+
+    monkeypatch.setattr(student_service, "get_dashboard", fake_dashboard)
+
+    client = TestClient(app)
+    response = client.get("/students/dashboard", headers=_auth_header())
+
+    assert response.status_code == 200
+    assert response.json()["student_id"] == 7
+    assert captured_student_ids == [7]
+
+
 def test_student_role_cannot_access_doctor_dashboard(monkeypatch):
     monkeypatch.setattr(
         auth_service,
@@ -369,6 +397,24 @@ def test_student_cancel_appointment_still_allows_empty_body(monkeypatch):
 
     assert response.status_code == 200
     assert captured == [(55, None, "student")]
+
+
+def test_staff_cancel_appointment_requires_reason(monkeypatch):
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("staff", user_id=40),
+    )
+    monkeypatch.setattr(auth_service, "can_access_appointment", lambda *args, **kwargs: True)
+
+    client = TestClient(app)
+    response = client.patch(
+        "/appointments/55/cancel",
+        headers={**_auth_header(), "Idempotency-Key": "staff-cancel-missing-reason"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cancellation reason is required"
 
 
 def test_state_changing_routes_require_idempotency_key(monkeypatch):

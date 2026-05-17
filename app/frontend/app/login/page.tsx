@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { login, setSession } from "@/lib/api";
 
+const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
+function isPatientRole(roleName: string) {
+  return PATIENT_ROLES.includes(roleName);
+}
+
 function Spinner() {
   return (
     <svg
@@ -53,7 +59,8 @@ export default function LoginPage() {
       if (res.user.role_name === "doctor") router.replace("/doctors");
       else if (res.user.role_name === "admin") router.replace("/admin");
       else if (res.user.role_name === "staff") router.replace("/staff");
-      else router.replace("/students");
+      else if (isPatientRole(res.user.role_name)) router.replace("/students");
+      else router.replace("/login");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
       if (msg.includes("429") || msg.toLowerCase().includes("too many")) {

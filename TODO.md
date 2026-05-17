@@ -50,7 +50,8 @@ Auth and Security Tasks
 [x] Require production-safe JWT secret configuration
 [x] Add brute-force protection for login
 [x] Add staff login, seed account, routing, and safe staff landing page
-[ ] [TOFIX] Build full staff workflow after front-desk requirements are finalized (GitHub issue #12)
+[x] [TOFIX] Build staff workflow API after front-desk requirements are finalized - staff dashboard counts, staff appointment oversight, and staff cancellation with required reason are implemented (GitHub issue #12)
+[x] [TOFIX] Fix professor sign-in routing and backend permissions so professor users can use the student/patient workflow after login (GitHub issue #39)
 [ ] [FUTURE] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
 [ ] [FUTURE] Revisit completed-appointment edit override only if approved — current MVP intentionally locks completed appointments from doctor edits; any future override needs admin approval + audit trail (GitHub issue #24)
 
@@ -87,14 +88,14 @@ Appointment APIs
 [x] [TOFIX] [BACKEND] Add GET /appointments/doctors?for_date= endpoint returning all doctors with availability status and override reason for a given date — required for frontend to show unavailable doctors on booking page instead of them disappearing (the v_available_appointment_slots view filters them out at DB level)
 [x] [TOFIX] Show doctor specialization (e.g. General Physician) on booking doctor cards — already in staff table, now exposed in API response and rendered in frontend (GitHub issue #31)
 [x] [TOFIX] When a doctor becomes unavailable for a date with existing booked appointments, cancel those appointments for that day and provide a normal-checkup or reschedule path
-[ ] [TOFIX] Admin — add delete/deactivate user action in the Users table
+[x] [TOFIX] Admin - add delete/deactivate user action in the Users table using safe soft-deactivation plus reactivation support (GitHub issue #48)
 [ ] [FUTURE] Active users indicator — show count of currently logged-in users across admin/doctor pages; needs backend session-presence tracking (Redis TTL keys on each authenticated request, or last_seen timestamp on users table) and a GET /admin/active-users endpoint; frontend polls every 30s and renders a small badge in the header or sidebar footer
-[ ] [FUTURE] Add college-staff and hostel-staff roles — same privilege level as student/professor; backend migration + seed accounts, admin role assignment modal conditional fields, role badge + filter on Users page, post-login routing TBD (GitHub issue #44)
+[x] [TOFIX] Add college-staff and hostel-staff roles - same privilege level as student/professor; backend migration + seed accounts, admin role assignment fields, role badge/filter support, and patient workflow routing implemented (GitHub issue #44)
 [ ] [FUTURE] Slot reservation hold with 5-min auto-expiry — POST /appointments/reserve creates a TTL reservation on slot select; booking-in-progress status broadcast via WebSocket to other students; countdown timer shown to holder; expired reservations swept by background task and slot freed; confirmed booking requires active reservation (GitHub issue #45)
 [ ] [FUTURE] True real-time slot updates via WebSocket or SSE — replace the current 30s/20s polling on the booking page with push events when slots are booked or freed; needs a FastAPI WebSocket endpoint or SSE stream, frontend replaces interval with useEffect WebSocket connection, graceful fallback to polling on disconnect (GitHub issue #41)
 [ ] [FUTURE] Real-time emergency alert push to admin and staff — WebSocket/SSE endpoint auth-gated to admin/staff, broadcast on every POST /emergency/alert, DashboardShell opens persistent connection and shows a toast + increments sidebar badge on receive; Emergency Alerts page prepends new card without reload (GitHub issue #42)
 [ ] [FUTURE] Emergency alert context fields — add reason (enum dropdown), location (free text), and contact number (optional, pre-filled from profile) to POST /emergency/alert; backend migration + schema update; EmergencyButton form redesign; admin alert cards show all three fields prominently (GitHub issue #46)
-[ ] [FUTURE] Emergency alert acknowledgement and resolution flow — Acknowledge and Resolve actions on alert cards, backend PATCH endpoints + migration for acknowledged_by/resolved_at columns, three-state badge (Unread / Acknowledged / Resolved), student-facing alert status view (GitHub issue #43) — backend needs DELETE or PATCH /admin/users/:id/deactivate endpoint; frontend Change Role button row should gain a Remove button with a confirmation modal
+[ ] [FUTURE] Emergency alert acknowledgement and resolution flow — Acknowledge and Resolve actions on alert cards, backend PATCH endpoints + migration for acknowledged_by/resolved_at columns, three-state badge (Unread / Acknowledged / Resolved), student-facing alert status view (GitHub issue #43)
 [x] [TOFIX] Doctor weekly availability schedule fails to save — fixed HH:MM → HH:MM:SS normalisation before sending to backend (GitHub issue #35)
 [x] [TOFIX] [BACKEND] Cancelled appointment slots not freed for rebooking — fixed active_slot_id generated column uniqueness constraint (GitHub issue #34)
 [x] [TOFIX] Booked appointment slots appear selectable if fetched before another student books them — slots re-fetched on step 2 entry (GitHub issue #32)
@@ -161,8 +162,8 @@ Frontend To Fix
 Final Project TODOs
 
 [x] [FINAL] Admin workflow and implementation - backend admin APIs and full frontend implemented: dashboard metrics, user role assignment, appointment oversight, student/professor tabs, doctor/staff directories, emergency alert review (GitHub issue #11)
-[ ] [FINAL] Staff workflow and implementation - finalize front-desk staff responsibilities, then build staff routes and UI for appointment lookup, check-in/help-desk handling, cancelling or rescheduling appointments with reasons, emergency alert follow-up, and normal walk-in checkup support; reuse the shared appointment cancellation reason flow where possible. (GitHub issue #12)
-[ ] [FINAL] Email notifications for appointment updates - choose SMTP/provider settings, add environment-driven email configuration, create notification templates, and send emails for booking confirmation, cancellation with reason, doctor unavailability auto-cancel, reschedule-related updates, and important report/certificate availability events; keep credentials out of git and cover the notification service with tests. (GitHub issue #37)
+[x] [FINAL] Staff workflow and implementation - backend staff routes now provide dashboard counts, appointment lookup/oversight, and cancellation with reason; frontend keeps the existing staff landing page for MVP staff access. (GitHub issue #12)
+[x] [FINAL] Email notifications for appointment updates - SMTP configuration is environment-driven and disabled by default; backend sends best-effort notifications for booking confirmation, cancellation with reason, doctor-unavailability auto-cancel, report/prescription updates, and certificate availability with tests for disabled/provider-failure paths. (GitHub issue #37)
 [ ] [FINAL] Code refinement and project hardening - clean up duplicated frontend/backend helpers, review API error messages, tighten route/service/repository boundaries, add live MySQL integration tests where useful, check accessibility/responsive UI issues, update final docs/screenshots, and remove stale TODOs before project submission. (GitHub issue #38)
 
 Testing and Documentation Tasks

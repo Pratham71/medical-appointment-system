@@ -42,6 +42,13 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Added staff workflow APIs for dashboard counts and appointment oversight, and allowed staff users to cancel appointments with required structured cancellation reasons
+[2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Added admin user activation, deactivation, and safe soft-delete endpoints plus frontend admin user action helpers
+[2026-05-17] [DB] [Codex] [feat/issues-12-37-39-44-admin-users] - Added college-staff and hostel-staff patient-equivalent roles, seed accounts, and a non-destructive role migration
+[2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Added environment-driven SMTP notification service with best-effort emails for booking, cancellation, doctor-unavailability auto-cancel, report/prescription updates, and certificate availability
+[2026-05-17] [UI] [Codex] [feat/issues-12-37-39-44-admin-users] - Fixed professor and patient-equivalent staff login routing to the student workflow and exposed new roles/deactivate actions on the admin users page
+[2026-05-17] [TEST] [Codex] [feat/issues-12-37-39-44-admin-users] - Added regression coverage for staff APIs, patient-equivalent roles, admin user status changes, notification dispatch behavior, OpenAPI routes, query boundaries, and frontend routing
+
 [2026-05-17] [API] [Codex] [feat/issue-11-admin-backend] - Implemented backend admin APIs for dashboard metrics, user listing, user role assignment, appointment oversight, student/professor directory, doctor/staff directories, and emergency alert review with admin-only RBAC
 [2026-05-17] [API] [Codex] [feat/issue-11-admin-backend] - Added POST /auth/signup defaulting new accounts to the student/patient role and allowed professor users to reuse student appointment/report/certificate permissions
 [2026-05-17] [DB] [Codex] [feat/issue-11-admin-backend] - Added professor role seed data, a professor role migration for existing MySQL databases, and a seeded professor login account

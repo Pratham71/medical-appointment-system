@@ -5,7 +5,7 @@ from app.backend.app.db import session
 from app.backend.app.db.queries import admin_queries
 
 
-_PATIENT_ROLES = {"student", "professor"}
+_PATIENT_ROLES = {"student", "professor", "college-staff", "hostel-staff"}
 
 
 def get_dashboard_counts() -> dict[str, Any] | None:
@@ -92,6 +92,26 @@ def assign_user_role(
                 admin_queries.delete_staff_profile(connection, user_id)
 
         return admin_queries.get_role_assignment_result(connection, user_id)
+
+
+def set_user_active_status(
+    *,
+    user_id: int,
+    is_active: bool,
+) -> dict[str, Any] | None:
+    with session.transaction_scope() as connection:
+        context = admin_queries.get_user_status_context(connection, user_id)
+        if context is None:
+            return None
+        admin_queries.update_user_active_status(
+            connection,
+            user_id=user_id,
+            is_active=is_active,
+        )
+        return {
+            "user_id": user_id,
+            "is_active": is_active,
+        }
 
 
 def list_appointments(
