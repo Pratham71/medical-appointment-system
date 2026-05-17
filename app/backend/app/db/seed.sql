@@ -120,16 +120,16 @@ INSERT INTO appointment_slots (
     (4, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), '11:00:00', '11:30:00'),
     -- professor slots
     (5, 1, 2, DATE_ADD(CURRENT_DATE, INTERVAL 3 DAY), '09:00:00', '09:30:00'),
-    (6, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY), '10:00:00', '10:30:00'),
-    (7, 1, 1, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), '11:00:00', '11:30:00'),
+    (6, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), '10:00:00', '10:30:00'),
+    (7, 1, 1, CURRENT_DATE,                            '11:00:00', '11:30:00'),
     -- college-staff slots
     (8, 1, 2, DATE_ADD(CURRENT_DATE, INTERVAL 4 DAY), '09:30:00', '10:00:00'),
-    (9, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '09:00:00', '09:30:00'),
-    (10, 1, 1, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '10:30:00', '11:00:00'),
+    (9, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), '09:00:00', '09:30:00'),
+    (10, 1, 1, CURRENT_DATE,                           '10:30:00', '11:00:00'),
     -- hostel-staff slots
-    (11, 1, 2, DATE_ADD(CURRENT_DATE, INTERVAL 5 DAY), '10:00:00', '10:30:00'),
-    (12, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), '09:30:00', '10:00:00'),
-    (13, 1, 1, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '11:30:00', '12:00:00');
+    (11, 1, 2, DATE_ADD(CURRENT_DATE, INTERVAL 2 DAY), '10:00:00', '10:30:00'),
+    (12, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '09:30:00', '10:00:00'),
+    (13, 1, 1, CURRENT_DATE,                            '11:30:00', '12:00:00');
 
 INSERT INTO appointments (appointment_id, student_id, slot_id, status_id, reason, cancellation_reason) VALUES
     -- student
@@ -147,6 +147,11 @@ INSERT INTO appointments (appointment_id, student_id, slot_id, status_id, reason
     (9, 4, 11, 1, 'Routine checkup', NULL),
     (10, 4, 12, 3, 'Headache and fatigue', NULL),
     (11, 4, 13, 2, 'Consultation', 'No-show');
+
+INSERT INTO emergency_alerts (student_id, reason, location, contact_number, message) VALUES
+    (2, 'Injury',           'Lab Block B, Room 101', NULL, 'Twisted ankle during lab session'),
+    (3, 'Chest pain',       'Hostel Block C',        NULL, 'Mild chest discomfort after lunch'),
+    (4, 'Allergic reaction','Cafeteria',             NULL, 'Rash after eating');
 
 INSERT INTO medical_notes (note_id, appointment_id, diagnosis, remarks) VALUES
     (1, 2, 'Seasonal fever', 'Rest advised for two days');

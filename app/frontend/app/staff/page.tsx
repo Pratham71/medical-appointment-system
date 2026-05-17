@@ -14,21 +14,11 @@ export default function StaffDashboardPage() {
       router.replace("/login");
       return;
     }
-    if (user.role_name === "student") {
-      router.replace("/students");
-      return;
-    }
-    if (user.role_name === "doctor") {
-      router.replace("/doctors");
-      return;
-    }
-    if (user.role_name === "admin") {
-      router.replace("/admin");
-      return;
-    }
-    if (user.role_name !== "staff") {
-      router.replace("/login");
-    }
+    const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+    if (PATIENT_ROLES.includes(user.role_name)) { router.replace("/students"); return; }
+    if (user.role_name === "doctor") { router.replace("/doctors"); return; }
+    if (user.role_name === "admin") { router.replace("/admin"); return; }
+    if (user.role_name !== "staff") { router.replace("/login"); }
   }, [router]);
 
   return (
