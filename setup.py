@@ -28,6 +28,35 @@ RATE_LIMIT_ENABLED=true
 """
 
 
+NPM_MAX_VERSION = (11, 11, 11)
+
+
+def parse_version(v: str) -> tuple[int, ...]:
+    """Convert a version string like '10.2.3' to a comparable tuple."""
+    try:
+        return tuple(int(x) for x in v.strip().split(".")[:3])
+    except ValueError:
+        return (0,)
+
+
+def check_npm_version() -> None:
+    """Warn and exit if the installed npm version exceeds the supported maximum."""
+    try:
+        raw = subprocess.check_output(["npm", "--version"], text=True).strip()
+    except Exception:
+        return  # npm not found — already caught by check()
+    installed = parse_version(raw)
+    max_v = NPM_MAX_VERSION
+    if installed > max_v:
+        max_str = ".".join(str(x) for x in max_v)
+        print(
+            f"\n  npm {raw} is installed but this project requires npm <= {max_str}.\n"
+            f"  Downgrade with:  npm install -g npm@{max_str}\n"
+        )
+        sys.exit(1)
+    print(f"  ✓  npm {raw} (within supported range <= {'.'.join(str(x) for x in max_v)})")
+
+
 def run(cmd: list[str], cwd: Path | None = None) -> bool:
     print(f"  $ {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd)
@@ -46,8 +75,8 @@ def main() -> None:
 
     # ── Check prerequisites ───────────────────────────────────────────────────
     print("Checking prerequisites:")
-    py_ok  = check("python") or check("python3")
-    uv_ok  = check("uv")
+    py_ok   = check("python") or check("python3")
+    uv_ok   = check("uv")
     node_ok = check("node")
     npm_ok  = check("npm")
 
@@ -63,6 +92,9 @@ def main() -> None:
             print(f"    • {m}")
         print("\nInstall them and re-run setup.py.\n")
         sys.exit(1)
+
+    if npm_ok:
+        check_npm_version()
 
     print()
 
