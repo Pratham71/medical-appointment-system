@@ -1,4 +1,5 @@
-from datetime import date, time
+from datetime import date, datetime, time
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -60,3 +61,16 @@ class StudentCertificateSummary(BaseModel):
     leave_start_date: date | None = None
     leave_end_date: date | None = None
     certificate_notes: str | None = None
+
+
+class StudentEmergencyAlertSummary(BaseModel):
+    alert_id: int
+    reason: str
+    location: str
+    contact_number: str | None = None
+    message: str
+    status: Literal["unread", "acknowledged", "resolved"]
+    created_at: datetime
+    acknowledged_at: datetime | None = None
+    resolved_at: datetime | None = None
+    resolution_note: str | None = None

@@ -4,7 +4,15 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 
-AssignableRole = Literal["student", "professor", "doctor", "staff", "admin"]
+AssignableRole = Literal[
+    "student",
+    "professor",
+    "college-staff",
+    "hostel-staff",
+    "doctor",
+    "staff",
+    "admin",
+]
 
 
 class AdminDashboard(BaseModel):
@@ -41,7 +49,12 @@ class AdminRoleAssignmentRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_required_profile_fields(self) -> "AdminRoleAssignmentRequest":
-        if self.role_name in {"student", "professor"}:
+        if self.role_name in {
+            "student",
+            "professor",
+            "college-staff",
+            "hostel-staff",
+        }:
             if not self.roll_number or not self.department or self.year_level is None:
                 raise ValueError(
                     "roll_number, department, and year_level are required"
@@ -59,6 +72,12 @@ class AdminRoleAssignmentResponse(BaseModel):
     student_id: int | None = None
     staff_id: int | None = None
     message: str = "User role updated"
+
+
+class AdminUserStatusResponse(BaseModel):
+    user_id: int
+    is_active: bool
+    message: str
 
 
 class AdminAppointmentFilters(BaseModel):
@@ -132,5 +151,18 @@ class AdminEmergencyAlertSummary(BaseModel):
     student_id: int
     student_name: str
     roll_number: str
+    reason: str
+    location: str
+    contact_number: str | None = None
     message: str
+    status: Literal["unread", "acknowledged", "resolved"]
     created_at: datetime
+    acknowledged_by: int | None = None
+    acknowledged_at: datetime | None = None
+    resolved_by: int | None = None
+    resolved_at: datetime | None = None
+    resolution_note: str | None = None
+
+
+class EmergencyAlertResolveRequest(BaseModel):
+    resolution_note: str | None = Field(default=None, max_length=1000)

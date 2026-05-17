@@ -8,6 +8,7 @@ from app.backend.app.api.routes import (
     doctors,
     emergencies,
     reports,
+    staff,
     students,
 )
 
@@ -20,3 +21,4 @@ api_router.include_router(emergencies.router)
 api_router.include_router(reports.router)
 api_router.include_router(certificates.router)
 api_router.include_router(admin.router)
+api_router.include_router(staff.router)

@@ -16,6 +16,7 @@ from app.backend.app.schemas.doctor import (
     PatientHistoryItem,
     PatientSearchResult,
 )
+from app.backend.app.services import notification_service
 
 
 _WEEKDAY_NAMES = {
@@ -92,6 +93,8 @@ def upsert_availability_override(
     )
     if row is None:
         raise NotFoundError("Doctor availability override was not found")
+    for appointment_id in row.get("cancelled_appointment_ids", []):
+        notification_service.send_appointment_cancelled(appointment_id)
     return DoctorAvailabilityOverride(**row)
 
 

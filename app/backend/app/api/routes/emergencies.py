@@ -20,6 +20,9 @@ def send_alert(
     try:
         return emergency_service.create_alert(
             student_id=student_id,
+            reason=payload.reason,
+            location=payload.location,
+            contact_number=payload.contact_number,
             message=payload.message,
         )
     except Exception as exc:

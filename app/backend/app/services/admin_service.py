@@ -12,7 +12,9 @@ from app.backend.app.schemas.admin import (
     AdminRoleAssignmentResponse,
     AdminStaffSummary,
     AdminStudentSummary,
+    AdminUserStatusResponse,
     AdminUserSummary,
+    EmergencyAlertResolveRequest,
 )
 
 
@@ -60,6 +62,49 @@ def assign_user_role(
     return AdminRoleAssignmentResponse(**result)
 
 
+def deactivate_user(
+    user_id: int,
+    actor_user_id: int,
+) -> AdminUserStatusResponse:
+    return _set_user_active_status(
+        user_id,
+        actor_user_id=actor_user_id,
+        is_active=False,
+        message="User deactivated",
+    )
+
+
+def activate_user(
+    user_id: int,
+    actor_user_id: int,
+) -> AdminUserStatusResponse:
+    return _set_user_active_status(
+        user_id,
+        actor_user_id=actor_user_id,
+        is_active=True,
+        message="User activated",
+    )
+
+
+def _set_user_active_status(
+    user_id: int,
+    *,
+    actor_user_id: int,
+    is_active: bool,
+    message: str,
+) -> AdminUserStatusResponse:
+    if user_id == actor_user_id and not is_active:
+        raise ConflictError("Admins cannot deactivate their own account")
+
+    result = admin_repo.set_user_active_status(
+        user_id=user_id,
+        is_active=is_active,
+    )
+    if result is None:
+        raise NotFoundError("User was not found")
+    return AdminUserStatusResponse(**result, message=message)
+
+
 def list_appointments(
     filters: AdminAppointmentFilters,
 ) -> list[AdminAppointmentSummary]:
@@ -95,3 +140,37 @@ def list_staff(q: str | None, limit: int) -> list[AdminStaffSummary]:
 def list_emergency_alerts(limit: int) -> list[AdminEmergencyAlertSummary]:
     rows = admin_repo.list_emergency_alerts(limit)
     return [AdminEmergencyAlertSummary(**row) for row in rows]
+
+
+def acknowledge_emergency_alert(
+    alert_id: int,
+    *,
+    actor_user_id: int,
+) -> AdminEmergencyAlertSummary:
+    result = admin_repo.acknowledge_emergency_alert(
+        alert_id=alert_id,
+        actor_user_id=actor_user_id,
+    )
+    if result is None:
+        raise NotFoundError("Emergency alert was not found")
+    return AdminEmergencyAlertSummary(**result)
+
+
+def resolve_emergency_alert(
+    alert_id: int,
+    payload: EmergencyAlertResolveRequest,
+    *,
+    actor_user_id: int,
+) -> AdminEmergencyAlertSummary:
+    result = admin_repo.resolve_emergency_alert(
+        alert_id=alert_id,
+        actor_user_id=actor_user_id,
+        resolution_note=(
+            payload.resolution_note.strip()
+            if payload.resolution_note and payload.resolution_note.strip()
+            else None
+        ),
+    )
+    if result is None:
+        raise NotFoundError("Emergency alert was not found")
+    return AdminEmergencyAlertSummary(**result)

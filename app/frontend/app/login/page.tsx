@@ -2,8 +2,15 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { login, setSession } from "@/lib/api";
+
+const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
+function isPatientRole(roleName: string) {
+  return PATIENT_ROLES.includes(roleName);
+}
 
 function Spinner() {
   return (
@@ -53,7 +60,8 @@ export default function LoginPage() {
       if (res.user.role_name === "doctor") router.replace("/doctors");
       else if (res.user.role_name === "admin") router.replace("/admin");
       else if (res.user.role_name === "staff") router.replace("/staff");
-      else router.replace("/students");
+      else if (isPatientRole(res.user.role_name)) router.replace("/students");
+      else router.replace("/login");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
       if (msg.includes("429") || msg.toLowerCase().includes("too many")) {
@@ -246,6 +254,17 @@ export default function LoginPage() {
             <button className="text-teal-600 hover:text-teal-700 transition-colors">
               Forgot password?
             </button>
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45 }}
+            className="mt-3 text-center text-sm text-brand-muted"
+          >
+            New student?{" "}
+            <Link href="/signup" className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
+              Create account
+            </Link>
           </motion.p>
         </div>
       </motion.div>

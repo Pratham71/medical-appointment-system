@@ -12,11 +12,13 @@ Current MVP Notes
 - MySQL is selected as the database provider.
 - Backend repositories call MySQL query functions.
 - Protected API routes require JWT Bearer authentication.
-- Role-based access is enforced for student, professor, doctor, staff, and admin-supported routes.
-- Professors use the same appointment/report/certificate workflow as students; the API exposes `role_name = professor` so the frontend can label the user differently.
-- New signup accounts are created as student/patient accounts by default; admin-only role assignment can later change them to professor, doctor, staff, or admin.
-- Admin backend routes are available for dashboard metrics, user role assignment, appointment oversight, directories, and emergency alert review.
-- Staff login and a safe staff landing page are implemented; full staff workflows are still tracked in GitHub issue #12.
+- Role-based access is enforced for student, professor, college-staff, hostel-staff, doctor, staff, and admin-supported routes.
+- Professors, college-staff, and hostel-staff use the same appointment/report/certificate workflow as students; the API preserves each distinct `role_name` for frontend labeling.
+- New signup accounts are created as student/patient accounts by default; admin-only role assignment can later change them to professor, college-staff, hostel-staff, doctor, staff, or admin.
+- Admin backend routes are available for dashboard metrics, user role assignment, user activation/deactivation, appointment oversight, directories, and emergency alert review.
+- Emergency alert review includes context fields plus acknowledge/resolve lifecycle actions for admin/staff responders.
+- Staff workflow APIs are implemented for dashboard counts and appointment lookup/oversight. Staff can cancel appointments with a structured reason through the shared cancellation endpoint.
+- Email notifications are environment-driven and disabled by default; when enabled, SMTP dispatch is best-effort and does not block the appointment/document workflow.
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
 - Doctor patient search supports name or roll-number lookup and scopes doctor users to their own patients.
@@ -29,7 +31,7 @@ Current MVP Notes
 Auth Requirements
 - Use `Authorization: Bearer <access_token>` for protected routes.
 - Public routes: `POST /auth/signup`, `POST /auth/login`, and `GET /health`.
-- Protected routes: student/professor, doctor, admin, appointment, report, certificate, logout, and `/auth/me`.
+- Protected routes: student/professor/college-staff/hostel-staff, staff, doctor, admin, appointment, report, certificate, logout, and `/auth/me`.
 - Return `401` for missing/invalid tokens.
 - Return `403` for valid users without the required role.
 
@@ -48,36 +50,58 @@ Signup notes:
 - `POST /auth/signup` accepts name, email, password, roll_number, department, and year_level.
 - Signup does not accept a role field.
 - Signup always returns an authenticated user with `role_name = student`.
-- Professors must be changed from student to professor by an admin after signup.
+- Professors, college-staff, and hostel-staff must be changed from student by an admin after signup.
 
 Admin
 GET /admin/dashboard
 GET /admin/users
 PATCH /admin/users/{user_id}/role
+PATCH /admin/users/{user_id}/deactivate
+PATCH /admin/users/{user_id}/activate
+DELETE /admin/users/{user_id}
 GET /admin/appointments
 GET /admin/students
 GET /admin/doctors
 GET /admin/staff
 GET /admin/emergency-alerts
+PATCH /admin/emergency-alerts/{alert_id}/acknowledge
+PATCH /admin/emergency-alerts/{alert_id}/resolve
 
 Admin notes:
-- All admin endpoints require a user with `role_name = admin`.
+- Admin endpoints require `role_name = admin`, except emergency alert acknowledge/resolve actions also allow `role_name = staff`.
 - `GET /admin/dashboard` returns high-level counts for students, professors, doctors, staff, appointment statuses, reports, certificates, and emergency alerts.
 - `GET /admin/users` supports `q`, `role_name`, and `limit` query parameters for role management screens.
-- `PATCH /admin/users/{user_id}/role` requires `Idempotency-Key` and can assign `student`, `professor`, `doctor`, `staff`, or `admin`.
-- Student and professor role assignment uses the existing patient/student profile fields: `roll_number`, `department`, and `year_level`.
+- `PATCH /admin/users/{user_id}/role` requires `Idempotency-Key` and can assign `student`, `professor`, `college-staff`, `hostel-staff`, `doctor`, `staff`, or `admin`.
+- `PATCH /admin/users/{user_id}/deactivate`, `PATCH /admin/users/{user_id}/activate`, and `DELETE /admin/users/{user_id}` require `Idempotency-Key`; delete is a safe soft-deactivate operation and does not hard-delete medical records.
+- Student, professor, college-staff, and hostel-staff role assignment uses the existing patient/student profile fields: `roll_number`, `department`, and `year_level`.
 - Doctor and staff role assignment uses `employee_number` and optional `specialization`.
 - Role changes return `409` when the change would remove a patient/staff profile that already has appointment or slot history.
+- Admins cannot deactivate their own account.
+- `GET /admin/emergency-alerts` returns reason, location, contact_number, status, acknowledgement fields, resolution fields, and resolution_note.
+- `PATCH /admin/emergency-alerts/{alert_id}/acknowledge` requires `Idempotency-Key` and stores the responder user/time.
+- `PATCH /admin/emergency-alerts/{alert_id}/resolve` requires `Idempotency-Key` and stores the responder user/time plus optional `resolution_note`.
+- Emergency alert acknowledge/resolve endpoints allow `admin` and `staff` roles.
+
+Staff
+GET /staff/dashboard
+GET /staff/appointments
+
+Staff notes:
+- Staff endpoints require `role_name = staff` or `role_name = admin`.
+- `GET /staff/dashboard` returns appointment and emergency-alert counts for front-desk triage.
+- `GET /staff/appointments` supports `status`, `from_date`, `to_date`, and `limit`.
 
 Students
 GET /students/dashboard
 GET /students/appointments
 GET /students/reports
 GET /students/certificates
+GET /students/emergency-alerts
 
-Student/professor notes:
-- Both `student` and `professor` roles can use these endpoints.
+Student/professor/patient-equivalent notes:
+- `student`, `professor`, `college-staff`, and `hostel-staff` roles can use these endpoints.
 - The role name is different for frontend labeling, but backend permissions and patient records are the same.
+- `GET /students/emergency-alerts` returns the authenticated user's own emergency alerts with status `unread`, `acknowledged`, or `resolved`.
 
 Doctors
 GET /doctors/dashboard
@@ -104,11 +128,11 @@ PATCH /appointments/{id}/cancel
 PATCH /appointments/{id}/complete
 
 Appointment cancellation notes:
-- Students can cancel their own booked appointments without a request body.
-- Doctors and admins can cancel accessible booked appointments with a request body containing `reason_code` and optional `note`.
-- Supported doctor/admin `reason_code` values: `no_show`, `student_request`, `doctor_unavailable`, `emergency_priority`, `duplicate_booking`, `other`.
+- Students and patient-equivalent roles can cancel their own booked appointments without a request body.
+- Doctors, staff, and admins can cancel accessible booked appointments with a request body containing `reason_code` and optional `note`.
+- Supported staff/doctor/admin `reason_code` values: `no_show`, `student_request`, `doctor_unavailable`, `emergency_priority`, `duplicate_booking`, `other`.
 - Notes are optional for every reason, including `other`.
-- Doctor/admin cancellation reasons are stored in `appointments.cancellation_reason`, and cancelling releases the appointment slot.
+- Staff/doctor/admin cancellation reasons are stored in `appointments.cancellation_reason`, and cancelling releases the appointment slot.
 
 Reports
 POST /reports/{appointment_id}/notes
@@ -122,10 +146,12 @@ Emergency
 POST /emergency/alert
 
 Emergency alert notes:
-- Student-only endpoint.
+- Student/patient-equivalent endpoint.
 - Requires `Authorization: Bearer <access_token>` and `Idempotency-Key`.
-- Stores an `emergency_alerts` row with student identity, message, and timestamp.
-- External email/SMS/push delivery is future scope until a notification provider is selected.
+- Request body requires `reason` and `location`, and accepts optional `contact_number` and optional `message`.
+- Stores an `emergency_alerts` row with student identity, context fields, message, timestamp, and lifecycle fields.
+- New alerts start with status `unread`; acknowledgement changes status to `acknowledged`; resolution changes status to `resolved`.
+- Real-time external SMS/push delivery is future scope. Email dispatch is available through environment-driven SMTP settings.
 
 Certificates
 POST /certificates/{appointment_id}
@@ -138,6 +164,11 @@ Certificate request/response notes:
 - Completed and cancelled appointments are locked; doctors cannot issue or update certificates after the appointment reaches a terminal status.
 - Leave date fields must be provided together and `leave_end_date` must be on or after `leave_start_date`.
 - Certificate responses include appointment reference, patient name, issuing doctor, appointment date, appointment reason, diagnosis, remarks, leave dates, and certificate notes where available.
+
+Notifications
+- Set `EMAIL_NOTIFICATIONS_ENABLED=true` plus SMTP settings to enable email notifications.
+- Supported notification events: appointment booked, appointment cancelled with reason, doctor-unavailability auto-cancel, report/prescription updated, and certificate available.
+- SMTP provider failures are treated as best-effort notification failures and do not roll back appointment or document writes.
 
 Future APIs
 GET /live/queue

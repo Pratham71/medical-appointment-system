@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { logout } from "@/lib/api";
+import { logout, getStoredUser } from "@/lib/api";
 import Modal from "@/components/ui/Modal";
 
 interface NavItem {
@@ -53,6 +53,15 @@ const studentNav: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/students/emergency-alerts",
+    label: "Emergency Alerts",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      </svg>
+    ),
+  },
 ];
 
 const doctorNav: NavItem[] = [
@@ -92,6 +101,15 @@ const doctorNav: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/doctors/emergency-alerts",
+    label: "Emergency Alerts",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      </svg>
+    ),
+  },
 ];
 
 const adminNav: NavItem[] = [
@@ -124,7 +142,7 @@ const adminNav: NavItem[] = [
   },
   {
     href: "/admin/students",
-    label: "Students & Professors",
+    label: "Students",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
@@ -160,6 +178,16 @@ const adminNav: NavItem[] = [
   },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  student: "Student",
+  professor: "Professor",
+  "college-staff": "College Staff",
+  "hostel-staff": "Hostel Staff",
+  doctor: "Doctor",
+  admin: "Administrator",
+  staff: "Staff",
+};
+
 const staffNav: NavItem[] = [
   {
     href: "/staff",
@@ -170,12 +198,27 @@ const staffNav: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/staff/emergency-alerts",
+    label: "Emergency Alerts",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Sidebar({ role }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [displayRole, setDisplayRole] = useState("");
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user) setDisplayRole(user.role_name);
+  }, []);
   const nav =
     role === "student"
       ? studentNav
@@ -254,8 +297,15 @@ export default function Sidebar({ role }: Props) {
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-brand-border">
+      {/* Role badge + Logout */}
+      <div className="p-3 border-t border-brand-border space-y-0.5">
+        {displayRole && (
+          <div className="px-3 py-1.5">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 ring-1 ring-teal-200">
+              {ROLE_LABELS[displayRole] ?? displayRole}
+            </span>
+          </div>
+        )}
         <button
           onClick={() => setConfirmLogout(true)}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors"

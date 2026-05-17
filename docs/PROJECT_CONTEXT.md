@@ -14,14 +14,16 @@ MVP Scope
 - Prescriptions
 - Certificates
 - Basic dashboard stats
-- Staff login safe landing
+- Staff login safe landing and backend appointment oversight
+- Admin role and user-status management
+- Emergency alert context, acknowledgement, resolution, and student-visible status
+- Email notifications for appointment/document updates
 
 Future Scope
-- Full staff workflow
-- Full admin dashboard and workflows
+- Active user presence tracking
 - Walk-in management
 - Live queue system
-- Notifications
+- SMS/push notification providers
 - Analytics
 - OAuth
 - ORM migration
@@ -30,9 +32,11 @@ Database Decision
 - MySQL is selected for the MVP database.
 - Schema and seed files are stored under `app/backend/app/db/`.
 
-Current Open Role Gap
-- Staff login and seed account are implemented.
-- Full staff workflow planning is still tracked in GitHub issue #12.
+Current Role Notes
+- Staff login, seed account, dashboard API, appointment lookup API, and cancellation with reason are implemented.
+- Professor, college-staff, and hostel-staff users reuse the student/patient workflow with distinct role names for labeling.
+- Admin delete/remove is implemented as soft-deactivation through `users.is_active`.
+- Emergency alerts now capture reason, location, optional contact number, and move through unread, acknowledged, and resolved states.
 
 ER Diagram
 - Not required at this stage

@@ -50,9 +50,13 @@ export default function AdminDashboardPage() {
     Promise.all([
       getAdminDashboard(),
       getAdminAppointments({ limit: 6 }),
-      getAdminEmergencyAlerts(3),
+      getAdminEmergencyAlerts(20),
     ])
-      .then(([d, a, al]) => { setDash(d); setAppts(a); setAlerts(al); })
+      .then(([d, a, al]) => {
+        setDash(d);
+        setAppts(a);
+        setAlerts(al.filter((x) => x.status !== "resolved").slice(0, 3));
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"));
   }, [router]);
 
@@ -159,9 +163,9 @@ export default function AdminDashboardPage() {
               <div className="bg-white rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border shadow-card">
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-brand-border">
                   <h2 className="text-sm font-semibold text-brand-text">Emergency Alerts</h2>
-                  {dash.emergency_alerts > 0 && (
+                  {alerts.length > 0 && (
                     <span className="text-xs bg-red-500 text-white rounded-full px-2 py-0.5 font-medium">
-                      {dash.emergency_alerts}
+                      {alerts.length} active
                     </span>
                   )}
                 </div>
@@ -172,6 +176,12 @@ export default function AdminDashboardPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-brand-text truncate">{a.student_name}</p>
                           <p className="text-xs text-brand-muted">{a.roll_number}</p>
+                          <div className="mt-1">
+                            <StatusBadge status={a.status} />
+                          </div>
+                          <p className="text-xs text-brand-muted mt-1">
+                            {a.reason} - {a.location}
+                          </p>
                           <p className="text-xs text-brand-text mt-1 line-clamp-2">{a.message}</p>
                         </div>
                         <span className="text-xs text-brand-muted whitespace-nowrap flex-shrink-0">

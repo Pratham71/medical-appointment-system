@@ -1,8 +1,15 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Select from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAdminUsers, assignUserRole, getStoredUser } from "@/lib/api";
+import {
+  activateUser,
+  assignUserRole,
+  deactivateUser,
+  getAdminUsers,
+  getStoredUser,
+} from "@/lib/api";
 import type {
   AdminUserSummary,
   AdminRoleAssignmentRequest,
@@ -15,12 +22,22 @@ import ToastContainer, { useToast } from "@/components/ui/Toast";
 const ROLE_BADGE: Record<string, string> = {
   student: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
   professor: "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
+  "college-staff": "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200",
+  "hostel-staff": "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200",
   doctor: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
   staff: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   admin: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
 };
 
-const ROLES: AssignableRole[] = ["student", "professor", "doctor", "staff", "admin"];
+const ROLES: AssignableRole[] = [
+  "student",
+  "professor",
+  "college-staff",
+  "hostel-staff",
+  "doctor",
+  "staff",
+  "admin",
+];
 
 interface RoleForm {
   role_name: AssignableRole;
@@ -51,7 +68,11 @@ function RoleAssignModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const needsAcademic = form.role_name === "student" || form.role_name === "professor";
+  const needsAcademic =
+    form.role_name === "student" ||
+    form.role_name === "professor" ||
+    form.role_name === "college-staff" ||
+    form.role_name === "hostel-staff";
   const needsEmployee = form.role_name === "doctor" || form.role_name === "staff";
 
   async function handleSubmit() {
@@ -118,15 +139,14 @@ function RoleAssignModal({
         <div className="mt-4 space-y-3">
           <div>
             <label className="block text-xs font-medium text-brand-muted mb-1">Role</label>
-            <select
+            <Select
               value={form.role_name}
               onChange={(e) => setForm({ ...form, role_name: e.target.value as AssignableRole })}
-              className="w-full border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {needsAcademic && (
@@ -135,16 +155,15 @@ function RoleAssignModal({
               {field("Department", "department", "e.g. Computer Science")}
               <div>
                 <label className="block text-xs font-medium text-brand-muted mb-1">Year Level</label>
-                <select
+                <Select
                   value={form.year_level}
                   onChange={(e) => setForm({ ...form, year_level: e.target.value })}
-                  className="w-full border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Select year</option>
                   {[1, 2, 3, 4, 5, 6].map((y) => (
                     <option key={y} value={y}>Year {y}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </>
           )}
@@ -186,6 +205,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<AdminUserSummary | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<AdminUserSummary | null>(null);
 
   const fetchUsers = useCallback(
     (q: string, role: string) => {
@@ -216,8 +236,87 @@ export default function AdminUsersPage() {
     fetchUsers(query, roleFilter);
   }
 
+  async function handleToggleActive(user: AdminUserSummary) {
+    if (!user.is_active) {
+      try {
+        const res = await activateUser(user.user_id);
+        show(res.message, "success");
+        fetchUsers(query, roleFilter);
+      } catch (e: unknown) {
+        show(e instanceof Error ? e.message : "Failed to activate user", "warning");
+      }
+      return;
+    }
+    setConfirmTarget(user);
+  }
+
+  async function handleConfirmDeactivate() {
+    if (!confirmTarget) return;
+    setConfirmTarget(null);
+    try {
+      const res = await deactivateUser(confirmTarget.user_id);
+      show(res.message, "success");
+      fetchUsers(query, roleFilter);
+    } catch (e: unknown) {
+      show(e instanceof Error ? e.message : "Failed to deactivate user", "warning");
+    }
+  }
+
   return (
     <DashboardShell role="admin" title="Users">
+      {/* Deactivate confirmation modal */}
+      <AnimatePresence>
+        {confirmTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          >
+            <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmTarget(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="relative w-full max-w-sm rounded-card bg-white shadow-xl border border-brand-border p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-brand-text">Deactivate user</h3>
+                  <p className="text-xs text-brand-muted mt-0.5">This will block their login immediately</p>
+                </div>
+              </div>
+              <p className="text-sm text-brand-text mb-1">
+                Are you sure you want to deactivate <span className="font-semibold">{confirmTarget.name}</span>?
+              </p>
+              <p className="text-xs text-brand-muted mb-5">
+                {confirmTarget.email} · <span className="capitalize">{confirmTarget.role_name}</span>
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmTarget(null)}
+                  className="flex-1 px-4 py-2 text-sm rounded-btn border border-brand-border text-brand-muted hover:bg-brand-raised transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDeactivate}
+                  className="flex-1 px-4 py-2 text-sm rounded-btn bg-red-500 hover:bg-red-600 text-white font-medium transition"
+                >
+                  Deactivate
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="space-y-4">
         {/* Search bar */}
         <div className="bg-white rounded-card border border-brand-border shadow-card p-4 flex flex-wrap gap-3 items-center">
@@ -229,16 +328,12 @@ export default function AdminUsersPage() {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="flex-1 min-w-[200px] border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
+          <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="">All roles</option>
             {ROLES.map((r) => (
               <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
             ))}
-          </select>
+          </Select>
           <button
             onClick={handleSearch}
             className="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-700 text-white rounded-btn font-medium transition"
@@ -291,12 +386,35 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <button
-                        onClick={() => setSelected(u)}
-                        className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors font-medium"
-                      >
-                        Change Role
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                      {u.role_name === "admin" ? (
+                        <span
+                          title="Admin accounts cannot be modified"
+                          className="text-xs text-brand-muted border border-brand-border px-2.5 py-1 rounded-btn opacity-40 cursor-not-allowed select-none"
+                        >
+                          Protected
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setSelected(u)}
+                            className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors font-medium"
+                          >
+                            Change Role
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(u)}
+                            className={`text-xs border px-2.5 py-1 rounded-btn transition-colors font-medium ${
+                              u.is_active
+                                ? "text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                : "text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                            }`}
+                          >
+                            {u.is_active ? "Deactivate" : "Activate"}
+                          </button>
+                        </>
+                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}

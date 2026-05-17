@@ -71,6 +71,41 @@ export interface StudentCertificateSummary {
   certificate_notes?: string | null;
 }
 
+export type EmergencyAlertStatus = "unread" | "acknowledged" | "resolved";
+
+export interface EmergencyAlertCreatePayload {
+  reason: string;
+  location: string;
+  contact_number?: string | null;
+  message?: string | null;
+}
+
+export interface EmergencyAlertResponse {
+  alert_id: number;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  reason: string;
+  location: string;
+  contact_number: string | null;
+  message: string;
+  status: EmergencyAlertStatus;
+  created_at: string;
+}
+
+export interface StudentEmergencyAlertSummary {
+  alert_id: number;
+  reason: string;
+  location: string;
+  contact_number: string | null;
+  message: string;
+  status: EmergencyAlertStatus;
+  created_at: string;
+  acknowledged_at: string | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
+}
+
 export interface AppointmentSlot {
   slot_id: number;
   doctor_id: number;
@@ -262,7 +297,14 @@ export interface CertificateResponse {
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-export type AssignableRole = "student" | "professor" | "doctor" | "staff" | "admin";
+export type AssignableRole =
+  | "student"
+  | "professor"
+  | "college-staff"
+  | "hostel-staff"
+  | "doctor"
+  | "staff"
+  | "admin";
 
 export interface AdminDashboard {
   total_students: number;
@@ -304,6 +346,12 @@ export interface AdminRoleAssignmentResponse {
   role_name: string;
   student_id: number | null;
   staff_id: number | null;
+  message: string;
+}
+
+export interface AdminUserStatusResponse {
+  user_id: number;
+  is_active: boolean;
   message: string;
 }
 
@@ -359,6 +407,15 @@ export interface AdminEmergencyAlertSummary {
   student_id: number;
   student_name: string;
   roll_number: string;
+  reason: string;
+  location: string;
+  contact_number: string | null;
   message: string;
+  status: EmergencyAlertStatus;
   created_at: string;
+  acknowledged_by: number | null;
+  acknowledged_at: string | null;
+  resolved_by: number | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
 }

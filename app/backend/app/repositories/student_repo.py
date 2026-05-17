@@ -27,3 +27,8 @@ def list_reports(student_id: int) -> list[dict[str, Any]]:
 def list_certificates(student_id: int) -> list[dict[str, Any]]:
     with session.connection_scope() as connection:
         return student_queries.list_certificates(connection, student_id)
+
+
+def list_emergency_alerts(student_id: int) -> list[dict[str, Any]]:
+    with session.connection_scope() as connection:
+        return student_queries.list_emergency_alerts(connection, student_id)

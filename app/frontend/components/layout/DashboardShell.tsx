@@ -14,9 +14,12 @@ interface Props {
 }
 
 export default function DashboardShell({ role, title, children }: Props) {
+  const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
   const router = useRouter();
   const pathname = usePathname();
   const [userName, setUserName] = useState("");
+  const [actualRole, setActualRole] = useState("");
 
   useEffect(() => {
     const user = getStoredUser();
@@ -25,6 +28,7 @@ export default function DashboardShell({ role, title, children }: Props) {
       return;
     }
     setUserName(user.name);
+    setActualRole(user.role_name);
   }, [router]);
 
   return (
@@ -45,7 +49,7 @@ export default function DashboardShell({ role, title, children }: Props) {
           </motion.div>
         </AnimatePresence>
       </main>
-      {role === "student" && <EmergencyButton />}
+      {PATIENT_ROLES.includes(actualRole) && <EmergencyButton />}
     </div>
   );
 }

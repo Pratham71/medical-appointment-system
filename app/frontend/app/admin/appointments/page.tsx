@@ -2,6 +2,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { getAdminAppointments, getStoredUser } from "@/lib/api";
+import Select from "@/components/ui/Select";
 import type { AdminAppointmentSummary } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -93,16 +94,12 @@ export default function AdminAppointmentsPage() {
         <div className="bg-white rounded-card border border-brand-border shadow-card p-4 flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-xs font-medium text-brand-muted mb-1">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
+            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">All statuses</option>
               <option value="booked">Booked</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
-            </select>
+            </Select>
           </div>
           <div>
             <label className="block text-xs font-medium text-brand-muted mb-1">From date</label>

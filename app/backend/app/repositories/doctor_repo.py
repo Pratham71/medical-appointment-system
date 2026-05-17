@@ -61,6 +61,7 @@ def upsert_availability_override(
     note: str | None,
 ) -> dict[str, Any] | None:
     with session.transaction_scope() as connection:
+        cancelled_appointment_ids = []
         doctor_queries.upsert_availability_override(
             connection,
             staff_id=staff_id,
@@ -91,6 +92,7 @@ def upsert_availability_override(
                     end_time=end_time,
                 )
                 for appointment in appointments:
+                    cancelled_appointment_ids.append(int(appointment["appointment_id"]))
                     appointment_queries.cancel_appointment_with_reason(
                         connection,
                         appointment_id=appointment["appointment_id"],
@@ -99,11 +101,14 @@ def upsert_availability_override(
                         slot_id=appointment["slot_id"],
                         cancellation_reason=cancellation_reason,
                     )
-        return doctor_queries.get_availability_override(
+        row = doctor_queries.get_availability_override(
             connection,
             staff_id=staff_id,
             override_date=override_date,
         )
+        if row is not None:
+            row["cancelled_appointment_ids"] = cancelled_appointment_ids
+        return row
 
 
 def delete_availability_override(staff_id: int, override_date: date) -> None:

@@ -27,6 +27,9 @@ from app.backend.app.schemas.auth import (
 )
 
 
+PATIENT_ROLES = {"student", "professor", "college-staff", "hostel-staff"}
+
+
 def login(payload: LoginRequest) -> TokenResponse:
     tracker = get_login_attempt_tracker()
     settings = get_settings()
@@ -139,16 +142,19 @@ def can_access_appointment(
     allow_student: bool,
     allow_doctor: bool,
     allow_admin: bool,
+    allow_staff: bool = False,
 ) -> bool:
     role = user.role_name.lower()
     if role == "admin" and allow_admin:
+        return True
+    if role == "staff" and allow_staff:
         return True
 
     context = appointment_repo.get_access_context(appointment_id)
     if context is None:
         raise NotFoundError("Appointment was not found")
 
-    if role in {"student", "professor"} and allow_student:
+    if role in PATIENT_ROLES and allow_student:
         return context["student_id"] == get_student_id_for_user(user.user_id)
 
     if role == "doctor" and allow_doctor:
@@ -164,7 +170,7 @@ def can_access_student_records(
     role = user.role_name.lower()
     if role == "admin":
         return True
-    if role in {"student", "professor"}:
+    if role in PATIENT_ROLES:
         return student_id == get_student_id_for_user(user.user_id)
     if role == "doctor":
         staff_id = get_staff_id_for_user(user.user_id)

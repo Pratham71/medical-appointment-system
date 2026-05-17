@@ -303,6 +303,31 @@ def get_role_assignment_result(connection: Any, user_id: int) -> dict[str, Any] 
     return fetch_one(connection, sql, (user_id,))
 
 
+def get_user_status_context(connection: Any, user_id: int) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            users.user_id,
+            users.is_active
+        FROM users
+        WHERE users.user_id = %s
+    """
+    return fetch_one(connection, sql, (user_id,))
+
+
+def update_user_active_status(
+    connection: Any,
+    *,
+    user_id: int,
+    is_active: bool,
+) -> None:
+    sql = """
+        UPDATE users
+        SET users.is_active = %s
+        WHERE users.user_id = %s
+    """
+    execute(connection, sql, (is_active, user_id))
+
+
 def list_appointments(
     connection: Any,
     *,
@@ -400,7 +425,12 @@ def list_students(
             ON appointments.student_id = students.student_id
         LEFT JOIN appointment_statuses
             ON appointment_statuses.status_id = appointments.status_id
-        WHERE roles.role_name IN ('student', 'professor')
+        WHERE roles.role_name IN (
+            'student',
+            'professor',
+            'college-staff',
+            'hostel-staff'
+        )
             AND (
                 %s IS NULL
                 OR users.name LIKE %s
@@ -541,8 +571,21 @@ def list_emergency_alerts(
             emergency_alerts.student_id,
             users.name AS student_name,
             students.roll_number,
+            emergency_alerts.reason,
+            emergency_alerts.location,
+            emergency_alerts.contact_number,
             emergency_alerts.message,
-            emergency_alerts.created_at
+            CASE
+                WHEN emergency_alerts.resolved_at IS NOT NULL THEN 'resolved'
+                WHEN emergency_alerts.acknowledged_at IS NOT NULL THEN 'acknowledged'
+                ELSE 'unread'
+            END AS status,
+            emergency_alerts.created_at,
+            emergency_alerts.acknowledged_by,
+            emergency_alerts.acknowledged_at,
+            emergency_alerts.resolved_by,
+            emergency_alerts.resolved_at,
+            emergency_alerts.resolution_note
         FROM emergency_alerts
         INNER JOIN students
             ON students.student_id = emergency_alerts.student_id
@@ -553,3 +596,109 @@ def list_emergency_alerts(
     """
     params = [limit]
     return fetch_all(connection, sql, tuple(params))
+
+
+def get_emergency_alert_for_update(
+    connection: Any,
+    alert_id: int,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            emergency_alerts.alert_id,
+            emergency_alerts.acknowledged_at,
+            emergency_alerts.resolved_at
+        FROM emergency_alerts
+        WHERE emergency_alerts.alert_id = %s
+        FOR UPDATE
+    """
+    return fetch_one(connection, sql, (alert_id,))
+
+
+def acknowledge_emergency_alert(
+    connection: Any,
+    *,
+    alert_id: int,
+    actor_user_id: int,
+) -> None:
+    sql = """
+        UPDATE emergency_alerts
+        SET
+            emergency_alerts.acknowledged_by = COALESCE(
+                emergency_alerts.acknowledged_by,
+                %s
+            ),
+            emergency_alerts.acknowledged_at = COALESCE(
+                emergency_alerts.acknowledged_at,
+                CURRENT_TIMESTAMP
+            )
+        WHERE emergency_alerts.alert_id = %s
+    """
+    execute(connection, sql, (actor_user_id, alert_id))
+
+
+def resolve_emergency_alert(
+    connection: Any,
+    *,
+    alert_id: int,
+    actor_user_id: int,
+    resolution_note: str | None,
+) -> None:
+    sql = """
+        UPDATE emergency_alerts
+        SET
+            emergency_alerts.acknowledged_by = COALESCE(
+                emergency_alerts.acknowledged_by,
+                %s
+            ),
+            emergency_alerts.acknowledged_at = COALESCE(
+                emergency_alerts.acknowledged_at,
+                CURRENT_TIMESTAMP
+            ),
+            emergency_alerts.resolved_by = %s,
+            emergency_alerts.resolved_at = COALESCE(
+                emergency_alerts.resolved_at,
+                CURRENT_TIMESTAMP
+            ),
+            emergency_alerts.resolution_note = %s
+        WHERE emergency_alerts.alert_id = %s
+    """
+    execute(
+        connection,
+        sql,
+        (actor_user_id, actor_user_id, resolution_note, alert_id),
+    )
+
+
+def get_emergency_alert_summary(
+    connection: Any,
+    alert_id: int,
+) -> dict[str, Any] | None:
+    sql = """
+        SELECT
+            emergency_alerts.alert_id,
+            emergency_alerts.student_id,
+            users.name AS student_name,
+            students.roll_number,
+            emergency_alerts.reason,
+            emergency_alerts.location,
+            emergency_alerts.contact_number,
+            emergency_alerts.message,
+            CASE
+                WHEN emergency_alerts.resolved_at IS NOT NULL THEN 'resolved'
+                WHEN emergency_alerts.acknowledged_at IS NOT NULL THEN 'acknowledged'
+                ELSE 'unread'
+            END AS status,
+            emergency_alerts.created_at,
+            emergency_alerts.acknowledged_by,
+            emergency_alerts.acknowledged_at,
+            emergency_alerts.resolved_by,
+            emergency_alerts.resolved_at,
+            emergency_alerts.resolution_note
+        FROM emergency_alerts
+        INNER JOIN students
+            ON students.student_id = emergency_alerts.student_id
+        INNER JOIN users
+            ON users.user_id = students.user_id
+        WHERE emergency_alerts.alert_id = %s
+    """
+    return fetch_one(connection, sql, (alert_id,))

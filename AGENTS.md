@@ -23,6 +23,24 @@ Current backend additions for issue #11:
 - app/backend/app/services/admin_service.py
 - app/backend/app/db/migrations/2026_05_17_add_professor_role.sql
 
+Current backend additions for issues #12, #37, #39, #44, and #48:
+- app/backend/app/api/routes/staff.py
+- app/backend/app/db/queries/staff_queries.py
+- app/backend/app/db/queries/notification_queries.py
+- app/backend/app/repositories/staff_repo.py
+- app/backend/app/repositories/notification_repo.py
+- app/backend/app/schemas/staff.py
+- app/backend/app/services/staff_service.py
+- app/backend/app/services/notification_service.py
+- app/backend/app/db/migrations/2026_05_17_add_staff_patient_roles.sql
+
+Current backend additions for issues #43 and #46:
+- app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql
+- Emergency alert context fields are stored in `emergency_alerts.reason`, `location`, and `contact_number`.
+- Emergency alert lifecycle fields are `acknowledged_by`, `acknowledged_at`, `resolved_by`, `resolved_at`, and `resolution_note`.
+- Admin/staff responders use `PATCH /admin/emergency-alerts/{alert_id}/acknowledge` and `PATCH /admin/emergency-alerts/{alert_id}/resolve`.
+- Students use `GET /students/emergency-alerts` to see their own alert statuses.
+
 medical-appointment-system/
 ├── app/
 │   ├── backend/
@@ -123,6 +141,10 @@ Database Rules
 - Use transactions for appointment booking.
 - MySQL is the selected database provider for the MVP.
 - Professor users share the same patient workflow and profile table as student users; the role name remains distinct for frontend labeling.
+- College-staff and hostel-staff users also share the same patient workflow and profile table as student users; keep their role names distinct for frontend labeling.
+- Admin delete/remove actions must be soft-deactivation through `users.is_active`; do not hard-delete users with medical history.
+- Email notification delivery is best-effort and environment-driven; do not commit provider credentials.
+- Emergency alert statuses are derived from lifecycle timestamps: unresolved/unacknowledged = `unread`, acknowledged only = `acknowledged`, resolved = `resolved`.
 
 ERD Rule
 

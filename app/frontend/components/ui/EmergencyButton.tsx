@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendEmergencyAlert } from "@/lib/api";
+import Select from "@/components/ui/Select";
 import ToastContainer, { useToast } from "@/components/ui/Toast";
 
 const EMERGENCY_CONTACTS = [
@@ -13,12 +14,26 @@ const EMERGENCY_CONTACTS = [
 export default function EmergencyButton() {
   const [open, setOpen] = useState(false);
   const [alertSending, setAlertSending] = useState(false);
+  const [reason, setReason] = useState("Injury");
+  const [location, setLocation] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [message, setMessage] = useState("");
   const { toasts, show, dismiss } = useToast();
 
   const handleSendAlert = async () => {
+    if (!location.trim()) {
+      show("Add your current location", "warning");
+      return;
+    }
+
     setAlertSending(true);
     try {
-      await sendEmergencyAlert("Student triggered emergency alert from app");
+      await sendEmergencyAlert({
+        reason,
+        location: location.trim(),
+        contact_number: contactNumber.trim() || null,
+        message: message.trim() || null,
+      });
       show("Alert sent to infirmary", "success");
     } catch {
       show("Alert failed — please call directly", "warning");
@@ -115,6 +130,53 @@ export default function EmergencyButton() {
               </div>
 
               <div className="px-4 pb-3">
+                <div className="mb-3 space-y-2 rounded-lg border border-brand-border bg-brand-bg p-3">
+                  <label className="block text-xs font-medium text-brand-muted">
+                    Reason
+                    <Select
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      wrapperClassName="mt-1"
+                      className="focus:ring-red-400 hover:border-red-300"
+                    >
+                      <option value="Injury">Injury</option>
+                      <option value="Chest pain">Chest pain</option>
+                      <option value="Allergic reaction">Allergic reaction</option>
+                      <option value="Fainted">Fainted</option>
+                      <option value="Breathing issue">Breathing issue</option>
+                      <option value="Other">Other</option>
+                    </Select>
+                  </label>
+                  <label className="block text-xs font-medium text-brand-muted">
+                    Location
+                    <input
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Lab Block C, Room 204"
+                      className="mt-1 w-full rounded-btn border border-brand-border bg-white px-3 py-2 text-sm text-brand-text outline-none focus:border-red-300"
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-brand-muted">
+                    Contact number
+                    <input
+                      type="tel"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                      placeholder="+971 50 123 4567"
+                      className="mt-1 w-full rounded-btn border border-brand-border bg-white px-3 py-2 text-sm text-brand-text outline-none focus:border-red-300"
+                    />
+                  </label>
+                  <label className="block text-xs font-medium text-brand-muted">
+                    Notes
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={2}
+                      placeholder="Short details for infirmary staff"
+                      className="mt-1 w-full resize-none rounded-btn border border-brand-border bg-white px-3 py-2 text-sm text-brand-text outline-none focus:border-red-300"
+                    />
+                  </label>
+                </div>
                 <button
                   onClick={handleSendAlert}
                   disabled={alertSending}

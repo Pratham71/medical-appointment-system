@@ -43,9 +43,12 @@ export default function MyAppointmentsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
 
+  const PATIENT_ROLES = ["student", "professor", "college-staff", "hostel-staff"];
+
   useEffect(() => {
     const user = getStoredUser();
     if (!user) { router.replace("/login"); setLoading(false); return; }
+    if (!PATIENT_ROLES.includes(user.role_name)) { router.replace("/login"); setLoading(false); return; }
     getStudentAppointments()
       .then(setAppointments)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))

@@ -236,6 +236,47 @@ def test_seed_and_migration_include_professor_role():
     assert "'professor'" in migration
 
 
+def test_seed_and_migration_include_patient_equivalent_staff_roles():
+    seed = (DB_DIR / "seed.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_17_add_staff_patient_roles.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    for role_name in ["college-staff", "hostel-staff"]:
+        assert f"'{role_name}'" in seed
+        assert f"'{role_name}'" in migration
+
+    assert "college.staff@college.edu" in seed
+    assert "hostel.staff@college.edu" in seed
+    assert "college-staff" in seed
+    assert "hostel-staff" in seed
+
+
+def test_admin_queries_support_user_status_updates():
+    source = (QUERY_DIR / "admin_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "def get_user_status_context" in source
+    assert "def update_user_active_status" in source
+    assert "set users.is_active = %s" in source
+
+
+def test_staff_queries_keep_sql_in_staff_query_module():
+    source = (QUERY_DIR / "staff_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def get_dashboard_counts" in source
+    assert "def list_appointments" in source
+    assert "appointment_statuses.status_name" in source
+
+
+def test_notification_queries_keep_sql_in_query_module():
+    source = (QUERY_DIR / "notification_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def get_appointment_notification_context" in source
+    assert "student_users.email as student_email" in source
+
+
 def test_schema_and_migration_include_cancellation_reason():
     schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
     migration = (
@@ -350,12 +391,26 @@ def test_schema_and_migration_define_emergency_alerts():
     migration = (
         MIGRATION_DIR / "2026_05_16_add_emergency_alerts.sql"
     ).read_text(encoding="utf-8").lower()
+    lifecycle_migration = (
+        MIGRATION_DIR / "2026_05_17_update_emergency_alerts_context_lifecycle.sql"
+    ).read_text(encoding="utf-8").lower()
 
     assert "create table emergency_alerts" in schema
     assert "student_id int not null" in schema
+    assert "reason varchar(120) not null" in schema
+    assert "location varchar(255) not null" in schema
+    assert "contact_number varchar(30) null" in schema
     assert "message varchar(500) not null" in schema
+    assert "acknowledged_by int null" in schema
+    assert "acknowledged_at timestamp null" in schema
+    assert "resolved_by int null" in schema
+    assert "resolved_at timestamp null" in schema
+    assert "resolution_note varchar(1000) null" in schema
     assert "foreign key (student_id) references students(student_id)" in schema
     assert "create table if not exists emergency_alerts" in migration
+    assert "alter table emergency_alerts" in lifecycle_migration
+    assert "add column reason varchar(120) not null" in lifecycle_migration
+    assert "add column acknowledged_by int null" in lifecycle_migration
 
 
 def test_emergency_alert_response_schema_accepts_alert_context():
@@ -366,12 +421,19 @@ def test_emergency_alert_response_schema_accepts_alert_context():
         student_id=1,
         student_name="Aarav Sharma",
         roll_number="CSE-2026-001",
+        reason="Injury",
+        location="Lab Block C, Room 204",
+        contact_number="+971501234567",
         message="Need urgent medical help",
+        status="unread",
         created_at=datetime(2026, 5, 16, 12, 0),
     )
 
     assert response.student_name == "Aarav Sharma"
     assert response.roll_number == "CSE-2026-001"
+    assert response.reason == "Injury"
+    assert response.location == "Lab Block C, Room 204"
+    assert response.status == "unread"
 
 
 def test_emergency_service_defaults_blank_alert_message(monkeypatch):
@@ -379,27 +441,68 @@ def test_emergency_service_defaults_blank_alert_message(monkeypatch):
 
     captured = {}
 
-    def fake_create_alert(student_id: int, message: str):
+    def fake_create_alert(
+        *,
+        student_id: int,
+        reason: str,
+        location: str,
+        contact_number: str | None,
+        message: str,
+    ):
         captured["student_id"] = student_id
+        captured["reason"] = reason
+        captured["location"] = location
+        captured["contact_number"] = contact_number
         captured["message"] = message
         return {
             "alert_id": 1,
             "student_id": student_id,
             "student_name": "Aarav Sharma",
             "roll_number": "CSE-2026-001",
+            "reason": reason,
+            "location": location,
+            "contact_number": contact_number,
             "message": message,
+            "status": "unread",
             "created_at": datetime(2026, 5, 16, 12, 0),
         }
 
     monkeypatch.setattr(emergency_service.emergency_repo, "create_alert", fake_create_alert)
 
-    response = emergency_service.create_alert(1, "   ")
+    response = emergency_service.create_alert(
+        1,
+        reason="Injury",
+        location="Lab Block C",
+        contact_number=None,
+        message="   ",
+    )
 
     assert response.message == "Student requested emergency assistance"
     assert captured == {
         "student_id": 1,
+        "reason": "Injury",
+        "location": "Lab Block C",
+        "contact_number": None,
         "message": "Student requested emergency assistance",
     }
+
+
+def test_emergency_queries_support_context_and_lifecycle_fields():
+    source = (QUERY_DIR / "emergency_queries.py").read_text(encoding="utf-8").lower()
+    admin_source = (QUERY_DIR / "admin_queries.py").read_text(encoding="utf-8").lower()
+    student_source = (QUERY_DIR / "student_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "select *" not in source
+    assert "def insert_alert" in source
+    assert "emergency_alerts.reason" in source
+    assert "emergency_alerts.location" in source
+    assert "emergency_alerts.contact_number" in source
+    assert "case" in source
+    assert "resolved_at is not null" in source
+    assert "acknowledged_at is not null" in source
+    assert "def acknowledge_emergency_alert" in admin_source
+    assert "def resolve_emergency_alert" in admin_source
+    assert "def list_emergency_alerts" in student_source
 
 
 def test_query_files_keep_sql_parameterized_and_explicit():

@@ -39,7 +39,17 @@ def require_roles(*allowed_roles: str) -> Callable[[AuthenticatedUser], Authenti
 
 
 def require_student_id(
-    user: Annotated[AuthenticatedUser, Depends(require_roles("student", "professor"))],
+    user: Annotated[
+        AuthenticatedUser,
+        Depends(
+            require_roles(
+                "student",
+                "professor",
+                "college-staff",
+                "hostel-staff",
+            )
+        ),
+    ],
 ) -> int:
     try:
         return auth_service.get_student_id_for_user(user.user_id)
@@ -63,6 +73,7 @@ def ensure_appointment_access(
     allow_student: bool,
     allow_doctor: bool,
     allow_admin: bool,
+    allow_staff: bool = False,
 ) -> None:
     try:
         allowed = auth_service.can_access_appointment(
@@ -71,6 +82,7 @@ def ensure_appointment_access(
             allow_student=allow_student,
             allow_doctor=allow_doctor,
             allow_admin=allow_admin,
+            allow_staff=allow_staff,
         )
     except Exception as exc:
         raise service_error_to_http(exc) from exc

@@ -5,7 +5,21 @@ import { getAdminStudents, getStoredUser } from "@/lib/api";
 import type { AdminStudentSummary } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 
-type Tab = "student" | "professor";
+type Tab = "student" | "professor" | "college-staff" | "hostel-staff";
+
+const TAB_LABELS: Record<Tab, string> = {
+  student: "Students",
+  professor: "Professors",
+  "college-staff": "College Staff",
+  "hostel-staff": "Hostel Staff",
+};
+
+const TAB_BADGE_COLORS: Record<Tab, string> = {
+  student: "bg-teal-50 text-teal-700 ring-teal-200",
+  professor: "bg-purple-50 text-purple-700 ring-purple-200",
+  "college-staff": "bg-cyan-50 text-cyan-700 ring-cyan-200",
+  "hostel-staff": "bg-indigo-50 text-indigo-700 ring-indigo-200",
+};
 
 export default function AdminStudentsPage() {
   const router = useRouter();
@@ -40,7 +54,7 @@ export default function AdminStudentsPage() {
         <div className="flex flex-wrap items-center gap-3">
           {/* Tab switcher */}
           <div className="flex bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
-            {(["student", "professor"] as Tab[]).map((t) => (
+            {(["student", "professor", "college-staff", "hostel-staff"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -50,7 +64,7 @@ export default function AdminStudentsPage() {
                     : "text-brand-muted hover:text-brand-text hover:bg-brand-raised"
                 }`}
               >
-                {t === "student" ? "Students" : "Professors"}
+                {TAB_LABELS[t]}
                 {!loading && (
                   <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
                     tab === t ? "bg-teal-700 text-teal-100" : "bg-brand-raised text-brand-muted"
@@ -66,7 +80,7 @@ export default function AdminStudentsPage() {
           <div className="flex gap-2 flex-1 min-w-[240px]">
             <input
               type="text"
-              placeholder={`Search ${tab === "student" ? "students" : "professors"}…`}
+              placeholder={`Search ${TAB_LABELS[tab].toLowerCase()}…`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchAll(query)}
@@ -92,9 +106,7 @@ export default function AdminStudentsPage() {
                 <tr className="border-b border-brand-border bg-brand-bg">
                   <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Name</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Email</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">
-                    {tab === "student" ? "Roll No." : "ID"}
-                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Roll / ID</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Department</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Year</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Total Appts</th>
@@ -116,11 +128,7 @@ export default function AdminStudentsPage() {
                     <td className="px-5 py-3 text-brand-muted font-mono text-xs">{s.roll_number}</td>
                     <td className="px-5 py-3 text-brand-muted">{s.department}</td>
                     <td className="px-5 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ${
-                        tab === "professor"
-                          ? "bg-purple-50 text-purple-700 ring-purple-200"
-                          : "bg-teal-50 text-teal-700 ring-teal-200"
-                      }`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ${TAB_BADGE_COLORS[tab]}`}>
                         Y{s.year_level}
                       </span>
                     </td>
@@ -131,7 +139,7 @@ export default function AdminStudentsPage() {
                 {!loading && rows.length === 0 && !error && (
                   <tr>
                     <td colSpan={7} className="px-5 py-8 text-center text-brand-muted text-sm">
-                      No {tab === "student" ? "students" : "professors"} found
+                      No {TAB_LABELS[tab].toLowerCase()} found
                     </td>
                   </tr>
                 )}
@@ -140,7 +148,7 @@ export default function AdminStudentsPage() {
           </div>
           {!loading && (
             <div className="px-5 py-3 border-t border-brand-border text-xs text-brand-muted">
-              {rows.length} {tab === "student" ? "student" : "professor"}{rows.length !== 1 ? "s" : ""}
+              {rows.length} {TAB_LABELS[tab].toLowerCase().replace(/s$/, "")}{rows.length !== 1 ? "s" : ""}
             </div>
           )}
         </div>

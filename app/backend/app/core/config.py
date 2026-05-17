@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     login_max_failed_attempts: int = 5
     login_lockout_seconds: int = 300
     idempotency_key_ttl_seconds: int = 600
+    email_notifications_enabled: bool = False
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
