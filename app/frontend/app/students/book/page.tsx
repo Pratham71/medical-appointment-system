@@ -58,6 +58,25 @@ export default function BookAppointmentPage() {
       .catch(() => setDoctors([]));
   }, [fromDate]);
 
+  // Auto-poll slot availability every 30s on step 1 and every 20s on step 2
+  useEffect(() => {
+    if (step === 3) return;
+
+    const interval = setInterval(() => {
+      if (step === 1) {
+        getSlots(fromDate).then(setSlots).catch(() => {});
+        getDoctorsForDate(fromDate).then(setDoctors).catch(() => {});
+      } else if (step === 2 && selectedSlot) {
+        getAllSlotsForDoctor(selectedSlot.doctor_id, fromDate)
+          .then(setDetailedSlots)
+          .catch(() => {});
+        getSlots(fromDate).then(setSlots).catch(() => {});
+      }
+    }, step === 1 ? 30_000 : 20_000);
+
+    return () => clearInterval(interval);
+  }, [step, fromDate, selectedSlot]);
+
   const byDoctor = slots.reduce<Record<string, AppointmentSlot[]>>((acc, s) => {
     const key = `${s.doctor_id}:${s.doctor_name}`;
     if (!acc[key]) acc[key] = [];
@@ -210,7 +229,11 @@ export default function BookAppointmentPage() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-brand-text">Select a Doctor</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
                 <label className="text-xs text-brand-muted">Date</label>
                 <input
                   type="date"
@@ -286,9 +309,15 @@ export default function BookAppointmentPage() {
             >
               ← Back
             </button>
-            <h2 className="text-base font-semibold text-brand-text mb-1">
-              Dr. {doctorName(selectedSlot.doctor_name)}
-            </h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-semibold text-brand-text">
+                Dr. {doctorName(selectedSlot.doctor_name)}
+              </h2>
+              <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+            </div>
             <p className="text-sm text-brand-muted mb-5">Choose an available time slot</p>
 
             {refreshingSlots && (
