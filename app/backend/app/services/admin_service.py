@@ -14,6 +14,7 @@ from app.backend.app.schemas.admin import (
     AdminStudentSummary,
     AdminUserStatusResponse,
     AdminUserSummary,
+    EmergencyAlertResolveRequest,
 )
 
 
@@ -139,3 +140,37 @@ def list_staff(q: str | None, limit: int) -> list[AdminStaffSummary]:
 def list_emergency_alerts(limit: int) -> list[AdminEmergencyAlertSummary]:
     rows = admin_repo.list_emergency_alerts(limit)
     return [AdminEmergencyAlertSummary(**row) for row in rows]
+
+
+def acknowledge_emergency_alert(
+    alert_id: int,
+    *,
+    actor_user_id: int,
+) -> AdminEmergencyAlertSummary:
+    result = admin_repo.acknowledge_emergency_alert(
+        alert_id=alert_id,
+        actor_user_id=actor_user_id,
+    )
+    if result is None:
+        raise NotFoundError("Emergency alert was not found")
+    return AdminEmergencyAlertSummary(**result)
+
+
+def resolve_emergency_alert(
+    alert_id: int,
+    payload: EmergencyAlertResolveRequest,
+    *,
+    actor_user_id: int,
+) -> AdminEmergencyAlertSummary:
+    result = admin_repo.resolve_emergency_alert(
+        alert_id=alert_id,
+        actor_user_id=actor_user_id,
+        resolution_note=(
+            payload.resolution_note.strip()
+            if payload.resolution_note and payload.resolution_note.strip()
+            else None
+        ),
+    )
+    if result is None:
+        raise NotFoundError("Emergency alert was not found")
+    return AdminEmergencyAlertSummary(**result)

@@ -151,5 +151,18 @@ class AdminEmergencyAlertSummary(BaseModel):
     student_id: int
     student_name: str
     roll_number: str
+    reason: str
+    location: str
+    contact_number: str | None = None
     message: str
+    status: Literal["unread", "acknowledged", "resolved"]
     created_at: datetime
+    acknowledged_by: int | None = None
+    acknowledged_at: datetime | None = None
+    resolved_by: int | None = None
+    resolved_at: datetime | None = None
+    resolution_note: str | None = None
+
+
+class EmergencyAlertResolveRequest(BaseModel):
+    resolution_note: str | None = Field(default=None, max_length=1000)

@@ -187,11 +187,25 @@ CREATE TABLE medical_notes (
 CREATE TABLE emergency_alerts (
     alert_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
+    reason VARCHAR(120) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    contact_number VARCHAR(30) NULL,
     message VARCHAR(500) NOT NULL DEFAULT 'Student requested emergency assistance',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    acknowledged_by INT NULL,
+    acknowledged_at TIMESTAMP NULL,
+    resolved_by INT NULL,
+    resolved_at TIMESTAMP NULL,
+    resolution_note VARCHAR(1000) NULL,
     CONSTRAINT fk_emergency_alerts_student
         FOREIGN KEY (student_id) REFERENCES students(student_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_emergency_alerts_acknowledged_by
+        FOREIGN KEY (acknowledged_by) REFERENCES users(user_id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_emergency_alerts_resolved_by
+        FOREIGN KEY (resolved_by) REFERENCES users(user_id)
+        ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE prescriptions (
@@ -256,6 +270,8 @@ CREATE INDEX idx_appointments_student ON appointments(student_id);
 CREATE INDEX idx_appointments_status ON appointments(status_id);
 CREATE INDEX idx_emergency_alerts_student_created
     ON emergency_alerts(student_id, created_at);
+CREATE INDEX idx_emergency_alerts_lifecycle_created
+    ON emergency_alerts(resolved_at, acknowledged_at, created_at);
 CREATE INDEX idx_medical_notes_appointment ON medical_notes(appointment_id);
 CREATE INDEX idx_prescriptions_appointment ON prescriptions(appointment_id);
 CREATE INDEX idx_prescription_items_prescription ON prescription_items(prescription_id);

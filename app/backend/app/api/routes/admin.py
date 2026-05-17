@@ -16,6 +16,7 @@ from app.backend.app.schemas.admin import (
     AdminStudentSummary,
     AdminUserStatusResponse,
     AdminUserSummary,
+    EmergencyAlertResolveRequest,
 )
 from app.backend.app.schemas.auth import AuthenticatedUser
 from app.backend.app.services import admin_service
@@ -173,5 +174,41 @@ def emergency_alerts(
 ) -> list[AdminEmergencyAlertSummary]:
     try:
         return admin_service.list_emergency_alerts(limit)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.patch(
+    "/emergency-alerts/{alert_id}/acknowledge",
+    response_model=AdminEmergencyAlertSummary,
+)
+def acknowledge_emergency_alert(
+    alert_id: int = Path(..., gt=0),
+    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff")),
+) -> AdminEmergencyAlertSummary:
+    try:
+        return admin_service.acknowledge_emergency_alert(
+            alert_id,
+            actor_user_id=current_user.user_id,
+        )
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.patch(
+    "/emergency-alerts/{alert_id}/resolve",
+    response_model=AdminEmergencyAlertSummary,
+)
+def resolve_emergency_alert(
+    payload: EmergencyAlertResolveRequest,
+    alert_id: int = Path(..., gt=0),
+    current_user: AuthenticatedUser = Depends(require_roles("admin", "staff")),
+) -> AdminEmergencyAlertSummary:
+    try:
+        return admin_service.resolve_emergency_alert(
+            alert_id,
+            payload,
+            actor_user_id=current_user.user_id,
+        )
     except Exception as exc:
         raise service_error_to_http(exc) from exc

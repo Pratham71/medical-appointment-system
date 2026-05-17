@@ -20,6 +20,8 @@ import type {
   DoctorAvailabilityPayload,
   DoctorAvailabilitySettings,
   DoctorWeeklyAvailability,
+  EmergencyAlertCreatePayload,
+  EmergencyAlertResponse,
   DoctorAppointmentDetail,
   DoctorAppointmentSummary,
   DoctorDashboard,
@@ -31,6 +33,7 @@ import type {
   StudentAppointmentSummary,
   StudentCertificateSummary,
   StudentDashboard,
+  StudentEmergencyAlertSummary,
   StudentReportSummary,
   TokenResponse,
 } from "./types";
@@ -136,6 +139,10 @@ export async function getStudentReports(): Promise<StudentReportSummary[]> {
 
 export async function getStudentCertificates(): Promise<StudentCertificateSummary[]> {
   return request<StudentCertificateSummary[]>("/students/certificates");
+}
+
+export async function getStudentEmergencyAlerts(): Promise<StudentEmergencyAlertSummary[]> {
+  return request<StudentEmergencyAlertSummary[]>("/students/emergency-alerts");
 }
 
 // ── Appointments ─────────────────────────────────────────────────────────────
@@ -255,13 +262,13 @@ export async function getReportDetail(appointmentId: number): Promise<ReportDeta
 }
 
 export async function sendEmergencyAlert(
-  message?: string
-): Promise<{ alert_id: number; created_at: string }> {
-  return request<{ alert_id: number; created_at: string }>(
+  payload: EmergencyAlertCreatePayload
+): Promise<EmergencyAlertResponse> {
+  return request<EmergencyAlertResponse>(
     "/emergency/alert",
     {
       method: "POST",
-      body: JSON.stringify({ message: message ?? null }),
+      body: JSON.stringify(payload),
     },
     true
   );
@@ -404,4 +411,28 @@ export async function getAdminStaff(q?: string, limit = 100): Promise<AdminStaff
 
 export async function getAdminEmergencyAlerts(limit = 50): Promise<AdminEmergencyAlertSummary[]> {
   return request<AdminEmergencyAlertSummary[]>(`/admin/emergency-alerts?limit=${limit}`);
+}
+
+export async function acknowledgeEmergencyAlert(
+  alertId: number
+): Promise<AdminEmergencyAlertSummary> {
+  return request<AdminEmergencyAlertSummary>(
+    `/admin/emergency-alerts/${alertId}/acknowledge`,
+    { method: "PATCH" },
+    true
+  );
+}
+
+export async function resolveEmergencyAlert(
+  alertId: number,
+  resolutionNote?: string
+): Promise<AdminEmergencyAlertSummary> {
+  return request<AdminEmergencyAlertSummary>(
+    `/admin/emergency-alerts/${alertId}/resolve`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ resolution_note: resolutionNote?.trim() || null }),
+    },
+    true
+  );
 }

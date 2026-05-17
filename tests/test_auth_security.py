@@ -448,14 +448,25 @@ def test_student_emergency_alert_uses_authenticated_student_context(monkeypatch)
     )
     monkeypatch.setattr(auth_service, "get_student_id_for_user", lambda user_id: 7)
 
-    def fake_create_alert(student_id: int, message: str | None):
-        captured.append((student_id, message))
+    def fake_create_alert(
+        student_id: int,
+        *,
+        reason: str,
+        location: str,
+        contact_number: str | None,
+        message: str | None,
+    ):
+        captured.append((student_id, reason, location, contact_number, message))
         return {
             "alert_id": 99,
             "student_id": student_id,
             "student_name": "Aarav Sharma",
             "roll_number": "CSE-2026-001",
+            "reason": reason,
+            "location": location,
+            "contact_number": contact_number,
             "message": message or "Student requested emergency assistance",
+            "status": "unread",
             "created_at": "2026-05-16T12:00:00",
         }
 
@@ -465,12 +476,72 @@ def test_student_emergency_alert_uses_authenticated_student_context(monkeypatch)
     response = client.post(
         "/emergency/alert",
         headers={**_auth_header(), "Idempotency-Key": "emergency-alert"},
-        json={"message": "Need urgent medical help"},
+        json={
+            "reason": "Injury",
+            "location": "Lab Block C, Room 204",
+            "contact_number": "+971501234567",
+            "message": "Need urgent medical help",
+        },
     )
 
     assert response.status_code == 201
     assert response.json()["alert_id"] == 99
-    assert captured == [(7, "Need urgent medical help")]
+    assert response.json()["reason"] == "Injury"
+    assert response.json()["location"] == "Lab Block C, Room 204"
+    assert response.json()["contact_number"] == "+971501234567"
+    assert response.json()["status"] == "unread"
+    assert captured == [
+        (
+            7,
+            "Injury",
+            "Lab Block C, Room 204",
+            "+971501234567",
+            "Need urgent medical help",
+        )
+    ]
+
+
+def test_student_can_list_own_emergency_alert_statuses(monkeypatch):
+    captured_student_ids = []
+
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+    monkeypatch.setattr(auth_service, "get_student_id_for_user", lambda user_id: 7)
+
+    def fake_list_emergency_alerts(student_id: int):
+        captured_student_ids.append(student_id)
+        return [
+            {
+                "alert_id": 99,
+                "reason": "Chest pain",
+                "location": "Hostel 3 corridor",
+                "contact_number": "+971501234567",
+                "message": "Severe pain",
+                "status": "acknowledged",
+                "created_at": "2026-05-16T12:00:00",
+                "acknowledged_at": "2026-05-16T12:05:00",
+                "resolved_at": None,
+                "resolution_note": None,
+            }
+        ]
+
+    monkeypatch.setattr(
+        student_service,
+        "list_emergency_alerts",
+        fake_list_emergency_alerts,
+        raising=False,
+    )
+
+    client = TestClient(app)
+    response = client.get("/students/emergency-alerts", headers=_auth_header())
+
+    assert response.status_code == 200
+    assert response.json()[0]["status"] == "acknowledged"
+    assert response.json()[0]["reason"] == "Chest pain"
+    assert captured_student_ids == [7]
 
 
 def test_state_changing_routes_check_auth_before_idempotency():

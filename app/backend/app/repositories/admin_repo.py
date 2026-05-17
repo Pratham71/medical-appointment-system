@@ -167,6 +167,42 @@ def list_emergency_alerts(limit: int) -> list[dict[str, Any]]:
         return admin_queries.list_emergency_alerts(connection, limit=limit)
 
 
+def acknowledge_emergency_alert(
+    *,
+    alert_id: int,
+    actor_user_id: int,
+) -> dict[str, Any] | None:
+    with session.transaction_scope() as connection:
+        context = admin_queries.get_emergency_alert_for_update(connection, alert_id)
+        if context is None:
+            return None
+        admin_queries.acknowledge_emergency_alert(
+            connection,
+            alert_id=alert_id,
+            actor_user_id=actor_user_id,
+        )
+        return admin_queries.get_emergency_alert_summary(connection, alert_id)
+
+
+def resolve_emergency_alert(
+    *,
+    alert_id: int,
+    actor_user_id: int,
+    resolution_note: str | None,
+) -> dict[str, Any] | None:
+    with session.transaction_scope() as connection:
+        context = admin_queries.get_emergency_alert_for_update(connection, alert_id)
+        if context is None:
+            return None
+        admin_queries.resolve_emergency_alert(
+            connection,
+            alert_id=alert_id,
+            actor_user_id=actor_user_id,
+            resolution_note=resolution_note,
+        )
+        return admin_queries.get_emergency_alert_summary(connection, alert_id)
+
+
 def _save_patient_profile(
     connection: Any,
     *,

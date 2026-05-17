@@ -17,7 +17,7 @@ Current Focus
 - Admin role assignment across student, professor, college-staff, hostel-staff, doctor, staff, and admin roles
 - Admin user status management through `users.is_active`
 - Doctor weekly availability and date-level override tables
-- Emergency alert storage for student-triggered infirmary alerts
+- Emergency alert storage for student-triggered infirmary alerts with reason, location, contact number, acknowledgement, and resolution fields
 - Login brute-force protection
 - Idempotency/replay-safe write request support
 - Rate limiting support
@@ -82,6 +82,7 @@ Constraints
 - Doctor weekly availability is unique per doctor and weekday.
 - Doctor date overrides are unique per doctor and date.
 - Available slot reads default doctors to Monday-Saturday availability and Sunday unavailability unless a date override says otherwise.
+- Emergency alerts reference the student that created them and optionally reference the responder users that acknowledged or resolved them.
 - Foreign keys across all related tables
 - Add CHECK constraints where needed
 
@@ -100,6 +101,7 @@ Indexes
 - prescription_items(prescription_id)
 - medical_certificates(certificate_type_id)
 - emergency_alerts(student_id, created_at)
+- emergency_alerts(resolved_at, acknowledged_at, created_at)
 
 Views
 - v_available_appointment_slots
@@ -114,6 +116,7 @@ Migrations
 - `app/backend/app/db/migrations/2026_05_16_add_emergency_alerts.sql` adds the emergency alert table and supporting index.
 - `app/backend/app/db/migrations/2026_05_17_add_professor_role.sql` adds the `professor` role to older local databases without changing existing users.
 - `app/backend/app/db/migrations/2026_05_17_add_staff_patient_roles.sql` adds the `college-staff` and `hostel-staff` roles to older local databases without changing existing users.
+- `app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql` adds emergency alert context and lifecycle columns for older local databases without dropping existing alerts.
 
 Triggers
 - Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.
@@ -141,6 +144,7 @@ DBMS Concepts to Demonstrate
 - MySQL triggers for cross-table integrity rules
 - Doctor availability rules and date overrides
 - Emergency alert writes with authenticated student ownership
+- Emergency alert acknowledgement/resolution lifecycle with nullable responder foreign keys and status derived from timestamps
 - Professor, college-staff, and hostel-staff role support through the same patient/student relationship
 - Admin role assignment with transaction-backed profile updates
 - Admin user deactivation/reactivation through soft status changes

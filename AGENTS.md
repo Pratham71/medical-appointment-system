@@ -34,6 +34,13 @@ Current backend additions for issues #12, #37, #39, #44, and #48:
 - app/backend/app/services/notification_service.py
 - app/backend/app/db/migrations/2026_05_17_add_staff_patient_roles.sql
 
+Current backend additions for issues #43 and #46:
+- app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql
+- Emergency alert context fields are stored in `emergency_alerts.reason`, `location`, and `contact_number`.
+- Emergency alert lifecycle fields are `acknowledged_by`, `acknowledged_at`, `resolved_by`, `resolved_at`, and `resolution_note`.
+- Admin/staff responders use `PATCH /admin/emergency-alerts/{alert_id}/acknowledge` and `PATCH /admin/emergency-alerts/{alert_id}/resolve`.
+- Students use `GET /students/emergency-alerts` to see their own alert statuses.
+
 medical-appointment-system/
 ├── app/
 │   ├── backend/
@@ -137,6 +144,7 @@ Database Rules
 - College-staff and hostel-staff users also share the same patient workflow and profile table as student users; keep their role names distinct for frontend labeling.
 - Admin delete/remove actions must be soft-deactivation through `users.is_active`; do not hard-delete users with medical history.
 - Email notification delivery is best-effort and environment-driven; do not commit provider credentials.
+- Emergency alert statuses are derived from lifecycle timestamps: unresolved/unacknowledged = `unread`, acknowledged only = `acknowledged`, resolved = `resolved`.
 
 ERD Rule
 

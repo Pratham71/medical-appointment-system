@@ -19,6 +19,7 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 - Prescription records
 - Medical certificate records
 - Student report and certificate view/download actions
+- Structured emergency alerts with reason, location, optional contact number, acknowledgement, resolution, and student-visible status
 - Staff login landing page and backend staff appointment oversight APIs
 - College-staff and hostel-staff patient access using the student workflow
 - Best-effort SMTP email notifications for appointment and document updates
@@ -144,6 +145,8 @@ The selected database engine is MySQL.
 - `GET /admin/doctors`
 - `GET /admin/staff`
 - `GET /admin/emergency-alerts`
+- `PATCH /admin/emergency-alerts/{alert_id}/acknowledge`
+- `PATCH /admin/emergency-alerts/{alert_id}/resolve`
 
 ### Staff
 
@@ -156,6 +159,7 @@ The selected database engine is MySQL.
 - `GET /students/appointments`
 - `GET /students/reports`
 - `GET /students/certificates`
+- `GET /students/emergency-alerts`
 
 ### Doctors
 
@@ -175,6 +179,10 @@ The selected database engine is MySQL.
 - `POST /appointments/book`
 - `PATCH /appointments/{id}/cancel`
 - `PATCH /appointments/{id}/complete`
+
+### Emergency
+
+- `POST /emergency/alert`
 
 ### Reports
 
@@ -264,6 +272,16 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
 mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 ```
 
+If your local database existed before emergency alert context/lifecycle support, apply:
+
+```powershell
+Get-Content app\backend\app\db\migrations\2026_05_17_update_emergency_alerts_context_lifecycle.sql | mysql -u root -p medical_appointment_system
+```
+
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql
+```
+
 ### Run
 
 Run backend only:
@@ -320,8 +338,8 @@ staff@college.edu
 
 ## Current Status
 
-The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor/college-staff/hostel-staff patient-equivalent role support, admin role assignment and user status management, staff appointment oversight, best-effort email notifications, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor/college-staff/hostel-staff patient-equivalent role support, admin role assignment and user status management, staff appointment oversight, structured emergency alert lifecycle management, best-effort email notifications, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
 
-The frontend supports login, student appointment lists, student report/certificate view and text downloads, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin user role/status actions, admin safe landing, and staff safe landing.
+The frontend supports login, student appointment lists, student report/certificate view and text downloads, emergency alert submission/status review, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin user role/status actions, admin emergency alert acknowledgement/resolution, admin safe landing, and staff safe landing.
 
 Current known gaps include forgot password/password reset as future scope, active user presence tracking, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.

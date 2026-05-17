@@ -42,6 +42,11 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Completed emergency alert context and lifecycle APIs for issues #46/#43: structured reason/location/contact fields, admin/staff acknowledge and resolve endpoints, and student alert status listing
+[2026-05-17] [DB] [Codex] [feat/issues-12-37-39-44-admin-users] - Added emergency_alerts context/lifecycle columns, lifecycle index, schema updates, and a non-destructive MySQL migration for existing databases
+[2026-05-17] [UI] [Codex] [feat/issues-12-37-39-44-admin-users] - Updated emergency alert UI with structured student alert form, admin context cards, acknowledge/resolve controls, and student dashboard alert statuses
+[2026-05-17] [TEST] [Codex] [feat/issues-12-37-39-44-admin-users] - Added regression coverage for emergency alert request context, admin lifecycle routes, student alert status endpoint, DB migration/schema checks, OpenAPI surface, and frontend wiring
+
 [2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Added staff workflow APIs for dashboard counts and appointment oversight, and allowed staff users to cancel appointments with required structured cancellation reasons
 [2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Added admin user activation, deactivation, and safe soft-delete endpoints plus frontend admin user action helpers
 [2026-05-17] [DB] [Codex] [feat/issues-12-37-39-44-admin-users] - Added college-staff and hostel-staff patient-equivalent roles, seed accounts, and a non-destructive role migration

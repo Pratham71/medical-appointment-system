@@ -16,6 +16,7 @@ Current MVP Notes
 - Professors, college-staff, and hostel-staff use the same appointment/report/certificate workflow as students; the API preserves each distinct `role_name` for frontend labeling.
 - New signup accounts are created as student/patient accounts by default; admin-only role assignment can later change them to professor, college-staff, hostel-staff, doctor, staff, or admin.
 - Admin backend routes are available for dashboard metrics, user role assignment, user activation/deactivation, appointment oversight, directories, and emergency alert review.
+- Emergency alert review includes context fields plus acknowledge/resolve lifecycle actions for admin/staff responders.
 - Staff workflow APIs are implemented for dashboard counts and appointment lookup/oversight. Staff can cancel appointments with a structured reason through the shared cancellation endpoint.
 - Email notifications are environment-driven and disabled by default; when enabled, SMTP dispatch is best-effort and does not block the appointment/document workflow.
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
@@ -63,9 +64,11 @@ GET /admin/students
 GET /admin/doctors
 GET /admin/staff
 GET /admin/emergency-alerts
+PATCH /admin/emergency-alerts/{alert_id}/acknowledge
+PATCH /admin/emergency-alerts/{alert_id}/resolve
 
 Admin notes:
-- All admin endpoints require a user with `role_name = admin`.
+- Admin endpoints require `role_name = admin`, except emergency alert acknowledge/resolve actions also allow `role_name = staff`.
 - `GET /admin/dashboard` returns high-level counts for students, professors, doctors, staff, appointment statuses, reports, certificates, and emergency alerts.
 - `GET /admin/users` supports `q`, `role_name`, and `limit` query parameters for role management screens.
 - `PATCH /admin/users/{user_id}/role` requires `Idempotency-Key` and can assign `student`, `professor`, `college-staff`, `hostel-staff`, `doctor`, `staff`, or `admin`.
@@ -74,6 +77,10 @@ Admin notes:
 - Doctor and staff role assignment uses `employee_number` and optional `specialization`.
 - Role changes return `409` when the change would remove a patient/staff profile that already has appointment or slot history.
 - Admins cannot deactivate their own account.
+- `GET /admin/emergency-alerts` returns reason, location, contact_number, status, acknowledgement fields, resolution fields, and resolution_note.
+- `PATCH /admin/emergency-alerts/{alert_id}/acknowledge` requires `Idempotency-Key` and stores the responder user/time.
+- `PATCH /admin/emergency-alerts/{alert_id}/resolve` requires `Idempotency-Key` and stores the responder user/time plus optional `resolution_note`.
+- Emergency alert acknowledge/resolve endpoints allow `admin` and `staff` roles.
 
 Staff
 GET /staff/dashboard
@@ -89,10 +96,12 @@ GET /students/dashboard
 GET /students/appointments
 GET /students/reports
 GET /students/certificates
+GET /students/emergency-alerts
 
 Student/professor/patient-equivalent notes:
 - `student`, `professor`, `college-staff`, and `hostel-staff` roles can use these endpoints.
 - The role name is different for frontend labeling, but backend permissions and patient records are the same.
+- `GET /students/emergency-alerts` returns the authenticated user's own emergency alerts with status `unread`, `acknowledged`, or `resolved`.
 
 Doctors
 GET /doctors/dashboard
@@ -137,9 +146,11 @@ Emergency
 POST /emergency/alert
 
 Emergency alert notes:
-- Student-only endpoint.
+- Student/patient-equivalent endpoint.
 - Requires `Authorization: Bearer <access_token>` and `Idempotency-Key`.
-- Stores an `emergency_alerts` row with student identity, message, and timestamp.
+- Request body requires `reason` and `location`, and accepts optional `contact_number` and optional `message`.
+- Stores an `emergency_alerts` row with student identity, context fields, message, timestamp, and lifecycle fields.
+- New alerts start with status `unread`; acknowledgement changes status to `acknowledged`; resolution changes status to `resolved`.
 - Real-time external SMS/push delivery is future scope. Email dispatch is available through environment-driven SMTP settings.
 
 Certificates

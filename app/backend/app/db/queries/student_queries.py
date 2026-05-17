@@ -128,3 +128,27 @@ def list_certificates(connection: Any, student_id: int) -> list[dict[str, Any]]:
         ORDER BY v_student_certificate_summaries.issue_date DESC
     """
     return fetch_all(connection, sql, (student_id,))
+
+
+def list_emergency_alerts(connection: Any, student_id: int) -> list[dict[str, Any]]:
+    sql = """
+        SELECT
+            emergency_alerts.alert_id,
+            emergency_alerts.reason,
+            emergency_alerts.location,
+            emergency_alerts.contact_number,
+            emergency_alerts.message,
+            CASE
+                WHEN emergency_alerts.resolved_at IS NOT NULL THEN 'resolved'
+                WHEN emergency_alerts.acknowledged_at IS NOT NULL THEN 'acknowledged'
+                ELSE 'unread'
+            END AS status,
+            emergency_alerts.created_at,
+            emergency_alerts.acknowledged_at,
+            emergency_alerts.resolved_at,
+            emergency_alerts.resolution_note
+        FROM emergency_alerts
+        WHERE emergency_alerts.student_id = %s
+        ORDER BY emergency_alerts.created_at DESC, emergency_alerts.alert_id DESC
+    """
+    return fetch_all(connection, sql, (student_id,))

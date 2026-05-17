@@ -16,6 +16,7 @@ MVP Scope
 - Basic dashboard stats
 - Staff login safe landing and backend appointment oversight
 - Admin role and user-status management
+- Emergency alert context, acknowledgement, resolution, and student-visible status
 - Email notifications for appointment/document updates
 
 Future Scope
@@ -35,6 +36,7 @@ Current Role Notes
 - Staff login, seed account, dashboard API, appointment lookup API, and cancellation with reason are implemented.
 - Professor, college-staff, and hostel-staff users reuse the student/patient workflow with distinct role names for labeling.
 - Admin delete/remove is implemented as soft-deactivation through `users.is_active`.
+- Emergency alerts now capture reason, location, optional contact number, and move through unread, acknowledged, and resolved states.
 
 ER Diagram
 - Not required at this stage

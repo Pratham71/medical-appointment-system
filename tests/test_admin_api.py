@@ -571,8 +571,17 @@ def test_admin_can_list_emergency_alerts(monkeypatch):
                 "student_id": 1,
                 "student_name": "Aarav Sharma",
                 "roll_number": "CSE-2026-001",
+                "reason": "Injury",
+                "location": "Lab Block C",
+                "contact_number": "+971501234567",
                 "message": "Need urgent medical help",
+                "status": "unread",
                 "created_at": datetime(2026, 5, 17, 9, 15),
+                "acknowledged_by": None,
+                "acknowledged_at": None,
+                "resolved_by": None,
+                "resolved_at": None,
+                "resolution_note": None,
             }
         ],
     )
@@ -582,3 +591,103 @@ def test_admin_can_list_emergency_alerts(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()[0]["alert_id"] == 10
+    assert response.json()[0]["reason"] == "Injury"
+    assert response.json()[0]["location"] == "Lab Block C"
+    assert response.json()[0]["status"] == "unread"
+
+
+def test_admin_can_acknowledge_emergency_alert(monkeypatch):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_acknowledge(alert_id: int, actor_user_id: int):
+        captured.append((alert_id, actor_user_id))
+        return {
+            "alert_id": alert_id,
+            "student_id": 1,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "reason": "Injury",
+            "location": "Lab Block C",
+            "contact_number": "+971501234567",
+            "message": "Need urgent medical help",
+            "status": "acknowledged",
+            "created_at": datetime(2026, 5, 17, 9, 15),
+            "acknowledged_by": actor_user_id,
+            "acknowledged_at": datetime(2026, 5, 17, 9, 16),
+            "resolved_by": None,
+            "resolved_at": None,
+            "resolution_note": None,
+        }
+
+    monkeypatch.setattr(
+        admin_service,
+        "acknowledge_emergency_alert",
+        fake_acknowledge,
+        raising=False,
+    )
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/emergency-alerts/10/acknowledge",
+        headers={**_auth_header(), "Idempotency-Key": "ack-alert-10"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "acknowledged"
+    assert response.json()["acknowledged_by"] == 30
+    assert captured == [(10, 30)]
+
+
+def test_admin_can_resolve_emergency_alert(monkeypatch):
+    admin_service = _admin_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("admin", user_id=30),
+    )
+
+    def fake_resolve(alert_id: int, payload, actor_user_id: int):
+        captured.append((alert_id, payload.resolution_note, actor_user_id))
+        return {
+            "alert_id": alert_id,
+            "student_id": 1,
+            "student_name": "Aarav Sharma",
+            "roll_number": "CSE-2026-001",
+            "reason": "Injury",
+            "location": "Lab Block C",
+            "contact_number": "+971501234567",
+            "message": "Need urgent medical help",
+            "status": "resolved",
+            "created_at": datetime(2026, 5, 17, 9, 15),
+            "acknowledged_by": actor_user_id,
+            "acknowledged_at": datetime(2026, 5, 17, 9, 16),
+            "resolved_by": actor_user_id,
+            "resolved_at": datetime(2026, 5, 17, 9, 25),
+            "resolution_note": payload.resolution_note,
+        }
+
+    monkeypatch.setattr(
+        admin_service,
+        "resolve_emergency_alert",
+        fake_resolve,
+        raising=False,
+    )
+
+    client = TestClient(app)
+    response = client.patch(
+        "/admin/emergency-alerts/10/resolve",
+        headers={**_auth_header(), "Idempotency-Key": "resolve-alert-10"},
+        json={"resolution_note": "Escorted to infirmary"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "resolved"
+    assert response.json()["resolution_note"] == "Escorted to infirmary"
+    assert captured == [(10, "Escorted to infirmary", 30)]

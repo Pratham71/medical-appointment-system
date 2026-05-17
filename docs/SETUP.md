@@ -144,6 +144,18 @@ macOS/Linux:
 mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_add_staff_patient_roles.sql
 ```
 
+If your local database was created before emergency alert context and lifecycle support, apply:
+
+Windows PowerShell:
+```powershell
+Get-Content app\backend\app\db\migrations\2026_05_17_update_emergency_alerts_context_lifecycle.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql
+```
+
 Frontend Setup
 
 If frontend dependencies are missing on a clean checkout, install from the frontend lockfile:

@@ -154,10 +154,52 @@ def test_student_cancelled_appointment_shows_reschedule_options() -> None:
 def test_emergency_button_sends_backend_alert() -> None:
     button = read(FRONTEND / "components" / "ui" / "EmergencyButton.tsx")
     api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
 
     assert "sendEmergencyAlert" in api
     assert '"/emergency/alert"' in api
+    assert "EmergencyAlertCreatePayload" in types
     assert "sendEmergencyAlert" in button
     assert "handleSendAlert" in button
+    assert "reason" in button
+    assert "location" in button
+    assert "contactNumber" in button
+    assert "value=\"Injury\"" in button
+    assert "sendEmergencyAlert({" in button
     assert "Send Alert to Infirmary" in button
     assert "Alert sent to infirmary" in button
+
+
+def test_admin_emergency_alerts_support_context_and_lifecycle_actions() -> None:
+    page = read(FRONTEND / "app" / "admin" / "emergency-alerts" / "page.tsx")
+    dashboard = read(FRONTEND / "app" / "admin" / "page.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "AdminEmergencyAlertSummary" in types
+    assert "acknowledgeEmergencyAlert" in api
+    assert "resolveEmergencyAlert" in api
+    assert "`/admin/emergency-alerts/${alertId}/acknowledge`" in api
+    assert "`/admin/emergency-alerts/${alertId}/resolve`" in api
+    assert "handleAcknowledge" in page
+    assert "handleResolve" in page
+    assert "resolutionNote" in page
+    assert "StatusBadge" in page
+    assert "a.reason" in page
+    assert "a.location" in page
+    assert "a.contact_number" in page
+    assert "a.status" in dashboard
+
+
+def test_student_dashboard_shows_emergency_alert_statuses() -> None:
+    page = read(FRONTEND / "app" / "students" / "page.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert "StudentEmergencyAlertSummary" in types
+    assert "getStudentEmergencyAlerts" in api
+    assert '"/students/emergency-alerts"' in api
+    assert "getStudentEmergencyAlerts()" in page
+    assert "alert.status" in page
+    assert "alert.reason" in page
+    assert "alert.location" in page

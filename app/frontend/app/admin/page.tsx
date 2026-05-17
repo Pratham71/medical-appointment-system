@@ -172,6 +172,12 @@ export default function AdminDashboardPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-brand-text truncate">{a.student_name}</p>
                           <p className="text-xs text-brand-muted">{a.roll_number}</p>
+                          <div className="mt-1">
+                            <StatusBadge status={a.status} />
+                          </div>
+                          <p className="text-xs text-brand-muted mt-1">
+                            {a.reason} - {a.location}
+                          </p>
                           <p className="text-xs text-brand-text mt-1 line-clamp-2">{a.message}</p>
                         </div>
                         <span className="text-xs text-brand-muted whitespace-nowrap flex-shrink-0">

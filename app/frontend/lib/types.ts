@@ -71,6 +71,41 @@ export interface StudentCertificateSummary {
   certificate_notes?: string | null;
 }
 
+export type EmergencyAlertStatus = "unread" | "acknowledged" | "resolved";
+
+export interface EmergencyAlertCreatePayload {
+  reason: string;
+  location: string;
+  contact_number?: string | null;
+  message?: string | null;
+}
+
+export interface EmergencyAlertResponse {
+  alert_id: number;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  reason: string;
+  location: string;
+  contact_number: string | null;
+  message: string;
+  status: EmergencyAlertStatus;
+  created_at: string;
+}
+
+export interface StudentEmergencyAlertSummary {
+  alert_id: number;
+  reason: string;
+  location: string;
+  contact_number: string | null;
+  message: string;
+  status: EmergencyAlertStatus;
+  created_at: string;
+  acknowledged_at: string | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
+}
+
 export interface AppointmentSlot {
   slot_id: number;
   doctor_id: number;
@@ -372,6 +407,15 @@ export interface AdminEmergencyAlertSummary {
   student_id: number;
   student_name: string;
   roll_number: string;
+  reason: string;
+  location: string;
+  contact_number: string | null;
   message: string;
+  status: EmergencyAlertStatus;
   created_at: string;
+  acknowledged_by: number | null;
+  acknowledged_at: string | null;
+  resolved_by: number | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
 }

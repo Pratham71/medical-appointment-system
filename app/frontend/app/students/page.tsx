@@ -1,9 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getStudentDashboard, getStudentAppointments, getStoredUser } from "@/lib/api";
+import {
+  getStudentAppointments,
+  getStudentDashboard,
+  getStudentEmergencyAlerts,
+  getStoredUser,
+} from "@/lib/api";
 import { doctorName } from "@/lib/utils";
-import type { StudentAppointmentSummary, StudentDashboard } from "@/lib/types";
+import type {
+  StudentAppointmentSummary,
+  StudentDashboard,
+  StudentEmergencyAlertSummary,
+} from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatsCard from "@/components/ui/StatsCard";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -27,6 +36,7 @@ export default function StudentDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<StudentDashboard | null>(null);
   const [todayCancelled, setTodayCancelled] = useState<StudentAppointmentSummary[]>([]);
+  const [emergencyAlerts, setEmergencyAlerts] = useState<StudentEmergencyAlertSummary[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -38,9 +48,14 @@ export default function StudentDashboardPage() {
     if (!isPatientRole(user.role_name)) { router.replace("/login"); return; }
 
     const today = todayKey();
-    Promise.all([getStudentDashboard(), getStudentAppointments()])
-      .then(([dashboard, appointments]) => {
+    Promise.all([
+      getStudentDashboard(),
+      getStudentAppointments(),
+      getStudentEmergencyAlerts(),
+    ])
+      .then(([dashboard, appointments, alerts]) => {
         setData(dashboard);
+        setEmergencyAlerts(alerts.slice(0, 3));
         const cancelled = appointments.filter(
           (a) => a.slot_date === today && a.status.toLowerCase() === "cancelled"
         );
@@ -179,6 +194,37 @@ export default function StudentDashboardPage() {
               >
                 Book Appointment
               </button>
+            </div>
+          )}
+
+          {/* Emergency alert status */}
+          {emergencyAlerts.length > 0 && (
+            <div className="bg-white rounded-card border border-brand-border shadow-card p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-brand-text">Emergency Alert Status</h2>
+                <span className="text-xs text-brand-muted">{emergencyAlerts.length} recent</span>
+              </div>
+              <div className="space-y-2">
+                {emergencyAlerts.map((alert) => (
+                  <div
+                    key={alert.alert_id}
+                    className="rounded-btn border border-brand-border bg-brand-bg px-3 py-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-brand-text">{alert.reason}</p>
+                        <p className="text-xs text-brand-muted">{alert.location}</p>
+                        {alert.resolution_note && (
+                          <p className="mt-1 text-xs text-emerald-700">
+                            {alert.resolution_note}
+                          </p>
+                        )}
+                      </div>
+                      <StatusBadge status={alert.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

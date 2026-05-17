@@ -6,6 +6,7 @@ from app.backend.app.schemas.student import (
     StudentAppointmentSummary,
     StudentCertificateSummary,
     StudentDashboard,
+    StudentEmergencyAlertSummary,
     StudentReportSummary,
 )
 from app.backend.app.services import student_service
@@ -47,5 +48,15 @@ def certificates(
 ) -> list[StudentCertificateSummary]:
     try:
         return student_service.list_certificates(student_id)
+    except Exception as exc:
+        raise service_error_to_http(exc) from exc
+
+
+@router.get("/emergency-alerts", response_model=list[StudentEmergencyAlertSummary])
+def emergency_alerts(
+    student_id: int = Depends(require_student_id),
+) -> list[StudentEmergencyAlertSummary]:
+    try:
+        return student_service.list_emergency_alerts(student_id)
     except Exception as exc:
         raise service_error_to_http(exc) from exc
