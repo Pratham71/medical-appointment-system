@@ -166,3 +166,7 @@ Current Entries
 [2026-05-15] [TEST] [TEAM] [feat/backend/api] - Added frontend workflow and patient-search regression tests
 [2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Updated README, setup, API notes, project context, report notes, and TODO for staff login and UI integration fixes
 [2026-05-17] [DOCS] [TEAM] [main] - Linked final project TODOs to GitHub issues and documented the TODO-plus-issue tracking rule
+[2026-05-17] [FIX] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Fixed cancelled appointment rebooking by making active_slot_id app-managed, clearing it on cancellation, freeing the slot, and adding a live MySQL repair migration for issue #34
+[2026-05-17] [UI] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Restored the doctor cancellation form label expected by the existing workflow regression test
+[2026-05-17] [FIX] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Fixed Framer Motion skeleton transition typing so the frontend production build can complete
+[2026-05-17] [DOCS] [TEAM] [fix/issue-34-cancelled-slot-rebooking] - Updated setup docs with the cancelled-slot rebooking repair migration command

@@ -1,9 +1,16 @@
 "use client";
 import { motion } from "framer-motion";
+import type { Transition } from "framer-motion";
+
+const pulseTransition: Transition = {
+  repeat: Infinity,
+  duration: 1.6,
+  ease: "easeInOut",
+};
 
 const pulse = {
   animate: { opacity: [0.45, 0.9, 0.45] },
-  transition: { repeat: Infinity, duration: 1.6, ease: "easeInOut" },
+  transition: pulseTransition,
 };
 
 interface Props { className?: string }

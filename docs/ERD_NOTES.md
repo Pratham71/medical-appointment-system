@@ -81,8 +81,9 @@ Appointments
 - student_id (FK)
 - slot_id (FK)
 - status_id (FK)
-- active_slot_id (generated, UNIQUE for non-cancelled appointments)
+- active_slot_id (nullable, app-managed, UNIQUE for active appointments)
 - reason
+- cancellation_reason
 
 Medical_Notes
 
@@ -143,7 +144,7 @@ Normalization
 
 Constraints
 
-- UNIQUE(active_slot_id) in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot.
+- UNIQUE(active_slot_id) in appointments prevents double booking for active appointments while allowing cancelled appointments to clear the marker and release the slot.
 - UNIQUE(staff_id, weekday) in doctor_weekly_availability.
 - UNIQUE(staff_id, override_date) in doctor_availability_overrides.
 - Foreign keys across all related tables.

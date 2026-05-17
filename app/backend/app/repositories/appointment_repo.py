@@ -158,8 +158,8 @@ def update_status(
             if available_slot_status_id is None:
                 return None
 
-        if status_name == "cancelled" and cancellation_reason:
-            appointment_queries.cancel_appointment_with_reason(
+        if status_name == "cancelled":
+            appointment_queries.cancel_appointment(
                 connection,
                 appointment_id=appointment_id,
                 cancelled_status_id=status_id,
@@ -172,13 +172,6 @@ def update_status(
                 connection,
                 appointment_id=appointment_id,
                 status_id=status_id,
-            )
-
-        if available_slot_status_id is not None and not cancellation_reason:
-            appointment_queries.update_slot_status(
-                connection,
-                slot_id=appointment["slot_id"],
-                slot_status_id=available_slot_status_id,
             )
 
         return appointment_queries.get_status_result(connection, appointment_id)

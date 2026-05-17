@@ -272,11 +272,12 @@ def insert_appointment(
             student_id,
             slot_id,
             status_id,
+            active_slot_id,
             reason
         )
-        VALUES (%s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s)
     """
-    return execute(connection, sql, (student_id, slot_id, status_id, reason))
+    return execute(connection, sql, (student_id, slot_id, status_id, slot_id, reason))
 
 
 def update_slot_status(
@@ -299,7 +300,9 @@ def update_appointment_status(
 ) -> None:
     sql = """
         UPDATE appointments
-        SET status_id = %s
+        SET
+            status_id = %s,
+            active_slot_id = slot_id
         WHERE appointment_id = %s
     """
     execute(connection, sql, (status_id, appointment_id))
@@ -339,18 +342,19 @@ def list_appointments_to_cancel(
     return fetch_all(connection, sql, params)
 
 
-def cancel_appointment_with_reason(
+def cancel_appointment(
     connection: Any,
     appointment_id: int,
     cancelled_status_id: int,
     available_slot_status_id: int,
     slot_id: int,
-    cancellation_reason: str,
+    cancellation_reason: str | None,
 ) -> None:
     sql = """
         UPDATE appointments
         SET
             status_id = %s,
+            active_slot_id = NULL,
             cancellation_reason = %s
         WHERE appointment_id = %s
     """
@@ -363,6 +367,24 @@ def cancel_appointment_with_reason(
         connection,
         slot_id=slot_id,
         slot_status_id=available_slot_status_id,
+    )
+
+
+def cancel_appointment_with_reason(
+    connection: Any,
+    appointment_id: int,
+    cancelled_status_id: int,
+    available_slot_status_id: int,
+    slot_id: int,
+    cancellation_reason: str,
+) -> None:
+    cancel_appointment(
+        connection,
+        appointment_id=appointment_id,
+        cancelled_status_id=cancelled_status_id,
+        available_slot_status_id=available_slot_status_id,
+        slot_id=slot_id,
+        cancellation_reason=cancellation_reason,
     )
 
 

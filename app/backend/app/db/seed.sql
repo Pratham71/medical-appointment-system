@@ -88,9 +88,16 @@ INSERT INTO appointment_slots (
     (3, 1, 2, DATE_ADD(CURRENT_DATE, INTERVAL 2 DAY), '10:00:00', '10:30:00'),
     (4, 1, 2, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), '11:00:00', '11:30:00');
 
-INSERT INTO appointments (appointment_id, student_id, slot_id, status_id, reason) VALUES
-    (1, 1, 3, 1, 'Fever and headache'),
-    (2, 1, 4, 3, 'Follow-up consultation');
+INSERT INTO appointments (
+    appointment_id,
+    student_id,
+    slot_id,
+    status_id,
+    active_slot_id,
+    reason
+) VALUES
+    (1, 1, 3, 1, 3, 'Fever and headache'),
+    (2, 1, 4, 3, 4, 'Follow-up consultation');
 
 INSERT INTO medical_notes (note_id, appointment_id, diagnosis, remarks) VALUES
     (1, 2, 'Seasonal fever', 'Rest advised for two days');

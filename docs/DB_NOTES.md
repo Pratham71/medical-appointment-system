@@ -19,6 +19,7 @@ Current Focus
 - Idempotency/replay-safe write request support
 - Rate limiting support
 - Non-destructive live schema sync migration for older local MySQL databases
+- Cancelled appointment rebooking repair migration for older local MySQL databases
 
 ERD
 - Do NOT create ER diagram yet
@@ -73,7 +74,7 @@ Route → Service → Repository → Query → DB
 
 Constraints
 - Unique email in users
-- Unique generated active_slot_id in appointments prevents double booking for active appointments while allowing cancelled appointments to release the slot
+- Unique app-managed active_slot_id in appointments prevents double booking for active appointments while allowing cancelled appointments to clear the marker and release the slot
 - Doctor weekly availability is unique per doctor and weekday.
 - Doctor date overrides are unique per doctor and date.
 - Available slot reads default doctors to Monday-Saturday availability and Sunday unavailability unless a date override says otherwise.
@@ -107,6 +108,7 @@ Migrations
 - `app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql` repairs older local MySQL databases by adding doctor weekly availability tables, copying legacy `doctor_availability` rows when present, and replacing availability/certificate summary views without dropping appointment data.
 - `app/backend/app/db/migrations/2026_05_16_add_cancellation_reason.sql` adds appointment cancellation context and refreshes the appointment detail view without dropping appointment data.
 - `app/backend/app/db/migrations/2026_05_16_add_emergency_alerts.sql` adds the emergency alert table and supporting index.
+- `app/backend/app/db/migrations/2026_05_17_repair_cancelled_slot_rebooking.sql` replaces the old generated active_slot_id column with an app-managed nullable column, backfills active appointments, clears cancelled appointments, and frees cancelled-only slots for rebooking.
 
 Triggers
 - Certificate insert/update triggers enforce issue_date >= appointment slot_date and block certificates for future appointments.

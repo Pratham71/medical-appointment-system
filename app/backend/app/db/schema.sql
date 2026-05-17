@@ -155,9 +155,7 @@ CREATE TABLE appointments (
     student_id INT NOT NULL,
     slot_id INT NOT NULL,
     status_id INT NOT NULL,
-    active_slot_id INT GENERATED ALWAYS AS (
-        CASE WHEN status_id = 2 THEN NULL ELSE slot_id END
-    ) STORED,
+    active_slot_id INT NULL,
     reason VARCHAR(500) NULL,
     cancellation_reason VARCHAR(500) NULL DEFAULT NULL,
     booked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

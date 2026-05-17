@@ -185,7 +185,9 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
         assert f"create table {table_name}" in schema
 
     assert "engine=innodb" in schema
-    assert "active_slot_id int generated always as" in schema
+    assert "active_slot_id int null" in schema
+    assert "active_slot_id int generated always as" not in schema
+    assert "status_id = 2" not in schema
     assert "unique (active_slot_id)" in schema
     assert "foreign key" in schema
     assert "idx_appointments_student" in schema
@@ -193,6 +195,28 @@ def test_schema_defines_mysql_tables_constraints_and_indexes():
     assert "idx_appointment_slots_date_status" in schema
     assert "idx_doctor_weekly_availability_staff_weekday" in schema
     assert "idx_doctor_availability_overrides_staff_date" in schema
+
+
+def test_cancelled_rebooking_schema_migration_repairs_active_slot_tracking():
+    migration = (
+        MIGRATION_DIR / "2026_05_17_repair_cancelled_slot_rebooking.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "drop index active_slot_id on appointments" in migration
+    assert "drop column active_slot_id" in migration
+    assert "add column active_slot_id int null" in migration
+    assert "appointment_statuses.status_name = 'cancelled'" in migration
+    assert "set appointments.active_slot_id = null" in migration
+    assert "add unique index active_slot_id" in migration
+    assert "slot_statuses.status_name = 'available'" in migration
+
+
+def test_appointment_queries_manage_active_slot_id_for_booking_and_cancellation():
+    source = (QUERY_DIR / "appointment_queries.py").read_text(encoding="utf-8").lower()
+
+    assert "active_slot_id" in source
+    assert "values (%s, %s, %s, %s, %s)" in source
+    assert "active_slot_id = null" in source
 
 
 def test_schema_defines_doctor_availability_rules():
@@ -869,7 +893,7 @@ def test_doctor_availability_update_rejects_invalid_time_range():
 
 
 def test_cancel_status_marks_slot_available(monkeypatch):
-    slot_updates = []
+    cancel_calls = []
 
     class FakeAppointmentQueries:
         @staticmethod
@@ -886,12 +910,23 @@ def test_cancel_status_marks_slot_available(monkeypatch):
             return 1
 
         @staticmethod
-        def update_appointment_status(connection, appointment_id, status_id):
-            connection["appointment_status"] = (appointment_id, status_id)
-
-        @staticmethod
-        def update_slot_status(connection, slot_id, slot_status_id):
-            slot_updates.append((slot_id, slot_status_id))
+        def cancel_appointment(
+            connection,
+            appointment_id,
+            cancelled_status_id,
+            available_slot_status_id,
+            slot_id,
+            cancellation_reason,
+        ):
+            cancel_calls.append(
+                (
+                    appointment_id,
+                    cancelled_status_id,
+                    available_slot_status_id,
+                    slot_id,
+                    cancellation_reason,
+                )
+            )
 
         @staticmethod
         def get_status_result(connection, appointment_id):
@@ -907,7 +942,7 @@ def test_cancel_status_marks_slot_available(monkeypatch):
     result = appointment_repo.update_status(5, "cancelled")
 
     assert result == {"appointment_id": 5, "status": "cancelled"}
-    assert slot_updates == [(10, 1)]
+    assert cancel_calls == [(5, 2, 1, 10, None)]
 
 
 def test_cancel_status_with_reason_stores_reason_and_marks_slot_available(monkeypatch):
@@ -929,7 +964,7 @@ def test_cancel_status_with_reason_stores_reason_and_marks_slot_available(monkey
             return 1
 
         @staticmethod
-        def cancel_appointment_with_reason(
+        def cancel_appointment(
             connection,
             appointment_id,
             cancelled_status_id,

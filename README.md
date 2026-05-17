@@ -234,6 +234,22 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
 mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 ```
 
+For an existing local database, apply the non-destructive migrations.
+
+Windows PowerShell:
+
+```powershell
+Get-Content app\backend\app\db\migrations\2026_05_16_sync_live_schema.sql | mysql -u root -p medical_appointment_system
+Get-Content app\backend\app\db\migrations\2026_05_17_repair_cancelled_slot_rebooking.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_repair_cancelled_slot_rebooking.sql
+```
+
 ### Run
 
 Run backend only:

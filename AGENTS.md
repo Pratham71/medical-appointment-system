@@ -111,7 +111,7 @@ Database Rules
 - Maintain 3NF normalization.
 - Use foreign keys properly.
 - Add indexes where needed.
-- Prevent double booking using UNIQUE(slot_id).
+- Prevent double booking using UNIQUE(active_slot_id) for active appointments so cancelled appointments can release the slot.
 - Use transactions for appointment booking.
 - MySQL is the selected database provider for the MVP.
 

@@ -103,17 +103,20 @@ mysql -u root -p medical_appointment_system < app/backend/app/db/schema.sql
 mysql -u root -p medical_appointment_system < app/backend/app/db/seed.sql
 ```
 
-If your local database already existed before the doctor availability and
-certificate context changes, apply the non-destructive sync migration:
+If your local database already existed before the doctor availability,
+certificate context, or cancelled-slot rebooking changes, apply the
+non-destructive sync migrations:
 
 Windows PowerShell:
 ```powershell
 Get-Content app\backend\app\db\migrations\2026_05_16_sync_live_schema.sql | mysql -u root -p medical_appointment_system
+Get-Content app\backend\app\db\migrations\2026_05_17_repair_cancelled_slot_rebooking.sql | mysql -u root -p medical_appointment_system
 ```
 
 macOS/Linux:
 ```bash
 mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_16_sync_live_schema.sql
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_repair_cancelled_slot_rebooking.sql
 ```
 
 Frontend Setup
