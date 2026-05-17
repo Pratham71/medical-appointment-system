@@ -156,6 +156,18 @@ macOS/Linux:
 mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_update_emergency_alerts_context_lifecycle.sql
 ```
 
+To add sample appointment data for professor, college-staff, and hostel-staff seed accounts:
+
+Windows PowerShell:
+```powershell
+Get-Content app\backend\app\db\migrations\2026_05_17_seed_patient_role_appointments.sql | mysql -u root -p medical_appointment_system
+```
+
+macOS/Linux:
+```bash
+mysql -u root -p medical_appointment_system < app/backend/app/db/migrations/2026_05_17_seed_patient_role_appointments.sql
+```
+
 Frontend Setup
 
 If frontend dependencies are missing on a clean checkout, install from the frontend lockfile:

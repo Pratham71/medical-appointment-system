@@ -89,7 +89,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="f2022XXXX@dubai.bits-pilani.ac.in"
+                placeholder="f20230123@dubai.bits-pilani.ac.in"
                 className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none transition"
               />
             </div>
@@ -133,7 +133,7 @@ export default function SignupPage() {
                   value={rollNumber}
                   onChange={(e) => setRollNumber(e.target.value)}
                   required
-                  placeholder="CSE-2026-001"
+                  placeholder="2023A7PS0123U"
                   className="w-full border border-brand-border rounded-btn px-3 py-2.5 text-sm text-brand-text placeholder:text-brand-muted focus:ring-2 focus:ring-teal-600 focus:ring-offset-1 focus:outline-none transition"
                 />
               </div>
