@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "College Infirmary Appointment API"
-    app_version: str = "0.1.0"
+    app_version: str = "beta-1.0.0"
     environment: str = "development"
     jwt_secret_key: str = "change-this-dev-secret"
     jwt_algorithm: str = "HS256"
