@@ -171,4 +171,5 @@ Current Entries
 [2026-05-15] [FIX] [TEAM] [feat/backend/api] - Preserved existing prescription context on doctor appointment details and fixed local-date schedule filtering
 [2026-05-15] [TEST] [TEAM] [feat/backend/api] - Added frontend workflow and patient-search regression tests
 [2026-05-15] [DOCS] [TEAM] [feat/backend/api] - Updated README, setup, API notes, project context, report notes, and TODO for staff login and UI integration fixes
+[2026-05-17] [UI] [TEAM] [main] - Month-wise appointment breakdown — student My Appointments (past/cancelled), doctor All Appointments, and admin Appointments now group rows by month with collapsible chevron headers showing appointment count; closes #33
 [2026-05-17] [DOCS] [TEAM] [main] - Linked final project TODOs to GitHub issues and documented the TODO-plus-issue tracking rule

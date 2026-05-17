@@ -1,10 +1,27 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { getAdminAppointments, getStoredUser } from "@/lib/api";
 import type { AdminAppointmentSummary } from "@/lib/types";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
+
+function groupByMonth<T extends { slot_date: string }>(items: T[]) {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const [year, month] = item.slot_date.split("-");
+    const key = `${year}-${month}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([key, rows]) => ({
+      key,
+      label: new Date(`${key}-01`).toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+      rows,
+    }));
+}
 
 function fmtDate(date: string) {
   return new Date(date + "T00:00:00").toLocaleDateString("en-IN", {
@@ -23,6 +40,15 @@ export default function AdminAppointmentsPage() {
   const [status, setStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+
+  function toggleMonth(key: string) {
+    setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   useEffect(() => {
     const user = getStoredUser();
@@ -139,21 +165,6 @@ export default function AdminAppointmentsPage() {
                     </td>
                   </tr>
                 )}
-                {!loading && appts.map((a) => (
-                  <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
-                    <td className="px-5 py-3 text-brand-muted text-xs">{a.appointment_id}</td>
-                    <td className="px-5 py-3 text-brand-muted whitespace-nowrap">{fmtDate(a.slot_date)}</td>
-                    <td className="px-5 py-3 text-brand-muted whitespace-nowrap">{a.start_time.slice(0, 5)}</td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-brand-text">{a.student_name}</p>
-                      <p className="text-xs text-brand-muted">{a.roll_number}</p>
-                    </td>
-                    <td className="px-5 py-3 text-brand-muted">{a.doctor_name}</td>
-                    <td className="px-5 py-3"><StatusBadge status={a.status} /></td>
-                    <td className="px-5 py-3 text-brand-muted max-w-[160px] truncate">{a.reason ?? "—"}</td>
-                    <td className="px-5 py-3 text-brand-muted max-w-[160px] truncate">{a.cancellation_reason ?? "—"}</td>
-                  </tr>
-                ))}
                 {!loading && appts.length === 0 && !error && (
                   <tr>
                     <td colSpan={8} className="px-5 py-8 text-center text-brand-muted text-sm">
@@ -161,6 +172,48 @@ export default function AdminAppointmentsPage() {
                     </td>
                   </tr>
                 )}
+                {!loading && groupByMonth(appts).map((group) => {
+                  const collapsed = collapsedMonths.has(group.key);
+                  return (
+                    <Fragment key={group.key}>
+                      <tr
+                        className="bg-brand-raised/70 cursor-pointer hover:bg-brand-raised border-y border-brand-border select-none"
+                        onClick={() => toggleMonth(group.key)}
+                      >
+                        <td colSpan={8} className="px-5 py-2">
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`}
+                              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span className="text-xs font-semibold text-brand-text">{group.label}</span>
+                            <span className="text-xs text-brand-muted">·</span>
+                            <span className="text-xs text-brand-muted">
+                              {group.rows.length} appointment{group.rows.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                      {!collapsed && group.rows.map((a) => (
+                        <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
+                          <td className="px-5 py-3 text-brand-muted text-xs">{a.appointment_id}</td>
+                          <td className="px-5 py-3 text-brand-muted whitespace-nowrap">{fmtDate(a.slot_date)}</td>
+                          <td className="px-5 py-3 text-brand-muted whitespace-nowrap">{a.start_time.slice(0, 5)}</td>
+                          <td className="px-5 py-3">
+                            <p className="font-medium text-brand-text">{a.student_name}</p>
+                            <p className="text-xs text-brand-muted">{a.roll_number}</p>
+                          </td>
+                          <td className="px-5 py-3 text-brand-muted">{a.doctor_name}</td>
+                          <td className="px-5 py-3"><StatusBadge status={a.status} /></td>
+                          <td className="px-5 py-3 text-brand-muted max-w-[160px] truncate">{a.reason ?? "—"}</td>
+                          <td className="px-5 py-3 text-brand-muted max-w-[160px] truncate">{a.cancellation_reason ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

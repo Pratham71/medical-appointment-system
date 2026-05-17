@@ -64,7 +64,8 @@ Google OAuth Tasks — Future Scope (GitHub issue #21)
 [ ] [FUTURE] [FRONTEND] Handle OAuth redirect and callback route, store JWT same as current login
 [ ] [FUTURE] [FRONTEND] Show error for non-college Google accounts
 [ ] [FUTURE] Dark mode — CSS variable theming with darkMode: 'class' in Tailwind, animated sun/moon toggle in header, persisted in localStorage
-[ ] [TOFIX] Month-wise appointment breakdown — student My Appointments and doctor All Appointments grouped by month with collapsible headers and counts; pure frontend, no backend needed (GitHub issue #33)
+[x] [TOFIX] Month-wise appointment breakdown — student My Appointments (past/cancelled tabs), doctor All Appointments, and admin Appointments grouped by month with collapsible headers and counts (GitHub issue #33)
+[ ] [FUTURE] Year-level pagination for appointment lists — add ?year= and cursor/page params to GET /students/appointments, GET /doctors/appointments, GET /admin/appointments; frontend shows year selector tabs or prev/next controls; required for large appointment histories (no GitHub issue yet)
 
 Appointment APIs
 
@@ -92,6 +93,7 @@ Appointment APIs
 [ ] [FUTURE] Slot reservation hold with 5-min auto-expiry — POST /appointments/reserve creates a TTL reservation on slot select; booking-in-progress status broadcast via WebSocket to other students; countdown timer shown to holder; expired reservations swept by background task and slot freed; confirmed booking requires active reservation (GitHub issue #45)
 [ ] [FUTURE] True real-time slot updates via WebSocket or SSE — replace the current 30s/20s polling on the booking page with push events when slots are booked or freed; needs a FastAPI WebSocket endpoint or SSE stream, frontend replaces interval with useEffect WebSocket connection, graceful fallback to polling on disconnect (GitHub issue #41)
 [ ] [FUTURE] Real-time emergency alert push to admin and staff — WebSocket/SSE endpoint auth-gated to admin/staff, broadcast on every POST /emergency/alert, DashboardShell opens persistent connection and shows a toast + increments sidebar badge on receive; Emergency Alerts page prepends new card without reload (GitHub issue #42)
+[ ] [FUTURE] Emergency alert context fields — add reason (enum dropdown), location (free text), and contact number (optional, pre-filled from profile) to POST /emergency/alert; backend migration + schema update; EmergencyButton form redesign; admin alert cards show all three fields prominently (GitHub issue #46)
 [ ] [FUTURE] Emergency alert acknowledgement and resolution flow — Acknowledge and Resolve actions on alert cards, backend PATCH endpoints + migration for acknowledged_by/resolved_at columns, three-state badge (Unread / Acknowledged / Resolved), student-facing alert status view (GitHub issue #43) — backend needs DELETE or PATCH /admin/users/:id/deactivate endpoint; frontend Change Role button row should gain a Remove button with a confirmation modal
 [ ] [TOFIX] Doctor weekly availability schedule fails to save — likely time format mismatch (HH:MM vs HH:MM:SS) or backend rejecting null times; investigate frontend payload and backend upsert (GitHub issue #35)
 [ ] [TOFIX] [BACKEND] Cancelled appointment slots not freed for rebooking — slot_status not returning to 'available' after cancellation; investigate active_slot_id uniqueness constraint and v_available_appointment_slots view (GitHub issue #34)

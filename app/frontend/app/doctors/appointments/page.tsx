@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { getDoctorAppointments, getStoredUser } from "@/lib/api";
 import type { DoctorAppointmentSummary } from "@/lib/types";
@@ -19,12 +19,30 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function groupByMonth<T extends { slot_date: string }>(items: T[]) {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const [year, month] = item.slot_date.split("-");
+    const key = `${year}-${month}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([key, rows]) => ({
+      key,
+      label: new Date(`${key}-01`).toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+      rows,
+    }));
+}
+
 export default function DoctorAppointmentsPage() {
   const router = useRouter();
   const [appointments, setAppointments] = useState<DoctorAppointmentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("today");
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const user = getStoredUser();
@@ -34,6 +52,18 @@ export default function DoctorAppointmentsPage() {
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    setCollapsedMonths(new Set());
+  }, [tab]);
+
+  function toggleMonth(key: string) {
+    setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   const today = getLocalDateKey();
   const filtered = tab === "today"
@@ -87,7 +117,7 @@ export default function DoctorAppointmentsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-brand-raised border-b border-brand-border">
-                {tab === "all" && <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>}
+                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Patient</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Student ID</th>
@@ -96,31 +126,81 @@ export default function DoctorAppointmentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border">
-              {filtered.map((a, i) => (
-                <motion.tr
-                  key={a.appointment_id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }}
-                  className="hover:bg-brand-raised transition-colors"
-                >
-                  {tab === "all" && <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>}
-                  <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
-                  <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={a.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
-                      className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
+              {tab === "all"
+                ? groupByMonth(filtered).map((group) => {
+                    const collapsed = collapsedMonths.has(group.key);
+                    return (
+                      <Fragment key={group.key}>
+                        <tr
+                          className="bg-brand-raised/70 cursor-pointer hover:bg-brand-raised border-y border-brand-border select-none"
+                          onClick={() => toggleMonth(group.key)}
+                        >
+                          <td colSpan={6} className="px-4 py-2">
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`}
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                              </svg>
+                              <span className="text-xs font-semibold text-brand-text">{group.label}</span>
+                              <span className="text-xs text-brand-muted">·</span>
+                              <span className="text-xs text-brand-muted">
+                                {group.rows.length} appointment{group.rows.length !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                        {!collapsed &&
+                          group.rows.map((a, i) => (
+                            <motion.tr
+                              key={a.appointment_id}
+                              initial={{ opacity: 0, y: 4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.2) }}
+                              className="hover:bg-brand-raised transition-colors"
+                            >
+                              <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
+                              <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
+                              <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
+                              <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
+                              <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+                              <td className="px-4 py-3">
+                                <button
+                                  onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
+                                  className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                                >
+                                  View Details →
+                                </button>
+                              </td>
+                            </motion.tr>
+                          ))}
+                      </Fragment>
+                    );
+                  })
+                : filtered.map((a, i) => (
+                    <motion.tr
+                      key={a.appointment_id}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }}
+                      className="hover:bg-brand-raised transition-colors"
                     >
-                      View Details →
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
+                      <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
+                      <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
+                      <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
+                          className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                        >
+                          View Details →
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
             </tbody>
           </table>
         )}
