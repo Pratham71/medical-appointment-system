@@ -42,6 +42,7 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-18] [DB] [Codex] [mobile-responsive] - Added live database repair migration for missing doctor appointment and student report summary views causing server-side 500s
 [2026-05-18] [UI] [PR] [mobile-responsive] - Full mobile-responsive frontend: hamburger drawer nav, all data tables converted to card layouts on mobile, modals as bottom sheets, availability page mobile forms, signup grid fix
 [2026-05-18] [UI] [PR] [mobile-responsive] - Staff dashboard redesign: entrance animations, greeting, live alert dot, walk-ins page added with mobile card table
 [2026-05-18] [UI] [PR] [mobile-responsive] - Emergency alerts action row now inline/flex-wrap on mobile instead of fixed-width right column

@@ -320,6 +320,19 @@ def test_live_schema_migration_repairs_availability_and_certificate_views():
     assert "medical_notes.diagnosis" in migration
 
 
+def test_live_summary_view_migration_repairs_missing_views():
+    migration = (
+        MIGRATION_DIR / "2026_05_18_add_missing_summary_views.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "create or replace view v_doctor_appointment_summaries" in migration
+    assert "create or replace view v_student_report_summaries" in migration
+    assert "appointments.appointment_id" in migration
+    assert "appointment_statuses.status_name as status" in migration
+    assert "count(prescription_items.item_id) as prescription_count" in migration
+    assert "select *" not in migration
+
+
 def test_available_slots_view_respects_doctor_availability_rules():
     schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
 
