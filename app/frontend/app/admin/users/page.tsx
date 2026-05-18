@@ -30,13 +30,7 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 const ROLES: AssignableRole[] = [
-  "student",
-  "professor",
-  "college-staff",
-  "hostel-staff",
-  "doctor",
-  "staff",
-  "admin",
+  "student", "professor", "college-staff", "hostel-staff", "doctor", "staff", "admin",
 ];
 
 interface RoleForm {
@@ -69,10 +63,8 @@ function RoleAssignModal({
   const [error, setError] = useState("");
 
   const needsAcademic =
-    form.role_name === "student" ||
-    form.role_name === "professor" ||
-    form.role_name === "college-staff" ||
-    form.role_name === "hostel-staff";
+    form.role_name === "student" || form.role_name === "professor" ||
+    form.role_name === "college-staff" || form.role_name === "hostel-staff";
   const needsEmployee = form.role_name === "doctor" || form.role_name === "staff";
 
   async function handleSubmit() {
@@ -98,12 +90,7 @@ function RoleAssignModal({
     }
   }
 
-  const field = (
-    label: string,
-    key: keyof RoleForm,
-    placeholder: string,
-    type = "text"
-  ) => (
+  const field = (label: string, key: keyof RoleForm, placeholder: string, type = "text") => (
     <div>
       <label className="block text-xs font-medium text-brand-muted mb-1">{label}</label>
       <input
@@ -121,15 +108,15 @@ function RoleAssignModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
     >
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="relative bg-white rounded-card shadow-xl p-6 w-full max-w-md mx-4 border border-brand-border"
+        className="relative bg-white rounded-t-2xl sm:rounded-card shadow-xl p-6 w-full sm:max-w-md sm:mx-4 border border-brand-border max-h-[90vh] overflow-y-auto"
       >
         <h3 className="text-base font-semibold text-brand-text">Assign Role</h3>
         <p className="mt-1 text-sm text-brand-muted">{user.name} · {user.email}</p>
@@ -139,26 +126,19 @@ function RoleAssignModal({
         <div className="mt-4 space-y-3">
           <div>
             <label className="block text-xs font-medium text-brand-muted mb-1">Role</label>
-            <Select
-              value={form.role_name}
-              onChange={(e) => setForm({ ...form, role_name: e.target.value as AssignableRole })}
-            >
+            <Select value={form.role_name} onChange={(e) => setForm({ ...form, role_name: e.target.value as AssignableRole })}>
               {ROLES.map((r) => (
                 <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
               ))}
             </Select>
           </div>
-
           {needsAcademic && (
             <>
               {field("Roll Number", "roll_number", "e.g. 2021A7PS123P")}
               {field("Department", "department", "e.g. Computer Science")}
               <div>
                 <label className="block text-xs font-medium text-brand-muted mb-1">Year Level</label>
-                <Select
-                  value={form.year_level}
-                  onChange={(e) => setForm({ ...form, year_level: e.target.value })}
-                >
+                <Select value={form.year_level} onChange={(e) => setForm({ ...form, year_level: e.target.value })}>
                   <option value="">Select year</option>
                   {[1, 2, 3, 4, 5, 6].map((y) => (
                     <option key={y} value={y}>Year {y}</option>
@@ -167,7 +147,6 @@ function RoleAssignModal({
               </div>
             </>
           )}
-
           {needsEmployee && (
             <>
               {field("Employee Number", "employee_number", "e.g. EMP001")}
@@ -207,17 +186,14 @@ export default function AdminUsersPage() {
   const [selected, setSelected] = useState<AdminUserSummary | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<AdminUserSummary | null>(null);
 
-  const fetchUsers = useCallback(
-    (q: string, role: string) => {
-      setLoading(true);
-      setError("");
-      getAdminUsers(q || undefined, role || undefined)
-        .then(setUsers)
-        .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
-        .finally(() => setLoading(false));
-    },
-    []
-  );
+  const fetchUsers = useCallback((q: string, role: string) => {
+    setLoading(true);
+    setError("");
+    getAdminUsers(q || undefined, role || undefined)
+      .then(setUsers)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -226,9 +202,7 @@ export default function AdminUsersPage() {
     fetchUsers("", "");
   }, [router, fetchUsers]);
 
-  function handleSearch() {
-    fetchUsers(query, roleFilter);
-  }
+  function handleSearch() { fetchUsers(query, roleFilter); }
 
   function handleRoleSuccess(res: AdminRoleAssignmentResponse) {
     setSelected(null);
@@ -264,22 +238,17 @@ export default function AdminUsersPage() {
 
   return (
     <DashboardShell role="admin" title="Users">
-      {/* Deactivate confirmation modal */}
       <AnimatePresence>
         {confirmTarget && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4"
           >
             <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmTarget(null)} />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="relative w-full max-w-sm rounded-card bg-white shadow-xl border border-brand-border p-6"
+              className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-card bg-white shadow-xl border border-brand-border p-6"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
@@ -326,7 +295,7 @@ export default function AdminUsersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="flex-1 min-w-[200px] border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="flex-1 min-w-[160px] border border-brand-border rounded-btn px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="">All roles</option>
@@ -342,92 +311,139 @@ export default function AdminUsersPage() {
           </button>
         </div>
 
-        {/* Table */}
+        {/* Table / Cards */}
         <div className="bg-white rounded-card border border-brand-border shadow-card">
           {error && (
             <div className="px-5 py-4 text-sm text-red-600 bg-red-50 border-b border-brand-border">{error}</div>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-brand-border bg-brand-bg">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Name</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Email</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Role</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">ID</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Active</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border">
-                {loading && (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-brand-muted text-sm animate-pulse">
-                      Loading…
-                    </td>
-                  </tr>
-                )}
-                {!loading && users.map((u) => (
-                  <tr key={u.user_id} className="hover:bg-brand-raised transition-colors">
-                    <td className="px-5 py-3 font-medium text-brand-text">{u.name}</td>
-                    <td className="px-5 py-3 text-brand-muted">{u.email}</td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[u.role_name] ?? ROLE_BADGE.staff}`}>
-                        {u.role_name.charAt(0).toUpperCase() + u.role_name.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-brand-muted text-xs">
-                      {u.student_id ?? u.staff_id ?? "—"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${u.is_active ? "text-emerald-600" : "text-slate-400"}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-slate-300"}`} />
-                        {u.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-wrap gap-2">
-                      {u.role_name === "admin" ? (
-                        <span
-                          title="Admin accounts cannot be modified"
-                          className="text-xs text-brand-muted border border-brand-border px-2.5 py-1 rounded-btn opacity-40 cursor-not-allowed select-none"
-                        >
-                          Protected
-                        </span>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => setSelected(u)}
-                            className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors font-medium"
-                          >
-                            Change Role
-                          </button>
-                          <button
-                            onClick={() => handleToggleActive(u)}
-                            className={`text-xs border px-2.5 py-1 rounded-btn transition-colors font-medium ${
-                              u.is_active
-                                ? "text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                                : "text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
-                            }`}
-                          >
-                            {u.is_active ? "Deactivate" : "Activate"}
-                          </button>
-                        </>
-                      )}
+
+          {loading && (
+            <div className="px-5 py-8 text-center text-brand-muted text-sm animate-pulse">Loading…</div>
+          )}
+
+          {!loading && users.length === 0 && !error && (
+            <div className="px-5 py-8 text-center text-brand-muted text-sm">No users found</div>
+          )}
+
+          {!loading && users.length > 0 && (
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-brand-border bg-brand-bg">
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Name</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Email</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Role</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">ID</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Active</th>
+                      <th className="text-left px-5 py-3 text-xs font-medium text-brand-muted">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-border">
+                    {users.map((u) => (
+                      <tr key={u.user_id} className="hover:bg-brand-raised transition-colors">
+                        <td className="px-5 py-3 font-medium text-brand-text">{u.name}</td>
+                        <td className="px-5 py-3 text-brand-muted">{u.email}</td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[u.role_name] ?? ROLE_BADGE.staff}`}>
+                            {u.role_name.charAt(0).toUpperCase() + u.role_name.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-brand-muted text-xs">{u.student_id ?? u.staff_id ?? "—"}</td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${u.is_active ? "text-emerald-600" : "text-slate-400"}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                            {u.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            {u.role_name === "admin" ? (
+                              <span className="text-xs text-brand-muted border border-brand-border px-2.5 py-1 rounded-btn opacity-40 cursor-not-allowed select-none">
+                                Protected
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => setSelected(u)}
+                                  className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1 rounded-btn transition-colors font-medium"
+                                >
+                                  Change Role
+                                </button>
+                                <button
+                                  onClick={() => handleToggleActive(u)}
+                                  aria-label={u.is_active ? "Remove user" : "Activate user"}
+                                  className={`text-xs border px-2.5 py-1 rounded-btn transition-colors font-medium ${
+                                    u.is_active
+                                      ? "text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                      : "text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                                  }`}
+                                >
+                                  {u.is_active ? "Deactivate" : "Activate"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-brand-border">
+                {users.map((u) => (
+                  <div key={u.user_id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-brand-text">{u.name}</p>
+                        <p className="text-xs text-brand-muted mt-0.5">{u.email}</p>
+                        {(u.student_id ?? u.staff_id) && (
+                          <p className="text-xs text-brand-muted font-mono mt-0.5">{u.student_id ?? u.staff_id}</p>
+                        )}
                       </div>
-                    </td>
-                  </tr>
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[u.role_name] ?? ROLE_BADGE.staff}`}>
+                          {u.role_name.charAt(0).toUpperCase() + u.role_name.slice(1)}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 text-xs font-medium ${u.is_active ? "text-emerald-600" : "text-slate-400"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                          {u.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
+                    {u.role_name !== "admin" && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => setSelected(u)}
+                          className="text-xs text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 px-2.5 py-1.5 rounded-btn transition-colors font-medium"
+                        >
+                          Change Role
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(u)}
+                          aria-label={u.is_active ? "Remove user" : "Activate user"}
+                          className={`text-xs border px-2.5 py-1.5 rounded-btn transition-colors font-medium ${
+                            u.is_active
+                              ? "text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                              : "text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                          }`}
+                        >
+                          {u.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                      </div>
+                    )}
+                    {u.role_name === "admin" && (
+                      <p className="mt-2 text-xs text-brand-muted opacity-60">Protected — cannot be modified</p>
+                    )}
+                  </div>
                 ))}
-                {!loading && users.length === 0 && !error && (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-brand-muted text-sm">
-                      No users found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </>
+          )}
+
           {!loading && (
             <div className="px-5 py-3 border-t border-brand-border text-xs text-brand-muted">
               {users.length} user{users.length !== 1 ? "s" : ""}
@@ -438,11 +454,7 @@ export default function AdminUsersPage() {
 
       <AnimatePresence>
         {selected && (
-          <RoleAssignModal
-            user={selected}
-            onClose={() => setSelected(null)}
-            onSuccess={handleRoleSuccess}
-          />
+          <RoleAssignModal user={selected} onClose={() => setSelected(null)} onSuccess={handleRoleSuccess} />
         )}
       </AnimatePresence>
 

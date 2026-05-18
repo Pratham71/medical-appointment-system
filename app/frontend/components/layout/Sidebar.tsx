@@ -14,6 +14,8 @@ interface NavItem {
 
 interface Props {
   role: "student" | "doctor" | "admin" | "staff";
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const studentNav: NavItem[] = [
@@ -199,6 +201,15 @@ const staffNav: NavItem[] = [
     ),
   },
   {
+    href: "/staff/walk-ins",
+    label: "Walk-ins",
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
     href: "/staff/emergency-alerts",
     label: "Emergency Alerts",
     icon: (
@@ -209,7 +220,7 @@ const staffNav: NavItem[] = [
   },
 ];
 
-export default function Sidebar({ role }: Props) {
+export default function Sidebar({ role, isOpen = false, onClose }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -219,6 +230,7 @@ export default function Sidebar({ role }: Props) {
     const user = getStoredUser();
     if (user) setDisplayRole(user.role_name);
   }, []);
+
   const nav =
     role === "student"
       ? studentNav
@@ -241,30 +253,37 @@ export default function Sidebar({ role }: Props) {
     return pathname.startsWith(href);
   }
 
-  return (
+  const navContent = (
     <>
-    <AnimatePresence>
-      {confirmLogout && (
-        <Modal
-          title="Sign out"
-          message="Are you sure you want to sign out?"
-          confirmLabel="Yes, sign out"
-          cancelLabel="Cancel"
-          danger
-          onConfirm={handleLogout}
-          onCancel={() => setConfirmLogout(false)}
-        />
-      )}
-    </AnimatePresence>
-    <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-brand-border flex flex-col z-40">
       {/* Logo */}
-      <div className="h-14 flex items-center px-5 border-b border-brand-border">
+      <div className="h-14 flex items-center px-5 border-b border-brand-border flex-shrink-0">
         <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
           M
         </div>
         <span className="ml-2.5 font-semibold text-brand-text text-sm leading-tight">
           College<br />Infirmary
         </span>
+        {/* Mobile-only controls: sign out + close */}
+        <div className="ml-auto md:hidden flex items-center gap-1">
+          <button
+            onClick={() => setConfirmLogout(true)}
+            className="p-1.5 rounded-md text-brand-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+            aria-label="Sign out"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-md text-brand-muted hover:text-brand-text hover:bg-brand-raised transition-colors"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Nav */}
@@ -278,27 +297,27 @@ export default function Sidebar({ role }: Props) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.2, delay: i * 0.05 }}
             >
-            <Link
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors relative ${
-                active
-                  ? "text-teal-700 bg-teal-50 font-medium"
-                  : "text-brand-muted hover:text-brand-text hover:bg-brand-raised"
-              }`}
-            >
-              {active && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-teal-600 rounded-r" />
-              )}
-              {item.icon}
-              {item.label}
-            </Link>
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors relative ${
+                  active
+                    ? "text-teal-700 bg-teal-50 font-medium"
+                    : "text-brand-muted hover:text-brand-text hover:bg-brand-raised"
+                }`}
+              >
+                {active && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-teal-600 rounded-r" />
+                )}
+                {item.icon}
+                {item.label}
+              </Link>
             </motion.div>
           );
         })}
       </nav>
 
       {/* Role badge + Logout */}
-      <div className="p-3 border-t border-brand-border space-y-0.5">
+      <div className="p-3 border-t border-brand-border space-y-0.5 flex-shrink-0">
         {displayRole && (
           <div className="px-3 py-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 ring-1 ring-teal-200">
@@ -316,7 +335,56 @@ export default function Sidebar({ role }: Props) {
           Sign out
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <AnimatePresence>
+        {confirmLogout && (
+          <Modal
+            title="Sign out"
+            message="Are you sure you want to sign out?"
+            confirmLabel="Yes, sign out"
+            cancelLabel="Cancel"
+            danger
+            onConfirm={handleLogout}
+            onCancel={() => setConfirmLogout(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar — always visible */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-60 bg-white border-r border-brand-border flex-col z-40">
+        {navContent}
+      </aside>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/40 z-40 md:hidden"
+              onClick={onClose}
+            />
+            <motion.aside
+              key="drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-brand-border flex flex-col z-50 md:hidden"
+            >
+              {navContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
