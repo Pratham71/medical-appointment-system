@@ -138,6 +138,29 @@ def test_student_booking_fetches_all_doctors_for_selected_date() -> None:
     assert "doc.unavailability_note" in page
 
 
+def test_staff_walk_in_booking_page_is_wired_to_backend() -> None:
+    page_path = FRONTEND / "app" / "staff" / "walk-ins" / "page.tsx"
+    sidebar = read(FRONTEND / "components" / "layout" / "Sidebar.tsx")
+    api = read(FRONTEND / "lib" / "api.ts")
+    types = read(FRONTEND / "lib" / "types.ts")
+
+    assert page_path.exists()
+    page = read(page_path)
+    assert 'href: "/staff/walk-ins"' in sidebar
+    assert "searchStaffPatients" in api
+    assert "bookWalkInAppointment" in api
+    assert "getStaffWalkIns" in api
+    assert "`/staff/walk-ins?${p}`" in api
+    assert "`/staff/patients/search?${p}`" in api
+    assert '"/staff/walk-ins/book"' in api
+    assert "StaffPatientSearchResult" in types
+    assert "searchStaffPatients(query.trim())" in page
+    assert "bookWalkInAppointment(selectedPatient.student_id" in page
+    assert "getStaffWalkIns({ status: walkInStatus" in page
+    assert "Walk-in Bookings" in page
+    assert "Walk-in consultation" in page
+
+
 def test_student_cancelled_appointment_shows_reschedule_options() -> None:
     detail_page = read(
         FRONTEND / "app" / "students" / "appointments" / "[id]" / "page.tsx"

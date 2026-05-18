@@ -252,6 +252,20 @@ def test_seed_and_migration_include_patient_equivalent_staff_roles():
     assert "hostel-staff" in seed
 
 
+def test_seed_and_migration_include_valid_staff_login_profile():
+    seed = (DB_DIR / "seed.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_18_repair_staff_seed_account.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "'staff@college.edu'" in seed
+    assert "'staff@college.edu'" in migration
+    assert "roles.role_name = 'staff'" in migration
+    assert "employee_number = 'staff-001'" in migration
+    assert "(\n        4,\n        4,\n        'infirmary staff'" in seed
+    assert "(2, 4, 'staff-001', null, false)" in seed
+
+
 def test_admin_queries_support_user_status_updates():
     source = (QUERY_DIR / "admin_queries.py").read_text(encoding="utf-8").lower()
 

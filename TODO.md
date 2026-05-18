@@ -50,7 +50,7 @@ Auth and Security Tasks
 [x] Require production-safe JWT secret configuration
 [x] Add brute-force protection for login
 [x] Add staff login, seed account, routing, and safe staff landing page
-[x] [TOFIX] Build staff workflow API after front-desk requirements are finalized - staff dashboard counts, staff appointment oversight, and staff cancellation with required reason are implemented (GitHub issue #12)
+[x] [TOFIX] Build staff workflow API after front-desk requirements are finalized - staff dashboard counts, staff appointment oversight, existing-patient walk-in booking/listing, and staff cancellation with required reason are implemented (GitHub issue #12)
 [x] [TOFIX] Fix professor sign-in routing and backend permissions so professor users can use the student/patient workflow after login (GitHub issue #39)
 [ ] [FUTURE] Forgot password / password reset flow — frontend button exists but non-functional, needs backend reset token API (GitHub issue #23)
 [ ] [FUTURE] Revisit completed-appointment edit override only if approved — current MVP intentionally locks completed appointments from doctor edits; any future override needs admin approval + audit trail (GitHub issue #24)
@@ -169,7 +169,7 @@ Frontend To Fix
 Final Project TODOs
 
 [x] [FINAL] Admin workflow and implementation - backend admin APIs and full frontend implemented: dashboard metrics, user role assignment, appointment oversight, student/professor tabs, doctor/staff directories, emergency alert review (GitHub issue #11)
-[x] [FINAL] Staff workflow and implementation - backend staff routes now provide dashboard counts, appointment lookup/oversight, and cancellation with reason; frontend keeps the existing staff landing page for MVP staff access. (GitHub issue #12)
+[x] [FINAL] Staff workflow and implementation - backend staff routes now provide dashboard counts, appointment lookup/oversight, existing-patient walk-in booking/listing, and cancellation with reason; frontend provides staff emergency alert triage, walk-in booking, and walk-in booking review for existing patients. (GitHub issue #12)
 [x] [FINAL] Email notifications for appointment updates - SMTP configuration is environment-driven and disabled by default; backend sends best-effort notifications for booking confirmation, cancellation with reason, doctor-unavailability auto-cancel, report/prescription updates, and certificate availability with tests for disabled/provider-failure paths. (GitHub issue #37)
 [ ] [FINAL] Code refinement and project hardening - clean up duplicated frontend/backend helpers, review API error messages, tighten route/service/repository boundaries, add live MySQL integration tests where useful, check accessibility/responsive UI issues, update final docs/screenshots, and remove stale TODOs before project submission. (GitHub issue #38)
 

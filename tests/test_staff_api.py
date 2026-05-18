@@ -107,6 +107,140 @@ def test_staff_can_list_appointments_with_filters(monkeypatch):
     assert captured[0].limit == 25
 
 
+def test_staff_can_search_existing_patients_for_walk_ins(monkeypatch):
+    staff_service = _staff_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("staff", user_id=40),
+    )
+
+    def fake_search_patients(q, limit):
+        captured.append((q, limit))
+        return [
+            {
+                "student_id": 1,
+                "student_name": "Aarav Sharma",
+                "email": "student@college.edu",
+                "roll_number": "CSE-2026-001",
+                "department": "Computer Science",
+                "year_level": 2,
+                "role_name": "student",
+            }
+        ]
+
+    monkeypatch.setattr(staff_service, "search_patients", fake_search_patients)
+
+    client = TestClient(app)
+    response = client.get(
+        "/staff/patients/search?q=Aarav&limit=10",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["student_id"] == 1
+    assert response.json()[0]["roll_number"] == "CSE-2026-001"
+    assert captured == [("Aarav", 10)]
+
+
+def test_staff_can_book_walk_in_for_existing_patient(monkeypatch):
+    staff_service = _staff_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("staff", user_id=40),
+    )
+
+    def fake_book_walk_in(payload):
+        captured.append((payload.student_id, payload.slot_id, payload.reason))
+        return {
+            "appointment_id": 77,
+            "slot_id": payload.slot_id,
+            "status": "booked",
+            "message": "Walk-in appointment booked",
+        }
+
+    monkeypatch.setattr(staff_service, "book_walk_in", fake_book_walk_in)
+
+    client = TestClient(app)
+    response = client.post(
+        "/staff/walk-ins/book",
+        headers={**_auth_header(), "Idempotency-Key": "walk-in-77"},
+        json={
+            "student_id": 1,
+            "slot_id": 4,
+            "reason": "Headache after class",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["appointment_id"] == 77
+    assert response.json()["message"] == "Walk-in appointment booked"
+    assert captured == [(1, 4, "Headache after class")]
+
+
+def test_staff_can_list_walk_in_bookings(monkeypatch):
+    staff_service = _staff_service()
+    captured = []
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("staff", user_id=40),
+    )
+
+    def fake_list_walk_ins(filters):
+        captured.append(filters)
+        return [
+            {
+                "appointment_id": 77,
+                "slot_date": date(2026, 5, 18),
+                "start_time": time(10, 0),
+                "end_time": time(10, 30),
+                "student_id": 1,
+                "student_name": "Aarav Sharma",
+                "roll_number": "CSE-2026-001",
+                "doctor_id": 1,
+                "doctor_name": "Dr. Meera Singh",
+                "status": "booked",
+                "reason": "Walk-in consultation: Headache after class",
+                "cancellation_reason": None,
+            }
+        ]
+
+    monkeypatch.setattr(staff_service, "list_walk_ins", fake_list_walk_ins)
+
+    client = TestClient(app)
+    response = client.get(
+        "/staff/walk-ins?status=booked&from_date=2026-05-18&to_date=2026-05-18&limit=25",
+        headers=_auth_header(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["appointment_id"] == 77
+    assert response.json()[0]["reason"].startswith("Walk-in consultation")
+    assert captured[0].status == "booked"
+    assert captured[0].limit == 25
+
+
+def test_students_cannot_book_staff_walk_ins(monkeypatch):
+    monkeypatch.setattr(
+        auth_service,
+        "get_current_user",
+        lambda token: _user("student", user_id=20),
+    )
+
+    client = TestClient(app)
+    response = client.post(
+        "/staff/walk-ins/book",
+        headers={**_auth_header(), "Idempotency-Key": "walk-in-denied"},
+        json={"student_id": 1, "slot_id": 4},
+    )
+
+    assert response.status_code == 403
+
+
 def test_staff_can_cancel_appointment_with_reason(monkeypatch):
     captured = []
     monkeypatch.setattr(

@@ -17,7 +17,7 @@ Current MVP Notes
 - New signup accounts are created as student/patient accounts by default; admin-only role assignment can later change them to professor, college-staff, hostel-staff, doctor, staff, or admin.
 - Admin backend routes are available for dashboard metrics, user role assignment, user activation/deactivation, appointment oversight, directories, and emergency alert review.
 - Emergency alert review includes context fields plus acknowledge/resolve lifecycle actions for admin/staff responders.
-- Staff workflow APIs are implemented for dashboard counts and appointment lookup/oversight. Staff can cancel appointments with a structured reason through the shared cancellation endpoint.
+- Staff workflow APIs are implemented for dashboard counts, appointment lookup/oversight, existing-patient walk-in booking, and cancellation with structured reasons through the shared cancellation endpoint.
 - Email notifications are environment-driven and disabled by default; when enabled, SMTP dispatch is best-effort and does not block the appointment/document workflow.
 - Student endpoints use the authenticated student context instead of `student_id` query parameters.
 - Doctor dashboard and appointment list endpoints use the authenticated staff context instead of `staff_id` query parameters.
@@ -85,11 +85,18 @@ Admin notes:
 Staff
 GET /staff/dashboard
 GET /staff/appointments
+GET /staff/patients/search
+GET /staff/walk-ins
+POST /staff/walk-ins/book
 
 Staff notes:
 - Staff endpoints require `role_name = staff` or `role_name = admin`.
 - `GET /staff/dashboard` returns appointment and emergency-alert counts for front-desk triage.
 - `GET /staff/appointments` supports `status`, `from_date`, `to_date`, and `limit`.
+- `GET /staff/patients/search` searches active existing patients by name, email, or roll number.
+- `GET /staff/walk-ins` lists staff-created walk-in bookings and supports `status`, `from_date`, `to_date`, and `limit`.
+- `POST /staff/walk-ins/book` books an existing patient into an available slot and stores the appointment reason with a walk-in prefix.
+- Walk-in booking requires `Idempotency-Key` and uses the same slot transaction/conflict checks as normal appointment booking.
 
 Students
 GET /students/dashboard
@@ -172,7 +179,7 @@ Notifications
 
 Future APIs
 GET /live/queue
-POST /walkins
+POST /walkins for unregistered temporary intake
 POST /vitals/{appointment_id}
 GET /notifications
 GET /audit-logs

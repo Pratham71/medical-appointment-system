@@ -20,7 +20,7 @@ This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL q
 - Medical certificate records
 - Student report and certificate view/download actions
 - Structured emergency alerts with reason, location, optional contact number, acknowledgement, resolution, and student-visible status
-- Staff login landing page and backend staff appointment oversight APIs
+- Staff dashboard workflow for emergency alerts and existing-patient walk-in booking
 - College-staff and hostel-staff patient access using the student workflow
 - Best-effort SMTP email notifications for appointment and document updates
 - JWT-based login flow
@@ -152,6 +152,9 @@ The selected database engine is MySQL.
 
 - `GET /staff/dashboard`
 - `GET /staff/appointments`
+- `GET /staff/patients/search`
+- `GET /staff/walk-ins`
+- `POST /staff/walk-ins/book`
 
 ### Students
 
@@ -338,8 +341,8 @@ staff@college.edu
 
 ## Current Status
 
-The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor/college-staff/hostel-staff patient-equivalent role support, admin role assignment and user status management, staff appointment oversight, structured emergency alert lifecycle management, best-effort email notifications, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
+The backend has FastAPI routes, MySQL schema/seed files, MySQL connection pooling, raw SQL query modules, reporting views, JWT route protection, role-based access, authenticated user context, signup defaulting to student/patient accounts, professor/college-staff/hostel-staff patient-equivalent role support, admin role assignment and user status management, staff appointment oversight, staff existing-patient walk-in booking, structured emergency alert lifecycle management, best-effort email notifications, rate limiting, idempotency, login brute-force protection, doctor patient search, and doctor availability management.
 
-The frontend supports login, student appointment lists, student report/certificate view and text downloads, emergency alert submission/status review, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin user role/status actions, admin emergency alert acknowledgement/resolution, admin safe landing, and staff safe landing.
+The frontend supports login, student appointment lists, student report/certificate view and text downloads, emergency alert submission/status review, doctor appointment details with existing prescription context, local-date doctor schedule filtering, patient lookup by name or roll number, doctor availability management, admin user role/status actions, admin emergency alert acknowledgement/resolution, admin safe landing, staff emergency alert review, and staff existing-patient walk-in booking.
 
 Current known gaps include forgot password/password reset as future scope, active user presence tracking, printable/downloadable templates for reports, prescriptions, and certificates, and live MySQL API integration tests.
