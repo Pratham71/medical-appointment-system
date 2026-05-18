@@ -42,6 +42,12 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-18] [UI] [PR] [mobile-responsive] - Full mobile-responsive frontend: hamburger drawer nav, all data tables converted to card layouts on mobile, modals as bottom sheets, availability page mobile forms, signup grid fix
+[2026-05-18] [UI] [PR] [mobile-responsive] - Staff dashboard redesign: entrance animations, greeting, live alert dot, walk-ins page added with mobile card table
+[2026-05-18] [UI] [PR] [mobile-responsive] - Emergency alerts action row now inline/flex-wrap on mobile instead of fixed-width right column
+[2026-05-18] [UI] [PR] [mobile-responsive] - Added favicon (teal M logo via app/icon.svg)
+[2026-05-18] [UPDATE] [PR] [main] - Bumped version to beta-1.1.0
+
 [2026-05-17] [API] [Codex] [feat/issues-12-37-39-44-admin-users] - Completed emergency alert context and lifecycle APIs for issues #46/#43: structured reason/location/contact fields, admin/staff acknowledge and resolve endpoints, and student alert status listing
 [2026-05-17] [DB] [Codex] [feat/issues-12-37-39-44-admin-users] - Added emergency_alerts context/lifecycle columns, lifecycle index, schema updates, and a non-destructive MySQL migration for existing databases
 [2026-05-17] [UI] [Codex] [feat/issues-12-37-39-44-admin-users] - Updated emergency alert UI with structured student alert form, admin context cards, acknowledge/resolve controls, and student dashboard alert statuses
@@ -194,3 +200,6 @@ Current Entries
 [2026-05-18] [DB] [TEAM] [feat/issues-12-37-39-44-admin-users] - Seed data and migration for professor/college-staff/hostel-staff appointments and emergency alerts
 [2026-05-17] [UI] [TEAM] [main] - Month-wise appointment breakdown — student My Appointments (past/cancelled), doctor All Appointments, and admin Appointments now group rows by month with collapsible chevron headers showing appointment count; closes #33
 [2026-05-17] [DOCS] [TEAM] [main] - Linked final project TODOs to GitHub issues and documented the TODO-plus-issue tracking rule
+[2026-05-18] [DB] [TEAM] [mobile-responsive] - Added and applied a staff seed repair migration so staff@college.edu has a staff role and matching staff profile row
+[2026-05-18] [ADD] [TEAM] [mobile-responsive] - Added staff existing-patient walk-in booking APIs and frontend workflow under /staff/walk-ins
+[2026-05-18] [ADD] [TEAM] [mobile-responsive] - Added staff walk-in booking list endpoint and bookings panel with status/date filters
