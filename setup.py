@@ -140,7 +140,9 @@ def init_database(host: str, port: int, user: str, password: str) -> bool:
         print("  ✓  Seed data already loaded")
     else:
         print("  Seeding data…")
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
         _execute_sql_file(cursor, SEED_SQL)
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
         conn.commit()
         print("  ✓  Seed data loaded")
 
