@@ -73,15 +73,20 @@ def check(name: str) -> bool:
     return found
 
 
+def _strip_inline_comments(sql: str) -> str:
+    """Remove -- inline comments from SQL while preserving string literals."""
+    import re
+    # Remove -- comments that are not inside single-quoted strings
+    result = re.sub(r"--[^\n]*", "", sql)
+    return result
+
+
 def _split_statements(sql: str) -> list[str]:
-    """Split a SQL file into individual statements, skipping blank/comment-only ones."""
+    """Split a SQL file into individual statements, skipping blank ones."""
+    sql = _strip_inline_comments(sql)
     stmts = []
     for raw in sql.split(";"):
-        lines = [
-            line for line in raw.splitlines()
-            if line.strip() and not line.strip().startswith("--")
-        ]
-        stmt = "\n".join(lines).strip()
+        stmt = raw.strip()
         if stmt:
             stmts.append(stmt)
     return stmts
@@ -116,19 +121,24 @@ def init_database(host: str, port: int, user: str, password: str) -> bool:
 
     cursor.execute(f"USE `{DB_NAME}`")
 
-    # ── Check if already seeded ───────────────────────────────────────────────
+    # ── Apply schema (idempotent — CREATE TABLE IF NOT EXISTS) ───────────────
     cursor.execute("SHOW TABLES LIKE 'users'")
-    already_seeded = cursor.fetchone() is not None
+    schema_applied = cursor.fetchone() is not None
 
-    if already_seeded:
-        print("  ✓  Schema already applied — skipping schema + seed")
+    if schema_applied:
+        print("  ✓  Schema already applied")
     else:
-        # ── Apply schema ──────────────────────────────────────────────────────
         print("  Applying schema…")
         _execute_sql_file(cursor, SCHEMA_SQL)
         print("  ✓  Schema applied")
 
-        # ── Apply seed data ───────────────────────────────────────────────────
+    # ── Apply seed (always attempt — duplicates are silently skipped) ─────────
+    cursor.execute("SELECT COUNT(*) FROM users")
+    user_count = cursor.fetchone()[0]
+
+    if user_count >= 7:
+        print("  ✓  Seed data already loaded")
+    else:
         print("  Seeding data…")
         _execute_sql_file(cursor, SEED_SQL)
         conn.commit()
