@@ -55,7 +55,7 @@ export default function EmergencyButton() {
         onClick={() => setOpen(true)}
         animate={{ scale: [1, 1.06, 1] }}
         transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-colors"
+        className="fixed bottom-6 right-4 md:right-6 z-40 flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition-colors"
         aria-label="Emergency contacts"
       >
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ export default function EmergencyButton() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-4"
           >
             <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
             <motion.div
@@ -79,7 +79,7 @@ export default function EmergencyButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative w-full max-w-sm rounded-card bg-white shadow-xl border border-brand-border"
+              className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-card bg-white shadow-xl border border-brand-border max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
               <div className="flex items-center gap-3 border-b border-brand-border px-5 py-4">

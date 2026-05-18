@@ -20,6 +20,7 @@ export default function DashboardShell({ role, title, children }: Props) {
   const pathname = usePathname();
   const [userName, setUserName] = useState("");
   const [actualRole, setActualRole] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -31,11 +32,15 @@ export default function DashboardShell({ role, title, children }: Props) {
     setActualRole(user.role_name);
   }, [router]);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     <div className="min-h-screen bg-brand-bg">
-      <Sidebar role={role} />
-      <Header title={title} userName={userName} />
-      <main className="ml-60 pt-14">
+      <Sidebar role={role} isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Header title={title} userName={userName} onMenuOpen={() => setMenuOpen(true)} />
+      <main className="md:ml-60 pt-14">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -43,7 +48,7 @@ export default function DashboardShell({ role, title, children }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="p-6 max-w-[1200px]"
+            className="p-4 md:p-6 max-w-[1200px]"
           >
             {children}
           </motion.div>

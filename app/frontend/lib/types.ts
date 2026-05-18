@@ -239,6 +239,16 @@ export interface PatientSearchResult {
   year_level: number;
 }
 
+export interface StaffPatientSearchResult {
+  student_id: number;
+  student_name: string;
+  email: string;
+  roll_number: string;
+  department: string;
+  year_level: number;
+  role_name: string;
+}
+
 export interface MedicalNoteResponse {
   note_id: number;
   appointment_id: number;

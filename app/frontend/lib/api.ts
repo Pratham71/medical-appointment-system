@@ -35,6 +35,7 @@ import type {
   StudentDashboard,
   StudentEmergencyAlertSummary,
   StudentReportSummary,
+  StaffPatientSearchResult,
   TokenResponse,
 } from "./types";
 
@@ -286,6 +287,51 @@ export async function sendEmergencyAlert(
     },
     true
   );
+}
+
+// ── Staff ─────────────────────────────────────────────────────────────────────
+
+export async function searchStaffPatients(
+  query: string,
+  limit = 10
+): Promise<StaffPatientSearchResult[]> {
+  const p = new URLSearchParams();
+  p.set("q", query);
+  p.set("limit", String(limit));
+  return request<StaffPatientSearchResult[]>(`/staff/patients/search?${p}`);
+}
+
+export async function bookWalkInAppointment(
+  studentId: number,
+  slotId: number,
+  reason?: string
+): Promise<AppointmentBookResponse> {
+  return request<AppointmentBookResponse>(
+    "/staff/walk-ins/book",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        student_id: studentId,
+        slot_id: slotId,
+        reason: reason?.trim() || null,
+      }),
+    },
+    true
+  );
+}
+
+export async function getStaffWalkIns(params?: {
+  status?: string;
+  from_date?: string;
+  to_date?: string;
+  limit?: number;
+}): Promise<AdminAppointmentSummary[]> {
+  const p = new URLSearchParams();
+  if (params?.status) p.set("status", params.status);
+  if (params?.from_date) p.set("from_date", params.from_date);
+  if (params?.to_date) p.set("to_date", params.to_date);
+  if (params?.limit) p.set("limit", String(params.limit));
+  return request<AdminAppointmentSummary[]>(`/staff/walk-ins?${p}`);
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────

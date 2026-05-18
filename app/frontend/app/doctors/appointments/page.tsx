@@ -6,7 +6,6 @@ import type { DoctorAppointmentSummary } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardShell from "@/components/layout/DashboardShell";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { SkeletonTableRows } from "@/components/ui/Skeleton";
 
 type Tab = "today" | "all";
 
@@ -53,9 +52,7 @@ export default function DoctorAppointmentsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  useEffect(() => {
-    setCollapsedMonths(new Set());
-  }, [tab]);
+  useEffect(() => { setCollapsedMonths(new Set()); }, [tab]);
 
   function toggleMonth(key: string) {
     setCollapsedMonths((prev) => {
@@ -66,9 +63,8 @@ export default function DoctorAppointmentsPage() {
   }
 
   const today = getLocalDateKey();
-  const filtered = tab === "today"
-    ? appointments.filter((a) => a.slot_date === today)
-    : appointments;
+  const filtered = tab === "today" ? appointments.filter((a) => a.slot_date === today) : appointments;
+  const groups = tab === "all" ? groupByMonth(filtered) : [];
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "today", label: "Today" },
@@ -87,16 +83,12 @@ export default function DoctorAppointmentsPage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-              tab === t.key
-                ? "border-teal-600 text-teal-700"
-                : "border-transparent text-brand-muted hover:text-brand-text"
+              tab === t.key ? "border-teal-600 text-teal-700" : "border-transparent text-brand-muted hover:text-brand-text"
             }`}
           >
             {t.label}
             {t.key === "today" && !loading && (
-              <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-                tab === "today" ? "bg-teal-100 text-teal-700" : "bg-brand-raised text-brand-muted"
-              }`}>
+              <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${tab === "today" ? "bg-teal-100 text-teal-700" : "bg-brand-raised text-brand-muted"}`}>
                 {appointments.filter((a) => a.slot_date === today).length}
               </span>
             )}
@@ -105,107 +97,133 @@ export default function DoctorAppointmentsPage() {
       </div>
 
       <AnimatePresence mode="wait">
-      <motion.div key={tab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-      <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
-        {loading ? (
-          <table className="w-full text-sm"><tbody><SkeletonTableRows rows={4} cols={5} /></tbody></table>
-        ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-brand-muted text-sm">
-            {tab === "today" ? "No appointments scheduled for today." : "No appointments found."}
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-brand-raised border-b border-brand-border">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Patient</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Student ID</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-border">
-              {tab === "all"
-                ? groupByMonth(filtered).map((group) => {
-                    const collapsed = collapsedMonths.has(group.key);
-                    return (
-                      <Fragment key={group.key}>
-                        <tr
-                          className="bg-brand-raised/70 cursor-pointer hover:bg-brand-raised border-y border-brand-border select-none"
-                          onClick={() => toggleMonth(group.key)}
-                        >
-                          <td colSpan={6} className="px-4 py-2">
-                            <div className="flex items-center gap-2">
-                              <svg
-                                className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`}
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                              </svg>
-                              <span className="text-xs font-semibold text-brand-text">{group.label}</span>
-                              <span className="text-xs text-brand-muted">·</span>
-                              <span className="text-xs text-brand-muted">
-                                {group.rows.length} appointment{group.rows.length !== 1 ? "s" : ""}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                        {!collapsed &&
-                          group.rows.map((a, i) => (
-                            <motion.tr
-                              key={a.appointment_id}
-                              initial={{ opacity: 0, y: 4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.2) }}
-                              className="hover:bg-brand-raised transition-colors"
-                            >
+        <motion.div key={tab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+          <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
+            {loading && (
+              <div className="p-8 text-center text-brand-muted text-sm animate-pulse">Loading…</div>
+            )}
+
+            {!loading && filtered.length === 0 && (
+              <div className="p-8 text-center text-brand-muted text-sm">
+                {tab === "today" ? "No appointments scheduled for today." : "No appointments found."}
+              </div>
+            )}
+
+            {!loading && filtered.length > 0 && (
+              <>
+                {/* Desktop table */}
+                <div className="hidden md:block">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-brand-raised border-b border-brand-border">
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Patient</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Student ID</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-border">
+                      {tab === "all"
+                        ? groups.map((group) => {
+                            const collapsed = collapsedMonths.has(group.key);
+                            return (
+                              <Fragment key={group.key}>
+                                <tr className="bg-brand-raised/70 cursor-pointer hover:bg-brand-raised border-y border-brand-border select-none" onClick={() => toggleMonth(group.key)}>
+                                  <td colSpan={6} className="px-4 py-2">
+                                    <div className="flex items-center gap-2">
+                                      <svg className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                      <span className="text-xs font-semibold text-brand-text">{group.label}</span>
+                                      <span className="text-xs text-brand-muted">· {group.rows.length}</span>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {!collapsed && group.rows.map((a, i) => (
+                                  <motion.tr key={a.appointment_id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.2) }} className="hover:bg-brand-raised transition-colors">
+                                    <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
+                                    <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
+                                    <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
+                                    <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
+                                    <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+                                    <td className="px-4 py-3"><button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">View Details →</button></td>
+                                  </motion.tr>
+                                ))}
+                              </Fragment>
+                            );
+                          })
+                        : filtered.map((a, i) => (
+                            <motion.tr key={a.appointment_id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }} className="hover:bg-brand-raised transition-colors">
                               <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
                               <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
                               <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
                               <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
                               <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                              <td className="px-4 py-3">
-                                <button
-                                  onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
-                                  className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
-                                >
-                                  View Details →
-                                </button>
-                              </td>
+                              <td className="px-4 py-3"><button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">View Details →</button></td>
                             </motion.tr>
                           ))}
-                      </Fragment>
-                    );
-                  })
-                : filtered.map((a, i) => (
-                    <motion.tr
-                      key={a.appointment_id}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.3) }}
-                      className="hover:bg-brand-raised transition-colors"
-                    >
-                      <td className="px-4 py-3 text-brand-text">{fmtDate(a.slot_date)}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-brand-text">{a.start_time.slice(0, 5)}</td>
-                      <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
-                      <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
-                          className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
-                        >
-                          View Details →
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      </motion.div>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden">
+                  {tab === "all"
+                    ? groups.map((group) => {
+                        const collapsed = collapsedMonths.has(group.key);
+                        return (
+                          <div key={group.key}>
+                            <button onClick={() => toggleMonth(group.key)} className="w-full flex items-center gap-2 px-4 py-2.5 bg-brand-raised/70 border-y border-brand-border text-left">
+                              <svg className={`w-3 h-3 text-brand-muted transition-transform duration-150 ${collapsed ? "" : "rotate-90"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                              </svg>
+                              <span className="text-xs font-semibold text-brand-text">{group.label}</span>
+                              <span className="text-xs text-brand-muted">· {group.rows.length}</span>
+                            </button>
+                            {!collapsed && (
+                              <div className="divide-y divide-brand-border">
+                                {group.rows.map((a) => (
+                                  <div key={a.appointment_id} className="p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <p className="text-sm font-medium text-brand-text">{a.student_name}</p>
+                                        <p className="text-xs text-brand-muted font-mono">{a.student_id}</p>
+                                        <p className="text-xs text-brand-muted mt-0.5">{fmtDate(a.slot_date)} · <span className="font-mono">{a.start_time.slice(0, 5)}</span></p>
+                                      </div>
+                                      <StatusBadge status={a.status} />
+                                    </div>
+                                    <button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">View Details →</button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    : (
+                      <div className="divide-y divide-brand-border">
+                        {filtered.map((a) => (
+                          <div key={a.appointment_id} className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-brand-text">{a.student_name}</p>
+                                <p className="text-xs text-brand-muted font-mono">{a.student_id}</p>
+                                <p className="text-xs text-brand-muted mt-0.5">{fmtDate(a.slot_date)} · <span className="font-mono">{a.start_time.slice(0, 5)}</span></p>
+                              </div>
+                              <StatusBadge status={a.status} />
+                            </div>
+                            <button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">View Details →</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
       </AnimatePresence>
     </DashboardShell>
   );

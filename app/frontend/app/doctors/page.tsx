@@ -177,35 +177,55 @@ export default function DoctorDashboardPage() {
                       No appointments scheduled for today.
                     </div>
                   ) : (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-brand-raised border-y border-brand-border">
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Patient</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">ID</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-brand-border">
+                    <>
+                      {/* Desktop table */}
+                      <div className="hidden md:block">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-brand-raised border-y border-brand-border">
+                              <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
+                              <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Patient</th>
+                              <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">ID</th>
+                              <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
+                              <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-brand-border">
+                            {todaysAppts.map((a) => (
+                              <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
+                                <td className="px-4 py-3 font-mono text-xs text-brand-text">{fmtTime(a.start_time)}</td>
+                                <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
+                                <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+                                <td className="px-4 py-3">
+                                  <button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">
+                                    View Details →
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Mobile cards */}
+                      <div className="md:hidden border-t border-brand-border divide-y divide-brand-border">
                         {todaysAppts.map((a) => (
-                          <tr key={a.appointment_id} className="hover:bg-brand-raised transition-colors">
-                            <td className="px-4 py-3 font-mono text-xs text-brand-text">{fmtTime(a.start_time)}</td>
-                            <td className="px-4 py-3 text-brand-text">{a.student_name}</td>
-                            <td className="px-4 py-3 font-mono text-xs text-brand-muted">{a.student_id}</td>
-                            <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                            <td className="px-4 py-3">
-                              <button
-                                onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)}
-                                className="text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors"
-                              >
-                                View Details →
-                              </button>
-                            </td>
-                          </tr>
+                          <div key={a.appointment_id} className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-brand-text">{a.student_name}</p>
+                                <p className="text-xs text-brand-muted font-mono">{a.student_id}</p>
+                                <p className="text-xs text-brand-muted font-mono mt-0.5">{fmtTime(a.start_time)}</p>
+                              </div>
+                              <StatusBadge status={a.status} />
+                            </div>
+                            <button onClick={() => router.push(`/doctors/appointments/${a.appointment_id}`)} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium transition-colors">
+                              View Details →
+                            </button>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </>
                   )}
                 </motion.div>
               )}

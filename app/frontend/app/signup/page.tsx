@@ -126,7 +126,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-brand-text mb-1.5">Roll number</label>
                 <input

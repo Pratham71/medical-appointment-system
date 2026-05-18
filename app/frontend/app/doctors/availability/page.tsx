@@ -179,7 +179,8 @@ export default function DoctorAvailabilityPage() {
             <div className="px-5 py-3.5 border-b border-brand-border">
               <h2 className="text-sm font-semibold text-brand-text">Weekly availability</h2>
             </div>
-            <div className="overflow-x-auto">
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-brand-raised border-b border-brand-border">
@@ -192,54 +193,62 @@ export default function DoctorAvailabilityPage() {
                 <tbody className="divide-y divide-brand-border">
                   {settings.weekly_availability.map((rule) => (
                     <tr key={rule.weekday} className="hover:bg-brand-raised transition-colors">
-                      <td className="px-4 py-3 font-medium text-brand-text">
-                        {rule.weekday_name}
+                      <td className="px-4 py-3 font-medium text-brand-text">{rule.weekday_name}</td>
+                      <td className="px-4 py-3">
+                        <input type="checkbox" checked={rule.is_available}
+                          onChange={(e) => patchWeekly(rule.weekday, { is_available: e.target.checked, start_time: e.target.checked ? rule.start_time : null, end_time: e.target.checked ? rule.end_time : null })}
+                          className="h-4 w-4 accent-teal-600" aria-label={`${rule.weekday_name} availability`} />
                       </td>
                       <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={rule.is_available}
-                          onChange={(e) =>
-                            patchWeekly(rule.weekday, {
-                              is_available: e.target.checked,
-                              start_time: e.target.checked ? rule.start_time : null,
-                              end_time: e.target.checked ? rule.end_time : null,
-                            })
-                          }
-                          className="h-4 w-4 accent-teal-600"
-                          aria-label={`${rule.weekday_name} availability`}
-                        />
+                        <input type="time" value={timeValue(rule.start_time)} disabled={!rule.is_available}
+                          onChange={(e) => patchWeekly(rule.weekday, { start_time: e.target.value || null })}
+                          className="h-9 rounded-md border border-brand-border px-2 text-sm text-brand-text disabled:bg-brand-raised disabled:text-brand-muted" />
                       </td>
                       <td className="px-4 py-3">
-                        <input
-                          type="time"
-                          value={timeValue(rule.start_time)}
-                          disabled={!rule.is_available}
-                          onChange={(e) =>
-                            patchWeekly(rule.weekday, {
-                              start_time: e.target.value || null,
-                            })
-                          }
-                          className="h-9 rounded-md border border-brand-border px-2 text-sm text-brand-text disabled:bg-brand-raised disabled:text-brand-muted"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="time"
-                          value={timeValue(rule.end_time)}
-                          disabled={!rule.is_available}
-                          onChange={(e) =>
-                            patchWeekly(rule.weekday, {
-                              end_time: e.target.value || null,
-                            })
-                          }
-                          className="h-9 rounded-md border border-brand-border px-2 text-sm text-brand-text disabled:bg-brand-raised disabled:text-brand-muted"
-                        />
+                        <input type="time" value={timeValue(rule.end_time)} disabled={!rule.is_available}
+                          onChange={(e) => patchWeekly(rule.weekday, { end_time: e.target.value || null })}
+                          className="h-9 rounded-md border border-brand-border px-2 text-sm text-brand-text disabled:bg-brand-raised disabled:text-brand-muted" />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-brand-border">
+              {settings.weekly_availability.map((rule) => (
+                <div key={rule.weekday} className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-brand-text">{rule.weekday_name}</span>
+                    <label className="flex items-center gap-2 text-xs text-brand-muted">
+                      Available
+                      <input type="checkbox" checked={rule.is_available}
+                        onChange={(e) => patchWeekly(rule.weekday, { is_available: e.target.checked, start_time: e.target.checked ? rule.start_time : null, end_time: e.target.checked ? rule.end_time : null })}
+                        className="h-4 w-4 accent-teal-600" />
+                    </label>
+                  </div>
+                  {rule.is_available && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="text-xs text-brand-muted">
+                        Start
+                        <input type="time" value={timeValue(rule.start_time)}
+                          onChange={(e) => patchWeekly(rule.weekday, { start_time: e.target.value || null })}
+                          className="mt-1 h-10 w-full rounded-md border border-brand-border px-2 text-sm text-brand-text" />
+                      </label>
+                      <label className="text-xs text-brand-muted">
+                        End
+                        <input type="time" value={timeValue(rule.end_time)}
+                          onChange={(e) => patchWeekly(rule.weekday, { end_time: e.target.value || null })}
+                          className="mt-1 h-10 w-full rounded-md border border-brand-border px-2 text-sm text-brand-text" />
+                      </label>
+                    </div>
+                  )}
+                  {!rule.is_available && (
+                    <p className="text-xs text-brand-muted">Not available</p>
+                  )}
+                </div>
+              ))}
             </div>
             <div className="px-5 py-4 border-t border-brand-border flex items-center gap-3">
               <button
@@ -318,56 +327,66 @@ export default function DoctorAvailabilityPage() {
             </div>
 
             {settings.date_overrides.length === 0 ? (
-              <div className="p-6 text-center text-brand-muted text-sm">
-                No date overrides set.
-              </div>
+              <div className="p-6 text-center text-brand-muted text-sm">No date overrides set.</div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-brand-raised border-b border-brand-border">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Note</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-border">
+              <>
+                {/* Desktop table */}
+                <div className="hidden md:block">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-brand-raised border-b border-brand-border">
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Date</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Status</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Time</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Note</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-brand-muted uppercase tracking-wide">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-border">
+                      {settings.date_overrides.map((override) => (
+                        <tr key={override.override_date} className="hover:bg-brand-raised transition-colors">
+                          <td className="px-4 py-3 font-mono text-xs text-brand-text">{override.override_date}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${override.is_available ? "bg-teal-50 text-teal-700" : "bg-red-50 text-red-700"}`}>
+                              {override.is_available ? "Available" : "Unavailable"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-brand-muted">
+                            {override.start_time && override.end_time ? `${timeValue(override.start_time)}-${timeValue(override.end_time)}` : "Full day"}
+                          </td>
+                          <td className="px-4 py-3 text-brand-muted">{override.note || "None"}</td>
+                          <td className="px-4 py-3">
+                            <button onClick={() => removeOverride(override.override_date)} disabled={savingKey === `override-${override.override_date}`} className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-60">Remove</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-brand-border">
                   {settings.date_overrides.map((override) => (
-                    <tr key={override.override_date} className="hover:bg-brand-raised transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-brand-text">
-                        {override.override_date}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                          override.is_available
-                            ? "bg-teal-50 text-teal-700"
-                            : "bg-red-50 text-red-700"
-                        }`}>
+                    <div key={override.override_date} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-mono text-brand-text">{override.override_date}</p>
+                          <p className="text-xs text-brand-muted mt-0.5">
+                            {override.start_time && override.end_time ? `${timeValue(override.start_time)}–${timeValue(override.end_time)}` : "Full day"}
+                          </p>
+                          {override.note && <p className="text-xs text-brand-muted mt-0.5">{override.note}</p>}
+                        </div>
+                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium flex-shrink-0 ${override.is_available ? "bg-teal-50 text-teal-700" : "bg-red-50 text-red-700"}`}>
                           {override.is_available ? "Available" : "Unavailable"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-brand-muted">
-                        {override.start_time && override.end_time
-                          ? `${timeValue(override.start_time)}-${timeValue(override.end_time)}`
-                          : "Full day"}
-                      </td>
-                      <td className="px-4 py-3 text-brand-muted">
-                        {override.note || "None"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => removeOverride(override.override_date)}
-                          disabled={savingKey === `override-${override.override_date}`}
-                          className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-60"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
+                      </div>
+                      <button onClick={() => removeOverride(override.override_date)} disabled={savingKey === `override-${override.override_date}`} className="mt-2 text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-60">
+                        Remove
+                      </button>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </div>
         </div>

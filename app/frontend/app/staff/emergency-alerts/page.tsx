@@ -117,43 +117,40 @@ export default function StaffEmergencyAlertsPage() {
                       <motion.div key={a.alert_id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: Math.min(i * 0.04, 0.25) }}
                         className="bg-white rounded-card border-l-4 border-red-400 border-t border-r border-b border-brand-border shadow-card p-4"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                              <p className="text-sm font-semibold text-brand-text">{a.student_name}</p>
-                              <span className="text-xs text-brand-muted font-mono">{a.roll_number}</span>
-                              <StatusBadge status={a.status} />
-                            </div>
-                            <div className="grid gap-2 py-2 text-xs sm:grid-cols-3">
-                              <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Reason</span><span className="font-medium text-brand-text">{a.reason}</span></div>
-                              <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Location</span><span className="font-medium text-brand-text">{a.location}</span></div>
-                              <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Contact</span><span className="font-medium text-brand-text">{a.contact_number || "Not provided"}</span></div>
-                            </div>
-                            {a.message && <p className="text-sm text-brand-text leading-relaxed">{a.message}</p>}
-                            {a.resolution_note && <p className="mt-2 text-xs text-emerald-700"><span className="font-medium">Resolution:</span> {a.resolution_note}</p>}
-                            <p className="text-xs text-brand-muted mt-2">{fmtFull(a.created_at)}</p>
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
+                            <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                            <p className="text-sm font-semibold text-brand-text">{a.student_name}</p>
+                            <span className="text-xs text-brand-muted font-mono">{a.roll_number}</span>
+                            <StatusBadge status={a.status} />
                           </div>
-                          <div className="flex w-48 flex-shrink-0 flex-col items-end gap-2 text-right">
-                            <span className="text-xs text-brand-muted">{timeAgo(a.created_at)}</span>
-                            {a.status !== "resolved" && (
-                              <>
-                                {a.status === "unread" && (
-                                  <button onClick={() => handleAcknowledge(a.alert_id)} disabled={actionBusy === a.alert_id}
-                                    className="rounded-btn border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-60">
-                                    Acknowledge
-                                  </button>
-                                )}
-                                <input value={resolutionNote[a.alert_id] ?? ""} onChange={(e) => setResolutionNote((c) => ({ ...c, [a.alert_id]: e.target.value }))}
-                                  placeholder="Resolution note" className="w-full rounded-btn border border-brand-border px-2 py-1 text-xs text-brand-text outline-none focus:border-emerald-300" />
-                                <button onClick={() => handleResolve(a.alert_id)} disabled={actionBusy === a.alert_id}
-                                  className="rounded-btn border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">
-                                  Resolve
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          <span className="text-xs text-brand-muted flex-shrink-0">{timeAgo(a.created_at)}</span>
                         </div>
+                        <div className="grid gap-2 py-2 text-xs grid-cols-1 sm:grid-cols-3">
+                          <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Reason</span><span className="font-medium text-brand-text">{a.reason}</span></div>
+                          <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Location</span><span className="font-medium text-brand-text">{a.location}</span></div>
+                          <div className="rounded-btn bg-brand-bg px-3 py-2"><span className="block text-brand-muted">Contact</span><span className="font-medium text-brand-text">{a.contact_number || "Not provided"}</span></div>
+                        </div>
+                        {a.message && <p className="text-sm text-brand-text leading-relaxed">{a.message}</p>}
+                        {a.resolution_note && <p className="mt-2 text-xs text-emerald-700"><span className="font-medium">Resolution:</span> {a.resolution_note}</p>}
+                        <p className="text-xs text-brand-muted mt-2">{fmtFull(a.created_at)}</p>
+                        {a.status !== "resolved" && (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {a.status === "unread" && (
+                              <button onClick={() => handleAcknowledge(a.alert_id)} disabled={actionBusy === a.alert_id}
+                                className="rounded-btn border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-60">
+                                Acknowledge
+                              </button>
+                            )}
+                            <input value={resolutionNote[a.alert_id] ?? ""} onChange={(e) => setResolutionNote((c) => ({ ...c, [a.alert_id]: e.target.value }))}
+                              placeholder="Resolution note (optional)"
+                              className="flex-1 min-w-[140px] rounded-btn border border-brand-border px-2 py-1.5 text-xs text-brand-text outline-none focus:border-emerald-300" />
+                            <button onClick={() => handleResolve(a.alert_id)} disabled={actionBusy === a.alert_id}
+                              className="rounded-btn border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">
+                              Resolve
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
                   </div>
