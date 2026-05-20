@@ -6,7 +6,6 @@ A web-based medical appointment system for a college infirmary. It helps student
 
 This is a DBMS-focused project with a FastAPI backend, MySQL database, raw SQL query layer, JWT authentication, role-based access, and a Next.js frontend for the MVP workflows.
 
-## Features
 
 - Student appointment booking
 - Professor appointment access using the same patient workflow as students
