@@ -1,0 +1,59 @@
+services:
+
+  # ── MySQL 8 ───────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: medical_appointment_system
+    volumes:
+      # Named volume keeps data across restarts.
+      # To fully reset the database: docker compose down -v
+      - db_data:/var/lib/mysql
+      # MySQL runs these automatically on first start (when db_data is empty).
+      # They are mounted read-only so Docker never writes back to your source files.
+      - ./app/backend/app/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./app/backend/app/db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15          # MySQL 8 can be slow to initialise on first run
+      start_period: 10s
+
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .                         # project root — pyproject.toml is here
+      dockerfile: app/backend/Dockerfile
+    restart: unless-stopped
+    env_file: .env                       # loads all vars from .env into the container
+    environment:
+      # Override the host so the backend reaches the db container by its
+      # service name instead of 127.0.0.1 (which would point at itself)
+      MYSQL_HOST: db
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy       # waits for MySQL to pass its healthcheck
+
+  # ── Next.js frontend ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./app/frontend            # package.json lives here
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # The browser (not the container) makes API calls, so this must be a
+      # host-reachable URL — localhost:8000 is correct for local development.
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
