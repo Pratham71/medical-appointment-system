@@ -2,8 +2,8 @@ ER Diagram Notes
 
 Status
 
-- Do not generate the final ER diagram yet.
-- These notes track the current MySQL schema shape.
+- The current schema ERD is available in `docs/ERD.md`.
+- These notes track the current MySQL schema shape and normalization decisions.
 
 Entities
 

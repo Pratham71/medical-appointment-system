@@ -1,0 +1,354 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║           COLLEGE INFIRMARY APPOINTMENT API — FLOW DIAGRAMS                    ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+  1.  REQUEST LIFECYCLE
+  2.  APPOINTMENT BOOKING SEQUENCE
+  3.  APPOINTMENT & SLOT STATE MACHINES
+  4.  DOCTOR AVAILABILITY RESOLUTION
+  5.  SECURITY ARCHITECTURE LAYERS
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1.  REQUEST LIFECYCLE — FLOW OF CONTROL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                         ┌───────────────────────────┐
+                         │       HTTP Request         │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  security_request_         │
+                         │  middleware                │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐     rate limit hit
+                         │  FixedWindowRateLimiter    │ ───────────────────► 429
+                         │  120 req/min per client    │
+                         │  key = SHA-256(auth header)│
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐     header missing
+                         │  IdempotencyStore          │ ───────────────────► 400
+                         │  all authed mutations need │
+                         │  Idempotency-Key header    │     key reused /
+                         │  TTL = 10 min              │     diff payload  ──► 409
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  FastAPI Route Handler     │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐     missing / invalid
+                         │  get_current_user          │ ───────────────────► 401
+                         │  · extract Bearer token    │
+                         │  · decode + verify JWT     │
+                         │  · load user from DB       │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐     role not allowed
+                         │  require_roles(*roles)     │ ───────────────────► 403
+                         │  RBAC – per-endpoint       │
+                         │  role whitelist            │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐     not owner /
+                         │  Resource-Level Guards     │     not treating  ──► 403
+                         │  ensure_appointment_access │
+                         │  ensure_student_record_acc │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  Service Layer             │
+                         │  · business rule checks    │
+                         │  · cross-repo coordination │
+                         │  · fire notifications      │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  Repository Layer          │
+                         │  · connection_scope()      │
+                         │  · transaction_scope()     │
+                         │  · FOR UPDATE row locks    │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  Query Layer               │
+                         │  · raw parameterised SQL   │
+                         │  · fetch_one/all/execute   │
+                         │  · timedelta → time        │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  MySQL Database            │
+                         │  InnoDB · pool=5           │
+                         │  autocommit=False          │
+                         └─────────────┬─────────────┘
+                                       │
+                                (response bubbles up)
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  service_error_to_http()   │
+                         │  ServiceError → HTTP code  │
+                         │  RuntimeError   → 503      │
+                         │  Unexpected     → 500      │
+                         └─────────────┬─────────────┘
+                                       │
+                         ┌─────────────▼─────────────┐
+                         │  JSON Response to Client   │
+                         │  (cached in                │
+                         │   IdempotencyStore)        │
+                         └───────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2.  APPOINTMENT BOOKING — SEQUENCE DIAGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Client        Middleware     Auth Dep      Appt Svc     Appt Repo    MySQL DB    Notif Svc
+     │                │              │             │              │           │           │
+     │ POST /appt/book│              │             │              │           │           │
+     │ Idempotency-Key│              │             │              │           │           │
+     │───────────────►│              │             │              │           │           │
+     │                │ new key      │             │              │           │           │
+     │                │ → proceed    │             │              │           │           │
+     │                │─────────────►│             │              │           │           │
+     │                │              │             │              │           │           │
+     │                │              │ require_    │              │           │           │
+     │                │              │ student_id()│              │           │           │
+     │                │              │─────────────────────SELECT user──────►│           │
+     │                │              │◄────────────────────────user row───────│           │
+     │                │              │─────────────────────SELECT student_id─►│           │
+     │                │              │◄────────────────────────student_id─────│           │
+     │                │              │             │              │           │           │
+     │                │              │             │ ensure_slots │           │           │
+     │                │              │             │ _for_date()  │           │           │
+     │                │              │             │─────────────►│BEGIN TXN  │           │
+     │                │              │             │              │─INSERT────►│           │
+     │                │              │             │              │ slots WHERE│           │
+     │                │              │             │              │ NOT EXISTS │           │
+     │                │              │             │              │◄───ok──────│           │
+     │                │              │             │              │COMMIT─────►│           │
+     │                │              │             │              │           │           │
+     │                │              │             │ book_appoint │           │           │
+     │                │              │             │ ment()       │           │           │
+     │                │              │             │─────────────►│BEGIN TXN  │           │
+     │                │              │             │              │─SELECT────►│           │
+     │                │              │             │              │ slot FOR  │           │
+     │                │              │             │              │ UPDATE    │           │
+     │                │              │             │              │◄──slot row─│           │
+     │                │              │             │              │ (locked)  │           │
+     │                │              │             │              │─check slot│           │
+     │                │              │             │              │  not past │           │
+     │                │              │             │              │─INSERT────►│           │
+     │                │              │             │              │ appointment│           │
+     │                │              │             │              │─UPDATE────►│           │
+     │                │              │             │              │ slot_status│           │
+     │                │              │             │              │ → 'booked'│           │
+     │                │              │             │              │◄──appt_id──│           │
+     │                │              │             │              │COMMIT─────►│           │
+     │                │              │             │◄────result────│           │           │
+     │                │              │             │              │           │           │
+     │                │              │             │──────────────────────────────────────►│
+     │                │              │             │              │           │send_booked│
+     │                │              │             │              │           │SMTP email │
+     │                │ cache resp   │             │              │           │(if enabled│
+     │                │ in store     │             │              │           │ no-throw) │
+     │◄───────────────│              │             │              │           │           │
+     │ 201 { appointment_id,         │             │              │           │           │
+     │       slot_id, status }       │             │              │           │           │
+     │                │              │             │              │           │           │
+
+
+   Conflict cases (inside BEGIN TXN):
+   ┌───────────────────────────────────────────────────────────────┐
+   │ slot = NULL           → return None  → 404 NotFoundError      │
+   │ slot start in past    → return {expired}  → 409 ConflictError │
+   │ duplicate INSERT key  → _BookingConflict  → 409 ConflictError │
+   └───────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3.  STATE MACHINES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ── APPOINTMENT STATUS FSM ─────────────────────────────────────────────────────
+
+                           POST /appointments/book
+                                    │
+                                    ▼
+                           ┌────────────────┐
+                    ┌──────│     booked     │──────┐
+                    │      └────────────────┘      │
+                    │                              │
+           PATCH /cancel                     PATCH /complete
+           (any role may cancel              (doctor or admin only)
+            own appointment)                       │
+                    │                              │
+                    ▼                              ▼
+           ┌────────────────┐            ┌────────────────┐
+           │   cancelled    │            │   completed    │
+           └────────────────┘            └────────────────┘
+            · slot freed                  · medical notes
+              → 'available'                 can be written
+            · ⊘ terminal                 · prescriptions
+              (no more                     can be written
+               transitions)             · certificate can
+                                           be issued
+                                         · ⊘ terminal
+
+  Enforcement:
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │  _ALLOWED_STATUS_TRANSITIONS = { "booked": {"cancelled", "completed"} }      │
+  │  Any other transition → return {invalid_transition: True} → 409 Conflict     │
+  └──────────────────────────────────────────────────────────────────────────────┘
+
+
+  ── SLOT STATUS FSM ────────────────────────────────────────────────────────────
+
+                       appointment booked
+              ┌─────────────────────────────────┐
+              │                                 │
+              ▼                                 │
+     ┌──────────────────┐             ┌──────────────────┐
+     │    available     │             │      booked      │
+     └──────────────────┘             └──────────────────┘
+              ▲                                 │
+              │                                 │
+              └─────────────────────────────────┘
+                       appointment cancelled
+
+  ── DB-LEVEL DOUBLE-BOOKING GUARD ──────────────────────────────────────────────
+
+  appointments.active_slot_id  GENERATED ALWAYS AS (
+      CASE WHEN status_id = 2 THEN NULL ELSE slot_id END
+  ) STORED
+
+  UNIQUE (active_slot_id)
+
+  → When an appointment is cancelled, active_slot_id becomes NULL
+    (excluded from UNIQUE), so the slot can be rebooked.
+  → When booked/completed, active_slot_id = slot_id is UNIQUE,
+    so a second booking for the same slot hits a constraint error
+    even if the application-level FOR UPDATE lock races.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4.  DOCTOR AVAILABILITY RESOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Triggered by: GET /appointments/slots  or  GET /appointments/doctors
+
+                    ┌──────────────────────────────────┐
+                    │  Query for date D                 │
+                    │  ensure_slots_for_date(D)         │
+                    └──────────────┬───────────────────┘
+                                   │
+                    ╔══════════════▼═══════════════════╗
+                    ║  date override exists             ║
+                    ║  for this doctor + date D ?       ║
+                    ╚══════╤════════════════╤═══════════╝
+                         YES               NO
+                           │               │
+               ┌───────────┘               └───────────────┐
+               │                                           │
+               ▼                           ╔══════════════▼══════════════╗
+  ┌────────────────────────┐               ║  weekly rule exists         ║
+  │  use override settings │               ║  for this weekday?          ║
+  │  · is_available        │               ╚══════╤════════════╤═════════╝
+  │  · start_time          │                    YES             NO
+  │  · end_time            │                      │             │
+  └──────────┬─────────────┘                      │             │
+             │                        ┌───────────┘   ┌─────────────────────┐
+     ╔════════▼═══════╗                │               │ default behaviour   │
+     ║ is_available   ║                ▼               │ Mon–Fri: available  │
+     ║ = FALSE ?      ║   ┌──────────────────────┐     │ Sat–Sun: closed     │
+     ╚════╤══════╤════╝   │ use weekly rule      │     │ hours: 09:00–17:00  │
+        YES     NO         │ · is_available       │     └─────────────────────┘
+          │     │           │ · start_time         │
+          │     │           │ · end_time           │
+          │  available      └──────────────────────┘
+          │  with override
+          │  hours
+          ▼
+  ┌───────────────────────────────────────────────┐
+  │  is_available = FALSE                         │
+  │  · show override.note to patient              │
+  │  · auto-cancel all booked slots on this date  │
+  │  · fire send_appointment_cancelled() per slot │
+  └───────────────────────────────────────────────┘
+
+  After availability is resolved (all branches):
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  For each 30-min window in [start_time, end_time):                    │
+  │  INSERT INTO appointment_slots ... WHERE NOT EXISTS (...)             │
+  │  → idempotent: safe to call multiple times, no duplicates created     │
+  └───────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5.  SECURITY ARCHITECTURE — LAYERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                           HTTP Request                                      │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [1] FixedWindowRateLimiter                                                 │
+  │      · 120 requests / minute per client key                                 │──► 429
+  │      · key = SHA-256(Authorization header)  |  raw IP if unauthenticated   │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [2] IdempotencyStore                                                       │
+  │      · POST / PUT / PATCH / DELETE + auth → must include Idempotency-Key   │──► 400 missing
+  │      · key = SHA-256(auth_token + idempotency_key)   TTL = 10 minutes      │──► 409 conflict
+  │      · replays cached response on retry (same key + same payload)          │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [3] JWT Bearer Verification  —  get_current_user()                        │
+  │      · HS256 signed: { sub: user_id, role: role_name, exp: now+60min }     │──► 401
+  │      · user loaded from DB: confirms existence + is_active = TRUE          │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [4] Role-Based Access Control  —  require_roles(*roles)                   │
+  │      · each endpoint declares an allowed role set                          │──► 403
+  │      · user.role_name checked against set (case-insensitive)               │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [5] Resource-Level Guards                                                  │
+  │      · ensure_appointment_access()   — student owns it / doctor assigned / │──► 403
+  │                                         admin bypass                        │
+  │      · ensure_student_record_access() — patient self / treating doc / admin│
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [6] LoginAttemptTracker  (auth/login endpoint only)                        │
+  │      · 5 consecutive failures → 5-minute lockout (per email address)       │──► 429
+  │      · counter cleared on successful login                                  │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  [7] Database-Level Guards                                                  │
+  │      · parameterised SQL throughout          → SQL injection proof          │
+  │      · SELECT ... FOR UPDATE in booking TXN  → race-condition safe          │
+  │      · active_slot_id UNIQUE constraint      → double-booking impossible    │
+  │      · MySQL BEFORE INSERT/UPDATE triggers   → certificate date enforced    │
+  └──────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+  ┌──────────────────────────────────▼──────────────────────────────────────────┐
+  │  Password & Token Hardening                                                 │
+  │      · bcrypt gensalt() default (12 rounds) — never stored in plaintext    │
+  │      · JWT_SECRET_KEY ≥ 32 chars enforced at startup in production         │
+  │      · CORS restricted to configured origins (default: localhost:3000)     │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ END OF FLOW DIAGRAMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

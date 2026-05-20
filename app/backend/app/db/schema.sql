@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS slot_statuses;
 DROP TABLE IF EXISTS appointment_statuses;
 DROP TABLE IF EXISTS staff;
 DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS certificate_types;
@@ -339,7 +340,7 @@ END//
 
 DELIMITER ;
 
-CREATE VIEW v_available_appointment_slots AS
+CREATE OR REPLACE VIEW v_available_appointment_slots AS
 SELECT
     appointment_slots.slot_id,
     staff.staff_id AS doctor_id,
@@ -393,7 +394,7 @@ WHERE slot_statuses.status_name = 'available'
         )
     );
 
-CREATE VIEW v_appointment_details AS
+CREATE OR REPLACE VIEW v_appointment_details AS
 SELECT
     appointments.appointment_id,
     appointments.student_id,
@@ -428,7 +429,7 @@ LEFT JOIN certificate_types
     ON certificate_types.certificate_type_id =
         medical_certificates.certificate_type_id;
 
-CREATE VIEW v_doctor_appointment_summaries AS
+CREATE OR REPLACE VIEW v_doctor_appointment_summaries AS
 SELECT
     appointments.appointment_id,
     staff.staff_id AS doctor_id,
@@ -447,7 +448,7 @@ INNER JOIN appointment_statuses
 INNER JOIN students ON students.student_id = appointments.student_id
 INNER JOIN users AS student_users ON student_users.user_id = students.user_id;
 
-CREATE VIEW v_student_report_summaries AS
+CREATE OR REPLACE VIEW v_student_report_summaries AS
 SELECT
     appointments.appointment_id,
     appointments.student_id,
@@ -477,7 +478,7 @@ GROUP BY
     medical_notes.diagnosis,
     medical_notes.remarks;
 
-CREATE VIEW v_student_certificate_summaries AS
+CREATE OR REPLACE VIEW v_student_certificate_summaries AS
 SELECT
     medical_certificates.certificate_id,
     appointments.appointment_id,

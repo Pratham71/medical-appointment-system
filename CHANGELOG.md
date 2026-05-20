@@ -42,6 +42,16 @@ changelog/branches/db.md
 
 Current Entries
 
+[2026-05-20] [UPDATE] [PR] [main] - Bumped version to beta-1.1.1
+[2026-05-20] [REFACTOR] [Codex] [main] - Overhauled setup.py: robust SQL parser (DELIMITER-aware, handles triggers), structured migration runner with rollback, cleaner CLI output, extracted read_env_file/write_env_password helpers
+[2026-05-20] [DB] [Codex] [main] - schema.sql: drop password_reset_tokens, convert all CREATE VIEW to CREATE OR REPLACE VIEW for idempotent re-runs
+[2026-05-20] [DB] [Codex] [main] - Added migration 2026_05_20_drop_password_reset_tokens.sql to clean unused table from live databases
+[2026-05-20] [DOCS] [Codex] [main] - Added ERD.md (Mermaid ER diagram) and updated ERD_NOTES.md to reference it
+[2026-05-20] [DOCS] [PR] [main] - Added BACKEND_DB_REPORT.txt, flow_diagrams.txt, and diagrams/ with annotated PNG flow diagrams for backend report
+[2026-05-20] [TEST] [Codex] [main] - Added test_setup_script.py covering SQL parser edge cases; updated test_mysql_database.py for CREATE OR REPLACE VIEW and password_reset_tokens migration checks
+[2026-05-20] [DB] [Codex] [main] - Added a cleanup migration and schema drop for the unused password_reset_tokens table before MySQL Workbench ERD generation
+[2026-05-20] [DOCS] [Codex] [main] - Added a Mermaid ERD for the current MySQL schema and updated ERD notes to reference the generated diagram
+[2026-05-20] [FIX] [Codex] [main] - Reconciled schema view definitions with migrations and fixed setup.py SQL parsing/migration error handling for MySQL setup
 [2026-05-18] [DB] [Codex] [mobile-responsive] - Added live database repair migration for missing doctor appointment and student report summary views causing server-side 500s
 [2026-05-18] [UI] [PR] [mobile-responsive] - Full mobile-responsive frontend: hamburger drawer nav, all data tables converted to card layouts on mobile, modals as bottom sheets, availability page mobile forms, signup grid fix
 [2026-05-18] [UI] [PR] [mobile-responsive] - Staff dashboard redesign: entrance animations, greeting, live alert dot, walk-ins page added with mobile card table

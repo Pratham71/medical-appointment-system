@@ -333,6 +333,17 @@ def test_live_summary_view_migration_repairs_missing_views():
     assert "select *" not in migration
 
 
+def test_password_reset_token_table_is_removed_from_current_database_shape():
+    schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        MIGRATION_DIR / "2026_05_20_drop_password_reset_tokens.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "create table password_reset_tokens" not in schema
+    assert "drop table if exists password_reset_tokens" in schema
+    assert "drop table if exists password_reset_tokens" in migration
+
+
 def test_available_slots_view_respects_doctor_availability_rules():
     schema = (DB_DIR / "schema.sql").read_text(encoding="utf-8").lower()
 
@@ -355,7 +366,7 @@ def test_schema_defines_reporting_views():
     ]
 
     for view_name in expected_views:
-        assert f"create view {view_name}" in schema
+        assert f"create or replace view {view_name}" in schema
 
     assert "drop view if exists v_appointment_details" in schema
     assert "select *" not in schema
@@ -636,6 +647,13 @@ def test_appointment_service_does_not_filter_future_date_by_current_time(monkeyp
 
 def test_appointment_service_lists_doctors_with_availability(monkeypatch):
     captured = []
+
+    monkeypatch.setattr(
+        appointment_service,
+        "_get_local_now",
+        lambda: datetime(2026, 5, 18, 8, 0),
+        raising=False,
+    )
 
     def fake_list_doctors(for_date):
         captured.append(for_date)
