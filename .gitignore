@@ -109,3 +109,4 @@ out/
 .turbo/
 coverage/
 *.tsbuildinfo
+diagrams/
