@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS medical_appointment_system;
+USE medical_appointment_system;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TRIGGER IF EXISTS trg_medical_certificates_validate_update;
