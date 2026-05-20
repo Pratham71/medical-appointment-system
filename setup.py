@@ -20,7 +20,7 @@ SCHEMA_SQL = ROOT / "app" / "backend" / "app" / "db" / "schema.sql"
 SEED_SQL = ROOT / "app" / "backend" / "app" / "db" / "seed.sql"
 MIGRATIONS = ROOT / "app" / "backend" / "app" / "db" / "migrations"
 DB_NAME = "medical_appointment_system"
-NPM_MAX_VERSION = (11, 11, 11)
+NPM_MAX_VERSION = (11, 11, 1)
 
 ENV_TEMPLATE = """\
 ENVIRONMENT=development
