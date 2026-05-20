@@ -94,6 +94,13 @@ temp/
 # uv
 uv.lock
 
+# project docs / planning (local only)
+AGENTS.md
+CHANGELOG.md
+DESIGN.md
+docs/
+changelog/
+
 # Node / Next.js frontend
 node_modules/
 .next/
