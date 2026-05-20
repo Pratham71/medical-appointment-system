@@ -237,7 +237,7 @@ python setup.py
 
 This installs all backend and frontend dependencies, creates the database, applies the schema, seeds initial data, and writes the `.env` file. MySQL credentials are prompted interactively.
 
-### Manual setup (if preferred)
+### Manual setup
 
 Install backend dependencies:
 
